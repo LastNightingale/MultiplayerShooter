@@ -21,7 +21,7 @@
     <ClCompile Include="Game.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="GameMath.cpp">
+    <ClCompile Include="GameMath.hpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
     <ClCompile Include="Entity.cpp">

@@ -3,7 +3,7 @@
 #include "Enemy.h"
 #include "Player.h"
 #include <thread>
-#include "GameMath.cpp"
+#include "GameMath.hpp"
 
 using namespace std;
 
@@ -14,7 +14,7 @@ private:
 	vector<Entity*> m_Entities;
 public:
 	Game();
-	//void SpawnEnemy();
+	void SpawnEnemy();
 	void GameUpdate(float dt);
 	void GameDraw();
 	void Run();

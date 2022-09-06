@@ -17,5 +17,5 @@ float VectorLength(Vector2f givenvector)
 Vector2f NormalizedVector(Vector2f givenvector)
 {
 	float length = VectorLength(givenvector);
-	return Vector2f(givenvector.x / length, givenvector.y / length)
+	return Vector2f(givenvector.x / length, givenvector.y / length);
 }

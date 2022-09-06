@@ -26,7 +26,7 @@ void Game::GameDraw()
 void Game::Run()
 {
 	Clock clock;
-	float dt, spawntime;	
+	float dt, spawntime = 0;
 	while (m_Window.isOpen())
 	{
 		dt = clock.getElapsedTime().asSeconds();
@@ -35,7 +35,7 @@ void Game::Run()
 		while (m_Window.pollEvent(event))
 		{
 			spawntime += dt;
-			if (spawntime >= 2.f) SpawnEnemy();
+			//if (spawntime >= 2.f) SpawnEnemy();
 		}
 		thread updatethread([this, dt]
 			{

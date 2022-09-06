@@ -39,8 +39,7 @@ void Game::Run()
 		thread updatethread([this, dt]
 			{
 				return this->GameUpdate(dt);
-			});
-		GameUpdate(dt);
+			}); 
 		GameDraw();
 		updatethread.join();
 	}

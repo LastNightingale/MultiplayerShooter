@@ -26,7 +26,7 @@ void Game::GameDraw()
 void Game::Run()
 {
 	Clock clock;
-	float dt;
+	float dt;	
 	while (m_Window.isOpen())
 	{
 		dt = clock.getElapsedTime().asSeconds();
@@ -36,7 +36,12 @@ void Game::Run()
 		{
 			
 		}
+		thread updatethread([this, dt]
+			{
+				return this->GameUpdate(dt);
+			});
 		GameUpdate(dt);
 		GameDraw();
+		updatethread.join();
 	}
 }

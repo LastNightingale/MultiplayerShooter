@@ -1,0 +1,16 @@
+cmake_minimum_required (VERSION 3.16)
+
+set(BUILD_SHARED_LIBS OFF)
+
+add_subdirectory ("sfml")
+
+add_executable(MultiplayerShooter 
+main.cpp
+Entity.cpp
+Enemy.cpp
+Player.cpp
+GameMath.hpp
+Game.cpp
+)
+
+target_link_libraries(MultiplayerShooter sfml-system sfml-graphics) 

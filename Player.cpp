@@ -7,7 +7,7 @@ Player::Player()
 	m_Body.setFillColor(Color::Blue);
 	m_Body.setSize(Player_Size);
 	m_Body.setOrigin(Vector2f(m_Body.getSize().x / 2, m_Body.getSize().y / 2));
-	SetStartPosition(Vector2f(400, 400));
+	m_Body.setPosition(Vector2f(400, 400));
 }
 
 void Player::Update(float dt) 

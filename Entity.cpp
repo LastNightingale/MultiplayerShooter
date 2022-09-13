@@ -30,3 +30,8 @@ FloatRect Entity::GetGlobalBounds() const
 {
 	return m_Body.getGlobalBounds();
 }
+
+bool Entity::Collided(Entity* other)
+{
+	return false;
+}

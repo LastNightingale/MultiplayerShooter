@@ -13,4 +13,6 @@ private:
 public:
 	Bullet(Player* owner, Vector2f direction);
 	void Update(float dt) override;
+	bool Collided(Entity* other) override;
+	Player* GetOWner();
 };

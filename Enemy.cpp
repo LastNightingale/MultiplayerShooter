@@ -13,3 +13,9 @@ void Enemy::Update(float dt)
 {
 	Move(m_Direction * dt * 200.f);
 }
+
+bool Enemy::Collided(Entity* other)
+{
+	if (dynamic_cast<Enemy*>(other)) return false;
+	else return true;
+}

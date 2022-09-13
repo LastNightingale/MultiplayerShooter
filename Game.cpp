@@ -42,7 +42,7 @@ void Game::GameUpdate(float dt)
 		{
 			if (outer->GetGlobalBounds().findIntersection(inner->GetGlobalBounds()))
 			{
-				if (outer != inner && typeid(*outer) != typeid(*inner))
+				if (outer->Collided(inner))
 				{
 					m_DestroyedEntities.push_back(inner);
 				}				
@@ -61,6 +61,7 @@ void Game::GameUpdate(float dt)
 				m_Entities[m_Entities.size() - 1] = temp;
 				m_Entities.pop_back();
 				delete temp;
+				break;
 			}
 		}
 	}
@@ -70,10 +71,11 @@ void Game::GameUpdate(float dt)
 void Game::GameDraw()
 {
 	m_Window.clear(Color::Black);
-	for (auto iter = m_Entities.rbegin(); iter != m_Entities.rend(); ++iter)
+	for (auto iter = ++m_Entities.begin(); iter != m_Entities.end(); ++iter)
 	{
 		(*iter)->Draw(m_Window);
 	}
+	m_Entities[0]->Draw(m_Window);
 	m_Window.display();
 }
 

@@ -1,5 +1,4 @@
 #include "Bullet.h"
-#include "GameMath.hpp"
 
 Bullet::Bullet(Player* owner, Vector2f direction)
 {
@@ -14,5 +13,21 @@ Bullet::Bullet(Player* owner, Vector2f direction)
 void Bullet::Update(float dt)
 {
 	m_Body.move(m_Direction * dt * 500.f);
+}
+
+bool Bullet::Collided(Entity* other)
+{
+	if (Player* player = dynamic_cast<Player*>(other))
+	{
+		if (player == this->GetOWner()) return false;
+		else return true;
+	}
+	else if (dynamic_cast<Bullet*>(other)) return false;
+	else return true;
+}
+
+Player* Bullet::GetOWner()
+{
+	return m_Owner;
 }
 

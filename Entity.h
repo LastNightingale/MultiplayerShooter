@@ -25,6 +25,7 @@ public:
 	RectangleShape GetBody();
 
 	FloatRect GetGlobalBounds() const;
-	//~Entity() { std::cout << "aaa" << std::endl; }
+
+	virtual bool Collided(Entity* other);
 };
 

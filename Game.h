@@ -14,10 +14,12 @@ private:
 	RenderWindow m_Window{ VideoMode({ 1400,900 }) , "Shooter", sf::Style::Close};
 	vector<Entity*> m_Entities;
 	vector<Entity*> m_DestroyedEntities;
+	Clock m_Clock;
 public:
 	Game();
 	void SpawnEnemy();
 	void GameUpdate(float dt);
+	void Collision();
 	void GameDraw();
 	void Run();
 };

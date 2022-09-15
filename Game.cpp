@@ -48,9 +48,13 @@ void Game::GameUpdate(float dt)
 				}				
 			}				
 		}
-	}
+	}	
+	Collision();
+}
 
-	for (Entity *entity : m_DestroyedEntities)
+void Game::Collision()
+{
+	for (Entity* entity : m_DestroyedEntities)
 	{
 		for (int i = 0; i < m_Entities.size(); i++)
 		{
@@ -82,12 +86,11 @@ void Game::GameDraw()
 void Game::Run()
 {
 	srand(time(NULL));
-	Clock clock;
 	float dt, spawntime = 0;
 	while (m_Window.isOpen())
 	{
-		dt = clock.getElapsedTime().asSeconds();
-		clock.restart();
+		dt = m_Clock.getElapsedTime().asSeconds();
+		m_Clock.restart();
 		Event event;
 		while (m_Window.pollEvent(event))
 		{

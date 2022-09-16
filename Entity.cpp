@@ -11,9 +11,14 @@ void Entity::Update(float dt)
 	std::cout << "Entity" << std::endl;
 }
 
-void Entity::Draw(RenderWindow& window)
+//void Entity::Draw(RenderWindow& window)
+//{
+//	window.draw(m_Body);
+//}
+
+void Entity::AddToRenderList(RenderList& list)
 {
-	window.draw(m_Body);
+	list.Rects.push_back(m_Body);
 }
 
 Vector2f Entity::GetPosition() const

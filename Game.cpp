@@ -4,6 +4,8 @@
 Game::Game()
 {	
 	m_Entities.push_back(new Player());
+	m_isRunning = true;
+	m_Dt = m_Spawntime = 0;
 }
 
 void Game::SpawnEnemy()
@@ -31,27 +33,44 @@ void Game::SpawnEnemy()
 
 void Game::GameUpdate(float dt)
 {
-	for (auto iter : m_Entities)
+	while (m_isRunning)		
 	{
-		iter->Update(dt);
-	}
-
-	for (Entity *outer : m_Entities)
-	{
-		for (Entity* inner : m_Entities)
+		m_DrawStarted.Wait();		
+		m_Spawntime += m_Dt;
+		if (m_Spawntime >= 2.f)
 		{
-			if (outer->GetGlobalBounds().findIntersection(inner->GetGlobalBounds()))
-			{
-				if (outer->Collided(inner))
-				{
-					m_DestroyedEntities.push_back(inner);
-				}				
-			}				
+			SpawnEnemy();
+			m_Spawntime = 0;
 		}
-	}	
-	Collision();
-}
+		for (auto& iter : m_Entities)
+		{
+			iter->Update(m_Dt);
+		}
 
+		for (Entity* outer : m_Entities)
+		{
+			for (Entity* inner : m_Entities)
+			{
+				if (outer->GetGlobalBounds().findIntersection(inner->GetGlobalBounds()))
+				{
+					if (outer->Collided(inner))
+					{
+						m_DestroyedEntities.push_back(inner);
+					}
+				}
+			}
+		}
+		Collision();
+		RenderList list;
+		for (auto& entity = m_Entities.rbegin(); entity != m_Entities.rend(); entity++)
+		{
+			(*entity)->AddToRenderList(list);
+		}
+		m_Lock.lock();
+		m_CurrentList = list;
+		m_Lock.unlock();
+	}	
+}
 void Game::Collision()
 {
 	for (Entity* entity : m_DestroyedEntities)
@@ -74,22 +93,10 @@ void Game::Collision()
 
 void Game::GameDraw()
 {
-	m_Window.clear(Color::Black);
-	for (auto iter = ++m_Entities.begin(); iter != m_Entities.end(); ++iter)
-	{
-		(*iter)->Draw(m_Window);
-	}
-	m_Entities[0]->Draw(m_Window);
-	m_Window.display();
-}
-
-void Game::Run()
-{
-	srand(time(NULL));
-	float dt, spawntime = 0;
 	while (m_Window.isOpen())
 	{
-		dt = m_Clock.getElapsedTime().asSeconds();
+		m_DrawStarted.Signal();
+		m_Dt = m_Clock.getElapsedTime().asSeconds();
 		m_Clock.restart();
 		Event event;
 		while (m_Window.pollEvent(event))
@@ -101,17 +108,27 @@ void Game::Run()
 					NormalizedVector(static_cast<Vector2f>(Mouse::getPosition(m_Window)) - m_Entities[0]->GetPosition())));
 			}
 		}
-		spawntime += dt;
-		if (spawntime >= 2.f)
+		RenderList list;
+		m_Lock.lock();
+		list = m_CurrentList;
+		m_Lock.unlock();
+		m_Window.clear(Color::Black);
+		for (auto& rect : list.Rects)
 		{
-			SpawnEnemy();
-			spawntime = 0;
+			m_Window.draw(rect);
 		}
-		thread updatethread([this, dt]
-			{
-				return this->GameUpdate(dt);
-			}); 
-		GameDraw();
-		updatethread.join();
-	}
+		m_Window.display();
+	}	
+	m_isRunning = false;
+}
+
+void Game::Run()
+{
+	srand(time(NULL));		
+	thread updatethread([this]
+		{
+			GameUpdate(m_Dt);
+		});
+	GameDraw();
+	updatethread.join();
 }

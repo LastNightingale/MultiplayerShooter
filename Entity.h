@@ -1,8 +1,14 @@
 #pragma once
 #include <SFML/Graphics.hpp>;
+#include <vector>
 #include <iostream>
 
 using namespace sf;
+
+struct RenderList
+{
+	std::vector<RectangleShape> Rects;
+};
 
 class Entity
 {
@@ -18,7 +24,8 @@ public:
 
 	virtual void Update(float dt);
 
-	void Draw(RenderWindow& window);
+	//void Draw(RenderWindow& window);
+	void AddToRenderList(RenderList& list);
 
 	Vector2f GetPosition() const;
 

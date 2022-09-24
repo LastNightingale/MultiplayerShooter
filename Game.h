@@ -7,6 +7,7 @@
 #include <mutex>
 #include <Windows.h>
 #include "GameMath.hpp"
+#include <SFML/Network.hpp>
 
 using namespace std;
 
@@ -46,9 +47,12 @@ private:
 	ProgramEvent m_DrawStarted;
 	mutex m_Lock;
 	Clock m_Clock;
+	sf::UdpSocket m_Socket;
+	unsigned short m_Port;
 	float m_Dt;
 	float m_Spawntime;
 	bool m_isRunning;
+	bool m_GameStarted = false;
 public:
 	Game();
 	void SpawnEnemy();

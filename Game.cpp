@@ -6,6 +6,9 @@ Game::Game()
 	m_Entities.push_back(new Player());
 	m_isRunning = true;
 	m_Dt = m_Spawntime = 0;
+	m_Port = 12500;
+	m_Socket.setBlocking(false);
+	m_Socket.bind(m_Port);
 }
 
 void Game::SpawnEnemy()
@@ -124,11 +127,23 @@ void Game::GameDraw()
 
 void Game::Run()
 {
-	srand(time(NULL));		
-	thread updatethread([this]
+	srand(time(NULL));	
+	while (true)
+	{
+		if (m_GameStarted)
 		{
-			GameUpdate(m_Dt);
-		});
-	GameDraw();
-	updatethread.join();
+			sf::Packet pack;
+			m_Socket.send(pack, IpAddress(127, 0, 0, 1), m_Port);
+			thread updatethread([this]
+				{
+					GameUpdate(m_Dt);
+				});
+			GameDraw();
+			updatethread.join();
+			sf::Packet packe;
+			IpAddress adr(127, 0, 0, 1);
+			if (m_Socket.receive(packe, std::optional<sf::IpAddress>(adr), m_Port) == Socket::Done)
+				packe >> m_GameStarted;
+		}
+	}
 }

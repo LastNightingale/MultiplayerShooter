@@ -13,4 +13,4 @@ GameMath.hpp
 Game.cpp
 Bullet.cpp)
 
-target_link_libraries(MultiplayerShooter sfml-system sfml-graphics) 
+target_link_libraries(MultiplayerShooter sfml-system sfml-graphics sfml-network) 

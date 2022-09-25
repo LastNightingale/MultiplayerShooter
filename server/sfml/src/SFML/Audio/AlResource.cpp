@@ -27,22 +27,21 @@
 ////////////////////////////////////////////////////////////
 #include <SFML/Audio/AlResource.hpp>
 #include <SFML/Audio/AudioDevice.hpp>
-
-#include <memory>
-#include <mutex>
+#include <SFML/System/Mutex.hpp>
+#include <SFML/System/Lock.hpp>
 
 
 namespace
 {
-// OpenAL resources counter and its mutex
-unsigned int         count = 0;
-std::recursive_mutex mutex;
+    // OpenAL resources counter and its mutex
+    unsigned int count = 0;
+    sf::Mutex mutex;
 
-// The audio device is instantiated on demand rather than at global startup,
-// which solves a lot of weird crashes and errors.
-// It is destroyed when it is no longer needed.
-std::unique_ptr<sf::priv::AudioDevice> globalDevice;
-} // namespace
+    // The audio device is instantiated on demand rather than at global startup,
+    // which solves a lot of weird crashes and errors.
+    // It is destroyed when it is no longer needed.
+    sf::priv::AudioDevice* globalDevice;
+}
 
 
 namespace sf
@@ -51,14 +50,14 @@ namespace sf
 AlResource::AlResource()
 {
     // Protect from concurrent access
-    std::scoped_lock lock(mutex);
+    Lock lock(mutex);
 
     // If this is the very first resource, trigger the global device initialization
     if (count == 0)
-        globalDevice = std::make_unique<priv::AudioDevice>();
+        globalDevice = new priv::AudioDevice;
 
     // Increment the resources counter
-    ++count;
+    count++;
 }
 
 
@@ -66,14 +65,14 @@ AlResource::AlResource()
 AlResource::~AlResource()
 {
     // Protect from concurrent access
-    std::scoped_lock lock(mutex);
+    Lock lock(mutex);
 
     // Decrement the resources counter
-    --count;
+    count--;
 
     // If there's no more resource alive, we can destroy the device
     if (count == 0)
-        globalDevice.reset();
+        delete globalDevice;
 }
 
 } // namespace sf

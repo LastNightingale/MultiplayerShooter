@@ -29,11 +29,10 @@
 // Headers
 ////////////////////////////////////////////////////////////
 #include <SFML/Graphics/Export.hpp>
-
 #include <SFML/Graphics/Drawable.hpp>
-#include <SFML/Graphics/Rect.hpp>
 #include <SFML/Graphics/Transformable.hpp>
 #include <SFML/Graphics/Vertex.hpp>
+#include <SFML/Graphics/Rect.hpp>
 
 
 namespace sf
@@ -48,6 +47,7 @@ class Texture;
 class SFML_GRAPHICS_API Sprite : public Drawable, public Transformable
 {
 public:
+
     ////////////////////////////////////////////////////////////
     /// \brief Default constructor
     ///
@@ -130,7 +130,7 @@ public:
     ////////////////////////////////////////////////////////////
     /// \brief Get the source texture of the sprite
     ///
-    /// If the sprite has no source texture, a null pointer is returned.
+    /// If the sprite has no source texture, a NULL pointer is returned.
     /// The returned pointer is const, which means that you can't
     /// modify the texture when you retrieve it with this function.
     ///
@@ -190,6 +190,7 @@ public:
     FloatRect getGlobalBounds() const;
 
 private:
+
     ////////////////////////////////////////////////////////////
     /// \brief Draw the sprite to a render target
     ///
@@ -197,7 +198,7 @@ private:
     /// \param states Current render states
     ///
     ////////////////////////////////////////////////////////////
-    void draw(RenderTarget& target, const RenderStates& states) const override;
+    virtual void draw(RenderTarget& target, RenderStates states) const;
 
     ////////////////////////////////////////////////////////////
     /// \brief Update the vertices' positions

@@ -29,21 +29,17 @@
 // Headers
 ////////////////////////////////////////////////////////////
 #include <SFML/System/Export.hpp>
+#include <SFML/System/Time.hpp>
 
 
 namespace sf
 {
-class Time;
-
 ////////////////////////////////////////////////////////////
 /// \ingroup system
 /// \brief Make the current thread sleep for a given duration
 ///
 /// sf::sleep is the best way to block a program or one of its
-/// threads, as it doesn't consume any CPU power. Compared to
-/// the standard std::this_thread::sleep_for function, this
-/// one provides more accurate sleeping time thanks to some
-/// platform-specific tweaks.
+/// threads, as it doesn't consume any CPU power.
 ///
 /// \param duration Time to sleep
 ///

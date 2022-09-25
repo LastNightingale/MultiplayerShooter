@@ -4,31 +4,24 @@
 ////////////////////////////////////////////////////////////
 #include <SFML/Window.hpp>
 
-#include <X11/Xlib.h>
 #define GLAD_GL_IMPLEMENTATION
 #include <gl.h>
 
-#include <array>
-#include <cmath>
-#include <cstdlib>
+#include <X11/Xlib.h>
 #include <iostream>
+#include <cmath>
+
 
 ////////////////////////////////////////////////////////////
 /// Initialize OpenGL states into the specified view
 ///
 /// \param Window Target window to initialize
 ///
-/// \return True if operation was successful, false otherwise
-///
 ////////////////////////////////////////////////////////////
-[[nodiscard]] bool initialize(sf::Window& window)
+void initialize(sf::Window& window)
 {
     // Activate the window
-    if (!window.setActive())
-    {
-        std::cerr << "Failed to set the window as active" << std::endl;
-        return false;
-    }
+    window.setActive();
 
     // Setup OpenGL states
     // Set color and depth clear value
@@ -48,7 +41,8 @@
     // Setup a perspective projection
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    float extent = std::tan(sf::degrees(45).asRadians());
+    static const float pi = 3.141592654f;
+    float extent = std::tan(90.0f * pi / 360.0f);
 
 #ifdef SFML_OPENGL_ES
     glFrustumf(-extent, extent, -extent, extent, 1.0f, 500.0f);
@@ -59,8 +53,6 @@
     // Enable position and texture coordinates vertex components
     glEnableClientState(GL_VERTEX_ARRAY);
     glEnableClientState(GL_COLOR_ARRAY);
-
-    return true;
 }
 
 ////////////////////////////////////////////////////////////
@@ -70,17 +62,11 @@
 /// \param window      Target window for rendering
 /// \param elapsedTime Time elapsed since the last draw
 ///
-/// \return True if operation was successful, false otherwise
-///
 ////////////////////////////////////////////////////////////
-[[nodiscard]] bool draw(sf::Window& window, float elapsedTime)
+void draw(sf::Window& window, float elapsedTime)
 {
     // Activate the window
-    if (!window.setActive())
-    {
-        std::cerr << "Failed to set the window as active" << std::endl;
-        return false;
-    }
+    window.setActive();
 
     // Clear color and depth buffers
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -94,8 +80,7 @@
     glRotatef(elapsedTime * 18.f, 0.f, 0.f, 1.f);
 
     // Define a 3D cube (6 faces made of 2 triangles composed by 3 vertices)
-    // clang-format off
-    constexpr std::array<GLfloat, 216> cube =
+    static const GLfloat cube[] =
     {
         // positions    // colors
         -50, -50, -50,  1, 1, 0,
@@ -140,14 +125,11 @@
          50, -50,  50,  0, 1, 1,
          50,  50,  50,  0, 1, 1
     };
-    // clang-format on
 
     // Draw the cube
-    glVertexPointer(3, GL_FLOAT, 6 * sizeof(GLfloat), cube.data());
-    glColorPointer(3, GL_FLOAT, 6 * sizeof(GLfloat), cube.data() + 3);
+    glVertexPointer(3, GL_FLOAT, 6 * sizeof(GLfloat), cube);
+    glColorPointer(3, GL_FLOAT, 6 * sizeof(GLfloat), cube + 3);
     glDrawArrays(GL_TRIANGLES, 0, 36);
-
-    return true;
 }
 
 
@@ -160,7 +142,7 @@
 int main()
 {
     // Open a connection with the X server
-    Display* display = XOpenDisplay(nullptr);
+    Display* display = XOpenDisplay(NULL);
     if (!display)
         return EXIT_FAILURE;
 
@@ -171,49 +153,31 @@ int main()
     XSetWindowAttributes attributes;
     attributes.background_pixel = BlackPixel(display, screen);
     attributes.event_mask       = KeyPressMask;
-    Window window               = XCreateWindow(display,
-                                  RootWindow(display, screen),
-                                  0,
-                                  0,
-                                  650,
-                                  330,
-                                  0,
+    Window window = XCreateWindow(display, RootWindow(display, screen),
+                                  0, 0, 650, 330, 0,
                                   DefaultDepth(display, screen),
                                   InputOutput,
                                   DefaultVisual(display, screen),
-                                  CWBackPixel | CWEventMask,
-                                  &attributes);
+                                  CWBackPixel | CWEventMask, &attributes);
     if (!window)
         return EXIT_FAILURE;
 
     // Set the window's name
-    XStoreName(display, window, "SFML Window");
+    XStoreName(display, window , "SFML Window");
 
     // Let's create the windows which will serve as containers for our SFML views
-    Window view1 = XCreateWindow(display,
-                                 window,
-                                 10,
-                                 10,
-                                 310,
-                                 310,
-                                 0,
+    Window view1 = XCreateWindow(display, window,
+                                 10, 10, 310, 310, 0,
                                  DefaultDepth(display, screen),
                                  InputOutput,
                                  DefaultVisual(display, screen),
-                                 0,
-                                 nullptr);
-    Window view2 = XCreateWindow(display,
-                                 window,
-                                 330,
-                                 10,
-                                 310,
-                                 310,
-                                 0,
+                                 0, NULL);
+    Window view2 = XCreateWindow(display, window,
+                                 330, 10, 310, 310, 0,
                                  DefaultDepth(display, screen),
                                  InputOutput,
                                  DefaultVisual(display, screen),
-                                 0,
-                                 nullptr);
+                                 0, NULL);
 
     // Show our windows
     XMapWindow(display, window);
@@ -227,11 +191,7 @@ int main()
     sf::Clock clock;
 
     // Load OpenGL or OpenGL ES entry points using glad
-    if (!sfmlView1.setActive())
-    {
-        std::cerr << "Failed to set view 1 as active" << std::endl;
-        return EXIT_FAILURE;
-    }
+    sfmlView1.setActive();
 
 #ifdef SFML_OPENGL_ES
     gladLoadGLES1(reinterpret_cast<GLADloadfunc>(sf::Context::getFunction));
@@ -240,17 +200,8 @@ int main()
 #endif
 
     // Initialize our views
-    if (!initialize(sfmlView1))
-    {
-        std::cerr << "Failed to initialize view 1" << std::endl;
-        return EXIT_FAILURE;
-    }
-
-    if (!initialize(sfmlView2))
-    {
-        std::cerr << "Failed to initialize view 2" << std::endl;
-        return EXIT_FAILURE;
-    }
+    initialize(sfmlView1);
+    initialize(sfmlView2);
 
     // Start the event loop
     bool running = true;
@@ -273,17 +224,8 @@ int main()
         }
 
         // Draw something into our views
-        if (!draw(sfmlView1, clock.getElapsedTime().asSeconds()))
-        {
-            std::cerr << "Failed to draw on view 1" << std::endl;
-            return EXIT_FAILURE;
-        }
-
-        if (!draw(sfmlView2, clock.getElapsedTime().asSeconds() * 0.3f))
-        {
-            std::cerr << "Failed to draw on view 2" << std::endl;
-            return EXIT_FAILURE;
-        }
+        draw(sfmlView1, clock.getElapsedTime().asSeconds());
+        draw(sfmlView2, clock.getElapsedTime().asSeconds() * 0.3f);
 
         // Display the views on screen
         sfmlView1.display();

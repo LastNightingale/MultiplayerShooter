@@ -2,19 +2,12 @@
 ////////////////////////////////////////////////////////////
 // Headers
 ////////////////////////////////////////////////////////////
-#include <array>
-#include <random>
-
 #include "Effect.hpp"
+#include <vector>
+#include <cmath>
 
 
-namespace
-{
-std::random_device rd;
-std::mt19937       rng(rd());
-} // namespace
-
-const sf::Font* Effect::s_font = nullptr;
+const sf::Font* Effect::s_font = NULL;
 
 ////////////////////////////////////////////////////////////
 // "Pixelate" fragment shader
@@ -22,11 +15,13 @@ const sf::Font* Effect::s_font = nullptr;
 class Pixelate : public Effect
 {
 public:
-    Pixelate() : Effect("Pixelate")
+
+    Pixelate() :
+    Effect("Pixelate")
     {
     }
 
-    bool onLoad() override
+    bool onLoad()
     {
         // Load the texture and initialize the sprite
         if (!m_texture.loadFromFile("resources/background.jpg"))
@@ -41,22 +36,22 @@ public:
         return true;
     }
 
-    void onUpdate(float, float x, float y) override
+    void onUpdate(float, float x, float y)
     {
         m_shader.setUniform("pixel_threshold", (x + y) / 30);
     }
 
-    void onDraw(sf::RenderTarget& target, const sf::RenderStates& states) const override
+    void onDraw(sf::RenderTarget& target, sf::RenderStates states) const
     {
-        sf::RenderStates statesCopy(states);
-        statesCopy.shader = &m_shader;
-        target.draw(m_sprite, statesCopy);
+        states.shader = &m_shader;
+        target.draw(m_sprite, states);
     }
 
 private:
+
     sf::Texture m_texture;
-    sf::Sprite  m_sprite;
-    sf::Shader  m_shader;
+    sf::Sprite m_sprite;
+    sf::Shader m_shader;
 };
 
 
@@ -66,35 +61,36 @@ private:
 class WaveBlur : public Effect
 {
 public:
-    WaveBlur() : Effect("Wave + Blur")
+
+    WaveBlur() :
+    Effect("Wave + Blur")
     {
     }
 
-    bool onLoad() override
+    bool onLoad()
     {
         // Create the text
-        m_text.setString(
-            "Praesent suscipit augue in velit pulvinar hendrerit varius purus aliquam.\n"
-            "Mauris mi odio, bibendum quis fringilla a, laoreet vel orci. Proin vitae vulputate tortor.\n"
-            "Praesent cursus ultrices justo, ut feugiat ante vehicula quis.\n"
-            "Donec fringilla scelerisque mauris et viverra.\n"
-            "Maecenas adipiscing ornare scelerisque. Nullam at libero elit.\n"
-            "Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas.\n"
-            "Nullam leo urna, tincidunt id semper eget, ultricies sed mi.\n"
-            "Morbi mauris massa, commodo id dignissim vel, lobortis et elit.\n"
-            "Fusce vel libero sed neque scelerisque venenatis.\n"
-            "Integer mattis tincidunt quam vitae iaculis.\n"
-            "Vivamus fringilla sem non velit venenatis fermentum.\n"
-            "Vivamus varius tincidunt nisi id vehicula.\n"
-            "Integer ullamcorper, enim vitae euismod rutrum, massa nisl semper ipsum,\n"
-            "vestibulum sodales sem ante in massa.\n"
-            "Vestibulum in augue non felis convallis viverra.\n"
-            "Mauris ultricies dolor sed massa convallis sed aliquet augue fringilla.\n"
-            "Duis erat eros, porta in accumsan in, blandit quis sem.\n"
-            "In hac habitasse platea dictumst. Etiam fringilla est id odio dapibus sit amet semper dui laoreet.\n");
+        m_text.setString("Praesent suscipit augue in velit pulvinar hendrerit varius purus aliquam.\n"
+                         "Mauris mi odio, bibendum quis fringilla a, laoreet vel orci. Proin vitae vulputate tortor.\n"
+                         "Praesent cursus ultrices justo, ut feugiat ante vehicula quis.\n"
+                         "Donec fringilla scelerisque mauris et viverra.\n"
+                         "Maecenas adipiscing ornare scelerisque. Nullam at libero elit.\n"
+                         "Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas.\n"
+                         "Nullam leo urna, tincidunt id semper eget, ultricies sed mi.\n"
+                         "Morbi mauris massa, commodo id dignissim vel, lobortis et elit.\n"
+                         "Fusce vel libero sed neque scelerisque venenatis.\n"
+                         "Integer mattis tincidunt quam vitae iaculis.\n"
+                         "Vivamus fringilla sem non velit venenatis fermentum.\n"
+                         "Vivamus varius tincidunt nisi id vehicula.\n"
+                         "Integer ullamcorper, enim vitae euismod rutrum, massa nisl semper ipsum,\n"
+                         "vestibulum sodales sem ante in massa.\n"
+                         "Vestibulum in augue non felis convallis viverra.\n"
+                         "Mauris ultricies dolor sed massa convallis sed aliquet augue fringilla.\n"
+                         "Duis erat eros, porta in accumsan in, blandit quis sem.\n"
+                         "In hac habitasse platea dictumst. Etiam fringilla est id odio dapibus sit amet semper dui laoreet.\n");
         m_text.setFont(getFont());
         m_text.setCharacterSize(22);
-        m_text.setPosition({30.f, 20.f});
+        m_text.setPosition(30, 20);
 
         // Load the shader
         if (!m_shader.loadFromFile("resources/wave.vert", "resources/blur.frag"))
@@ -103,22 +99,22 @@ public:
         return true;
     }
 
-    void onUpdate(float time, float x, float y) override
+    void onUpdate(float time, float x, float y)
     {
         m_shader.setUniform("wave_phase", time);
         m_shader.setUniform("wave_amplitude", sf::Vector2f(x * 40, y * 40));
         m_shader.setUniform("blur_radius", (x + y) * 0.008f);
     }
 
-    void onDraw(sf::RenderTarget& target, const sf::RenderStates& states) const override
+    void onDraw(sf::RenderTarget& target, sf::RenderStates states) const
     {
-        sf::RenderStates statesCopy(states);
-        statesCopy.shader = &m_shader;
-        target.draw(m_text, statesCopy);
+        states.shader = &m_shader;
+        target.draw(m_text, states);
     }
 
 private:
-    sf::Text   m_text;
+
+    sf::Text m_text;
     sf::Shader m_shader;
 };
 
@@ -129,25 +125,23 @@ private:
 class StormBlink : public Effect
 {
 public:
-    StormBlink() : Effect("Storm + Blink")
+
+    StormBlink() :
+    Effect("Storm + Blink")
     {
     }
 
-    bool onLoad() override
+    bool onLoad()
     {
-        std::uniform_real_distribution<float>        x_distribution(0, 800);
-        std::uniform_real_distribution<float>        y_distribution(0, 600);
-        std::uniform_int_distribution<std::uint16_t> color_distribution(0, 255);
-
         // Create the points
         m_points.setPrimitiveType(sf::Points);
         for (int i = 0; i < 40000; ++i)
         {
-            auto x = x_distribution(rng);
-            auto y = y_distribution(rng);
-            auto r = static_cast<std::uint8_t>(color_distribution(rng));
-            auto g = static_cast<std::uint8_t>(color_distribution(rng));
-            auto b = static_cast<std::uint8_t>(color_distribution(rng));
+            float x = static_cast<float>(std::rand() % 800);
+            float y = static_cast<float>(std::rand() % 600);
+            sf::Uint8 r = static_cast<sf::Uint8>(std::rand() % 255);
+            sf::Uint8 g = static_cast<sf::Uint8>(std::rand() % 255);
+            sf::Uint8 b = static_cast<sf::Uint8>(std::rand() % 255);
             m_points.append(sf::Vertex(sf::Vector2f(x, y), sf::Color(r, g, b)));
         }
 
@@ -158,7 +152,7 @@ public:
         return true;
     }
 
-    void onUpdate(float time, float x, float y) override
+    void onUpdate(float time, float x, float y)
     {
         float radius = 200 + std::cos(time) * 150;
         m_shader.setUniform("storm_position", sf::Vector2f(x * 800, y * 600));
@@ -167,16 +161,16 @@ public:
         m_shader.setUniform("blink_alpha", 0.5f + std::cos(time * 3) * 0.25f);
     }
 
-    void onDraw(sf::RenderTarget& target, const sf::RenderStates& states) const override
+    void onDraw(sf::RenderTarget& target, sf::RenderStates states) const
     {
-        sf::RenderStates statesCopy(states);
-        statesCopy.shader = &m_shader;
-        target.draw(m_points, statesCopy);
+        states.shader = &m_shader;
+        target.draw(m_points, states);
     }
 
 private:
+
     sf::VertexArray m_points;
-    sf::Shader      m_shader;
+    sf::Shader m_shader;
 };
 
 
@@ -186,14 +180,16 @@ private:
 class Edge : public Effect
 {
 public:
-    Edge() : Effect("Edge Post-effect")
+
+    Edge() :
+    Effect("Edge Post-effect")
     {
     }
 
-    bool onLoad() override
+    bool onLoad()
     {
         // Create the off-screen surface
-        if (!m_surface.create({800, 600}))
+        if (!m_surface.create(800, 600))
             return false;
         m_surface.setSmooth(true);
 
@@ -207,12 +203,12 @@ public:
 
         // Initialize the background sprite
         m_backgroundSprite.setTexture(m_backgroundTexture);
-        m_backgroundSprite.setPosition({135.f, 100.f});
+        m_backgroundSprite.setPosition(135, 100);
 
         // Load the moving entities
         for (int i = 0; i < 6; ++i)
         {
-            sf::Sprite entity(m_entityTexture, sf::IntRect({96 * i, 0}, {96, 96}));
+            sf::Sprite entity(m_entityTexture, sf::IntRect(96 * i, 0, 96, 96));
             m_entities.push_back(entity);
         }
 
@@ -224,7 +220,7 @@ public:
         return true;
     }
 
-    void onUpdate(float time, float x, float y) override
+    void onUpdate(float time, float x, float y)
     {
         m_shader.setUniform("edge_threshold", 1 - (x + y) / 2);
 
@@ -232,35 +228,33 @@ public:
         for (std::size_t i = 0; i < m_entities.size(); ++i)
         {
             sf::Vector2f position;
-            position.x = std::cos(0.25f * (time * static_cast<float>(i) + static_cast<float>(m_entities.size() - i))) * 300 +
-                         350;
-            position.y = std::sin(0.25f * (time * static_cast<float>(m_entities.size() - i) + static_cast<float>(i))) * 200 +
-                         250;
+            position.x = std::cos(0.25f * (time * static_cast<float>(i) + static_cast<float>(m_entities.size() - i))) * 300 + 350;
+            position.y = std::sin(0.25f * (time * static_cast<float>(m_entities.size() - i) + static_cast<float>(i))) * 200 + 250;
             m_entities[i].setPosition(position);
         }
 
         // Render the updated scene to the off-screen surface
         m_surface.clear(sf::Color::White);
         m_surface.draw(m_backgroundSprite);
-        for (const sf::Sprite& entity : m_entities)
-            m_surface.draw(entity);
+        for (std::size_t i = 0; i < m_entities.size(); ++i)
+            m_surface.draw(m_entities[i]);
         m_surface.display();
     }
 
-    void onDraw(sf::RenderTarget& target, const sf::RenderStates& states) const override
+    void onDraw(sf::RenderTarget& target, sf::RenderStates states) const
     {
-        sf::RenderStates statesCopy(states);
-        statesCopy.shader = &m_shader;
-        target.draw(sf::Sprite(m_surface.getTexture()), statesCopy);
+        states.shader = &m_shader;
+        target.draw(sf::Sprite(m_surface.getTexture()), states);
     }
 
 private:
-    sf::RenderTexture       m_surface;
-    sf::Texture             m_backgroundTexture;
-    sf::Texture             m_entityTexture;
-    sf::Sprite              m_backgroundSprite;
+
+    sf::RenderTexture m_surface;
+    sf::Texture m_backgroundTexture;
+    sf::Texture m_entityTexture;
+    sf::Sprite m_backgroundSprite;
     std::vector<sf::Sprite> m_entities;
-    sf::Shader              m_shader;
+    sf::Shader m_shader;
 };
 
 
@@ -270,18 +264,21 @@ private:
 class Geometry : public Effect
 {
 public:
-    Geometry() : Effect("Geometry Shader Billboards"), m_pointCloud(sf::Points, 10000)
+
+    Geometry() :
+        Effect("Geometry Shader Billboards"),
+        m_pointCloud(sf::Points, 10000)
     {
     }
 
-    bool onLoad() override
+    bool onLoad()
     {
         // Check if geometry shaders are supported
         if (!sf::Shader::isGeometryAvailable())
             return false;
 
         // Move the points in the point cloud to random positions
-        for (std::size_t i = 0; i < 10000; ++i)
+        for (std::size_t i = 0; i < 10000; i++)
         {
             // Spread the coordinates from -480 to +480
             // So they'll always fill the viewport at 800x600
@@ -304,14 +301,14 @@ public:
         return true;
     }
 
-    void onUpdate(float /*time*/, float x, float y) override
+    void onUpdate(float /*time*/, float x, float y)
     {
         // Reset our transformation matrix
         m_transform = sf::Transform::Identity;
         // Move to the center of the window
-        m_transform.translate({400.f, 300.f});
+        m_transform.translate(400, 300);
         // Rotate everything based on cursor position
-        m_transform.rotate(sf::degrees(x * 360.f));
+        m_transform.rotate(x * 360.f);
 
         // Adjust billboard size to scale between 25 and 75
         float size = 25 + std::abs(y) * 50;
@@ -320,23 +317,22 @@ public:
         m_shader.setUniform("size", sf::Vector2f(size, size));
     }
 
-    void onDraw(sf::RenderTarget& target, const sf::RenderStates& states) const override
+    void onDraw(sf::RenderTarget& target, sf::RenderStates states) const
     {
-        sf::RenderStates statesCopy(states);
-
         // Prepare the render state
-        statesCopy.shader    = &m_shader;
-        statesCopy.texture   = &m_logoTexture;
-        statesCopy.transform = m_transform;
+        states.shader = &m_shader;
+        states.texture = &m_logoTexture;
+        states.transform = m_transform;
 
         // Draw the point cloud
-        target.draw(m_pointCloud, statesCopy);
+        target.draw(m_pointCloud, states);
     }
 
 private:
-    sf::Texture     m_logoTexture;
-    sf::Transform   m_transform;
-    sf::Shader      m_shader;
+
+    sf::Texture m_logoTexture;
+    sf::Transform m_transform;
+    sf::Shader m_shader;
     sf::VertexArray m_pointCloud;
 };
 
@@ -350,7 +346,8 @@ private:
 int main()
 {
     // Create the main window
-    sf::RenderWindow window(sf::VideoMode({800, 600}), "SFML Shader", sf::Style::Titlebar | sf::Style::Close);
+    sf::RenderWindow window(sf::VideoMode(800, 600), "SFML Shader",
+                            sf::Style::Titlebar | sf::Style::Close);
     window.setVerticalSyncEnabled(true);
 
     // Load the application font and pass it to the Effect class
@@ -360,36 +357,34 @@ int main()
     Effect::setFont(font);
 
     // Create the effects
-    Pixelate   pixelateEffect;
-    WaveBlur   waveBlurEffect;
-    StormBlink stormBlinkEffect;
-    Edge       edgeEffect;
-    Geometry   geometryEffect;
-
-    const std::array<Effect*, 5> effects{&pixelateEffect, &waveBlurEffect, &stormBlinkEffect, &edgeEffect, &geometryEffect};
-
+    std::vector<Effect*> effects;
+    effects.push_back(new Pixelate);
+    effects.push_back(new WaveBlur);
+    effects.push_back(new StormBlink);
+    effects.push_back(new Edge);
+    effects.push_back(new Geometry);
     std::size_t current = 0;
 
     // Initialize them
-    for (Effect* effect : effects)
-        effect->load();
+    for (std::size_t i = 0; i < effects.size(); ++i)
+        effects[i]->load();
 
     // Create the messages background
     sf::Texture textBackgroundTexture;
     if (!textBackgroundTexture.loadFromFile("resources/text-background.png"))
         return EXIT_FAILURE;
     sf::Sprite textBackground(textBackgroundTexture);
-    textBackground.setPosition({0.f, 520.f});
+    textBackground.setPosition(0, 520);
     textBackground.setColor(sf::Color(255, 255, 255, 200));
 
     // Create the description text
     sf::Text description("Current effect: " + effects[current]->getName(), font, 20);
-    description.setPosition({10.f, 530.f});
+    description.setPosition(10, 530);
     description.setFillColor(sf::Color(80, 80, 80));
 
     // Create the instructions text
     sf::Text instructions("Press left and right arrows to change the current shader", font, 20);
-    instructions.setPosition({280.f, 555.f});
+    instructions.setPosition(280, 555);
     instructions.setFillColor(sf::Color(80, 80, 80));
 
     // Start the game loop
@@ -397,7 +392,8 @@ int main()
     while (window.isOpen())
     {
         // Process events
-        for (sf::Event event; window.pollEvent(event);)
+        sf::Event event;
+        while (window.pollEvent(event))
         {
             // Close window: exit
             if (event.type == sf::Event::Closed)
@@ -417,7 +413,7 @@ int main()
                         if (current == 0)
                             current = effects.size() - 1;
                         else
-                            --current;
+                            current--;
                         description.setString("Current effect: " + effects[current]->getName());
                         break;
 
@@ -426,7 +422,7 @@ int main()
                         if (current == effects.size() - 1)
                             current = 0;
                         else
-                            ++current;
+                            current++;
                         description.setString("Current effect: " + effects[current]->getName());
                         break;
 
@@ -442,12 +438,9 @@ int main()
         effects[current]->update(clock.getElapsedTime().asSeconds(), x, y);
 
         // Clear the window
-        if (effects[current]->getName() == "Edge Post-effect")
-        {
+        if(effects[current]->getName() == "Edge Post-effect"){
             window.clear(sf::Color::White);
-        }
-        else
-        {
+        } else {
             window.clear(sf::Color(50, 50, 50));
         }
 
@@ -462,6 +455,10 @@ int main()
         // Finally, display the rendered frame on screen
         window.display();
     }
+
+    // delete the effects
+    for (std::size_t i = 0; i < effects.size(); ++i)
+        delete effects[i];
 
     return EXIT_SUCCESS;
 }

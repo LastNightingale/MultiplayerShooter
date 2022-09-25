@@ -27,11 +27,9 @@
 ////////////////////////////////////////////////////////////
 #include <SFML/Network/Unix/SocketImpl.hpp>
 #include <SFML/System/Err.hpp>
-
-#include <cerrno>
-#include <cstring>
+#include <errno.h>
 #include <fcntl.h>
-#include <ostream>
+#include <cstring>
 
 
 namespace sf
@@ -39,7 +37,7 @@ namespace sf
 namespace priv
 {
 ////////////////////////////////////////////////////////////
-sockaddr_in SocketImpl::createAddress(std::uint32_t address, unsigned short port)
+sockaddr_in SocketImpl::createAddress(Uint32 address, unsigned short port)
 {
     sockaddr_in addr;
     std::memset(&addr, 0, sizeof(addr));
@@ -82,6 +80,7 @@ void SocketImpl::setBlocking(SocketHandle sock, bool block)
     {
         if (fcntl(sock, F_SETFL, status | O_NONBLOCK) == -1)
             err() << "Failed to set file status flags: " << errno << std::endl;
+
     }
 }
 
@@ -95,7 +94,6 @@ Socket::Status SocketImpl::getErrorStatus()
     if ((errno == EAGAIN) || (errno == EINPROGRESS))
         return Socket::NotReady;
 
-    // clang-format off
     switch (errno)
     {
         case EWOULDBLOCK:  return Socket::NotReady;
@@ -107,7 +105,6 @@ Socket::Status SocketImpl::getErrorStatus()
         case EPIPE:        return Socket::Disconnected;
         default:           return Socket::Error;
     }
-    // clang-format on
 }
 
 } // namespace priv

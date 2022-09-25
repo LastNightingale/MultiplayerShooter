@@ -27,21 +27,20 @@
 ////////////////////////////////////////////////////////////
 #include <SFML/Window/iOS/SFAppDelegate.hpp>
 #include <SFML/Window/iOS/SFMain.hpp>
-
 #include <vector>
 
 
 namespace
 {
-// Save the global instance of the delegate
-SFAppDelegate* delegateInstance = nullptr;
+    // Save the global instance of the delegate
+    SFAppDelegate* delegateInstance = NULL;
 
-// Current touches positions
-std::vector<sf::Vector2i> touchPositions;
+    // Current touches positions
+    std::vector<sf::Vector2i> touchPositions;
 }
 
 
-@interface SFAppDelegate ()
+@interface SFAppDelegate()
 
 @property (nonatomic) CMMotionManager* motionManager;
 
@@ -59,8 +58,8 @@ std::vector<sf::Vector2i> touchPositions;
 {
     NSAssert(delegateInstance,
              @"SFAppDelegate instance is nil, this means SFML was not properly initialized. "
-              "Make sure that the file defining your main() function includes <SFML/Main.hpp>");
-
+             "Make sure that the file defining your main() function includes <SFML/Main.hpp>");
+    
     return delegateInstance;
 }
 
@@ -69,12 +68,12 @@ std::vector<sf::Vector2i> touchPositions;
 - (void)runUserMain
 {
     // Arguments intentionally dropped, see comments in main in sfml-main
-    sfmlMain(0, nullptr);
+    sfmlMain(0, NULL);
 }
 
 
 ////////////////////////////////////////////////////////////
-- (BOOL)application:(UIApplication*)application didFinishLaunchingWithOptions:(NSDictionary*)launchOptions
+- (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
 {
     // Save the delegate instance
     delegateInstance = self;
@@ -86,14 +85,10 @@ std::vector<sf::Vector2i> touchPositions;
 
     // Register orientation changes notifications
     [[UIDevice currentDevice] beginGeneratingDeviceOrientationNotifications];
-    [[NSNotificationCenter defaultCenter]
-        addObserver:self
-           selector:@selector(deviceOrientationDidChange:)
-               name:UIDeviceOrientationDidChangeNotification
-             object:nil];
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(deviceOrientationDidChange:) name:UIDeviceOrientationDidChangeNotification object: nil];
 
     // Change the working directory to the resources directory
-    [[NSFileManager defaultManager] changeCurrentDirectoryPath:[[NSBundle mainBundle] resourcePath]];
+    [[NSFileManager defaultManager] changeCurrentDirectoryPath: [[NSBundle mainBundle] resourcePath]];
 
     // Schedule an indirect call to the user main, so that this call (and the whole
     // init sequence) can end, and the default splashscreen can be destroyed
@@ -105,14 +100,14 @@ std::vector<sf::Vector2i> touchPositions;
 - (void)initBackingScale
 {
     id data = [[NSBundle mainBundle] objectForInfoDictionaryKey:@"NSHighResolutionCapable"];
-    if (data && [data boolValue])
+    if(data && [data boolValue])
         backingScaleFactor = [[UIScreen mainScreen] scale];
     else
         backingScaleFactor = 1;
 }
 
 ////////////////////////////////////////////////////////////
-- (void)applicationWillResignActive:(UIApplication*)application
+- (void)applicationWillResignActive:(UIApplication *)application
 {
     // Called when:
     // - the application is sent to background
@@ -129,14 +124,14 @@ std::vector<sf::Vector2i> touchPositions;
 
 
 ////////////////////////////////////////////////////////////
-- (void)applicationDidEnterBackground:(UIApplication*)application
+- (void)applicationDidEnterBackground:(UIApplication *)application
 {
     // Called when the application is sent to background (home button pressed)
 }
 
 
 ////////////////////////////////////////////////////////////
-- (void)applicationDidBecomeActive:(UIApplication*)application
+- (void)applicationDidBecomeActive:(UIApplication *)application
 {
     // Called when:
     // - the application is sent to foreground
@@ -153,14 +148,14 @@ std::vector<sf::Vector2i> touchPositions;
 
 
 ////////////////////////////////////////////////////////////
-- (void)applicationWillEnterForeground:(UIApplication*)application
+- (void)applicationWillEnterForeground:(UIApplication *)application
 {
     // Called when the application is sent to foreground (app icon pressed)
 }
 
 
 ////////////////////////////////////////////////////////////
-- (void)applicationWillTerminate:(UIApplication*)application
+- (void)applicationWillTerminate:(UIApplication *)application
 {
     // Generate a Closed event
     if (self.sfWindow)
@@ -176,18 +171,30 @@ std::vector<sf::Vector2i> touchPositions;
     if (!self.sfWindow)
         return false;
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wold-style-cast"
+#if defined(__APPLE__)
+    #if defined(__clang__)
+        #pragma clang diagnostic push
+        #pragma clang diagnostic ignored "-Wold-style-cast"
+    #elif defined(__GNUC__)
+        #pragma GCC diagnostic push
+        #pragma GCC diagnostic ignored "-Wold-style-cast"
+    #endif
+#endif
 
     UIViewController* rootViewController = [((__bridge UIWindow*)(self.sfWindow->getSystemHandle())) rootViewController];
 
-#pragma GCC diagnostic pop
+#if defined(__APPLE__)
+    #if defined(__clang__)
+        #pragma clang diagnostic pop
+    #elif defined(__GNUC__)
+        #pragma GCC diagnostic pop
+    #endif
+#endif
 
     if (!rootViewController || ![rootViewController shouldAutorotate])
         return false;
 
-    NSArray* supportedOrientations = [[NSBundle mainBundle]
-        objectForInfoDictionaryKey:@"UISupportedInterfaceOrientations"];
+    NSArray *supportedOrientations = [[NSBundle mainBundle] objectForInfoDictionaryKey:@"UISupportedInterfaceOrientations"];
     if (!supportedOrientations)
         return (1 << orientation) & [rootViewController supportedInterfaceOrientations];
 
@@ -207,12 +214,12 @@ std::vector<sf::Vector2i> touchPositions;
 - (bool)needsToFlipFrameForOrientation:(UIDeviceOrientation)orientation
 {
     sf::Vector2u size = self.sfWindow->getSize();
-    return ((!UIDeviceOrientationIsLandscape(orientation) && size.x > size.y) ||
-            (UIDeviceOrientationIsLandscape(orientation) && size.y > size.x));
+    return ((!UIDeviceOrientationIsLandscape(orientation) && size.x > size.y)
+            || (UIDeviceOrientationIsLandscape(orientation) && size.y > size.x));
 }
 
 ////////////////////////////////////////////////////////////
-- (void)deviceOrientationDidChange:(NSNotification*)notification
+- (void)deviceOrientationDidChange:(NSNotification *)notification
 {
     if (self.sfWindow)
     {
@@ -229,8 +236,8 @@ std::vector<sf::Vector2i> touchPositions;
 
             // Send a Resized event to the current window
             sf::Event event;
-            event.type        = sf::Event::Resized;
-            event.size.width  = size.x;
+            event.type = sf::Event::Resized;
+            event.size.width = size.x;
             event.size.height = size.y;
             sfWindow->forwardEvent(event);
         }
@@ -270,10 +277,10 @@ std::vector<sf::Vector2i> touchPositions;
     if (self.sfWindow)
     {
         sf::Event event;
-        event.type         = sf::Event::TouchBegan;
+        event.type = sf::Event::TouchBegan;
         event.touch.finger = index;
-        event.touch.x      = position.x;
-        event.touch.y      = position.y;
+        event.touch.x = position.x;
+        event.touch.y = position.y;
         sfWindow->forwardEvent(event);
     }
 }
@@ -294,10 +301,10 @@ std::vector<sf::Vector2i> touchPositions;
     if (self.sfWindow)
     {
         sf::Event event;
-        event.type         = sf::Event::TouchMoved;
+        event.type = sf::Event::TouchMoved;
         event.touch.finger = index;
-        event.touch.x      = position.x;
-        event.touch.y      = position.y;
+        event.touch.x = position.x;
+        event.touch.y = position.y;
         sfWindow->forwardEvent(event);
     }
 }
@@ -314,22 +321,22 @@ std::vector<sf::Vector2i> touchPositions;
     if (self.sfWindow)
     {
         sf::Event event;
-        event.type         = sf::Event::TouchEnded;
+        event.type = sf::Event::TouchEnded;
         event.touch.finger = index;
-        event.touch.x      = position.x * static_cast<int>(backingScaleFactor);
-        event.touch.y      = position.y * static_cast<int>(backingScaleFactor);
+        event.touch.x = position.x * static_cast<int>(backingScaleFactor);
+        event.touch.y = position.y * static_cast<int>(backingScaleFactor);
         sfWindow->forwardEvent(event);
     }
 }
 
 
 ////////////////////////////////////////////////////////////
-- (void)notifyCharacter:(std::uint32_t)character
+- (void)notifyCharacter:(sf::Uint32)character
 {
     if (self.sfWindow)
     {
         sf::Event event;
-        event.type         = sf::Event::TextEntered;
+        event.type = sf::Event::TextEntered;
         event.text.unicode = character;
         sfWindow->forwardEvent(event);
     }

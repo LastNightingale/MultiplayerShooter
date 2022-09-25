@@ -39,6 +39,7 @@ void JoystickImpl::initialize()
 }
 
 
+
 ////////////////////////////////////////////////////////////
 void JoystickImpl::cleanup()
 {

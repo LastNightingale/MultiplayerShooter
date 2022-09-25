@@ -27,136 +27,124 @@
 ////////////////////////////////////////////////////////////
 #include <SFML/Graphics/Font.hpp>
 #include <SFML/Graphics/GLCheck.hpp>
-#include <SFML/Graphics/Image.hpp>
 #ifdef SFML_SYSTEM_ANDROID
-#include <SFML/System/Android/ResourceStream.hpp>
+    #include <SFML/System/Android/ResourceStream.hpp>
 #endif
-#include <SFML/System/Err.hpp>
 #include <SFML/System/InputStream.hpp>
-#include <SFML/System/Utils.hpp>
-
+#include <SFML/System/Err.hpp>
 #include <ft2build.h>
 #include FT_FREETYPE_H
 #include FT_GLYPH_H
 #include FT_OUTLINE_H
 #include FT_BITMAP_H
 #include FT_STROKER_H
-#include <cmath>
 #include <cstdlib>
 #include <cstring>
-#include <ostream>
-#include <type_traits>
+#include <cmath>
 
 
 namespace
 {
-// FreeType callbacks that operate on a sf::InputStream
-unsigned long read(FT_Stream rec, unsigned long offset, unsigned char* buffer, unsigned long count)
-{
-    auto  convertedOffset = static_cast<std::int64_t>(offset);
-    auto* stream          = static_cast<sf::InputStream*>(rec->descriptor.pointer);
-    if (stream->seek(convertedOffset) == convertedOffset)
+    // FreeType callbacks that operate on a sf::InputStream
+    unsigned long read(FT_Stream rec, unsigned long offset, unsigned char* buffer, unsigned long count)
     {
-        if (count > 0)
-            return static_cast<unsigned long>(
-                stream->read(reinterpret_cast<char*>(buffer), static_cast<std::int64_t>(count)));
+        sf::Int64 convertedOffset = static_cast<sf::Int64>(offset);
+        sf::InputStream* stream = static_cast<sf::InputStream*>(rec->descriptor.pointer);
+        if (stream->seek(convertedOffset) == convertedOffset)
+        {
+            if (count > 0)
+                return static_cast<unsigned long>(stream->read(reinterpret_cast<char*>(buffer), static_cast<sf::Int64>(count)));
+            else
+                return 0;
+        }
         else
-            return 0;
+            return count > 0 ? 0 : 1; // error code is 0 if we're reading, or nonzero if we're seeking
     }
-    else
-        return count > 0 ? 0 : 1; // error code is 0 if we're reading, or nonzero if we're seeking
-}
-void close(FT_Stream)
-{
-}
+    void close(FT_Stream)
+    {
+    }
 
-// Helper to intepret memory as a specific type
-template <typename T, typename U>
-inline T reinterpret(const U& input)
-{
-    T output;
-    std::memcpy(&output, &input, sizeof(U));
-    return output;
-}
+    // Helper to intepret memory as a specific type
+    template <typename T, typename U>
+    inline T reinterpret(const U& input)
+    {
+        T output;
+        std::memcpy(&output, &input, sizeof(U));
+        return output;
+    }
 
-// Combine outline thickness, boldness and font glyph index into a single 64-bit key
-std::uint64_t combine(float outlineThickness, bool bold, std::uint32_t index)
-{
-    return (static_cast<std::uint64_t>(reinterpret<std::uint32_t>(outlineThickness)) << 32) |
-           (static_cast<std::uint64_t>(bold) << 31) | index;
+    // Combine outline thickness, boldness and font glyph index into a single 64-bit key
+    sf::Uint64 combine(float outlineThickness, bool bold, sf::Uint32 index)
+    {
+        return (static_cast<sf::Uint64>(reinterpret<sf::Uint32>(outlineThickness)) << 32) | (static_cast<sf::Uint64>(bold) << 31) | index;
+    }
 }
-} // namespace
 
 
 namespace sf
 {
 ////////////////////////////////////////////////////////////
-class Font::FontHandles
+Font::Font() :
+m_library  (NULL),
+m_face     (NULL),
+m_streamRec(NULL),
+m_stroker  (NULL),
+m_refCount (NULL),
+m_isSmooth (true),
+m_info     ()
 {
-private:
-    // Default constructible deleter functor
-    struct Deleter
-    {
-        void operator()(FT_Library theLibrary)
-        {
-            FT_Done_FreeType(theLibrary);
-        }
-        void operator()(FT_Face theFace)
-        {
-            FT_Done_Face(theFace);
-        }
-        void operator()(FT_Stroker theStroker)
-        {
-            FT_Stroker_Done(theStroker);
-        }
-    };
-
-public:
-    std::unique_ptr<std::remove_pointer_t<FT_Library>, Deleter> library;   //< Pointer to the internal library interface
-    std::unique_ptr<FT_StreamRec>                               streamRec; //< Pointer to the stream rec instance
-    std::unique_ptr<std::remove_pointer_t<FT_Face>, Deleter>    face;      //< Pointer to the internal font face
-    std::unique_ptr<std::remove_pointer_t<FT_Stroker>, Deleter> stroker;   //< Pointer to the stroker
-};
-
-
-////////////////////////////////////////////////////////////
-Font::Font() : m_fontHandles(), m_isSmooth(true), m_info()
-{
+    #ifdef SFML_SYSTEM_ANDROID
+        m_stream = NULL;
+    #endif
 }
 
 
 ////////////////////////////////////////////////////////////
 Font::Font(const Font& copy) :
-m_fontHandles(copy.m_fontHandles),
-m_isSmooth(copy.m_isSmooth),
-m_info(copy.m_info),
-m_pages(copy.m_pages),
+m_library    (copy.m_library),
+m_face       (copy.m_face),
+m_streamRec  (copy.m_streamRec),
+m_stroker    (copy.m_stroker),
+m_refCount   (copy.m_refCount),
+m_isSmooth   (copy.m_isSmooth),
+m_info       (copy.m_info),
+m_pages      (copy.m_pages),
 m_pixelBuffer(copy.m_pixelBuffer)
 {
+    #ifdef SFML_SYSTEM_ANDROID
+        m_stream = NULL;
+    #endif
+
+    // Note: as FreeType doesn't provide functions for copying/cloning,
+    // we must share all the FreeType pointers
+
+    if (m_refCount)
+        (*m_refCount)++;
 }
 
 
 ////////////////////////////////////////////////////////////
-Font::~Font() = default;
-
-
-////////////////////////////////////////////////////////////
-Font::Font(Font&&) noexcept = default;
-
-
-////////////////////////////////////////////////////////////
-Font& Font::operator=(Font&&) noexcept = default;
-
-
-////////////////////////////////////////////////////////////
-bool Font::loadFromFile(const std::filesystem::path& filename)
+Font::~Font()
 {
-#ifndef SFML_SYSTEM_ANDROID
+    cleanup();
+
+    #ifdef SFML_SYSTEM_ANDROID
+
+    if (m_stream)
+        delete static_cast<priv::ResourceStream*>(m_stream);
+
+    #endif
+}
+
+
+////////////////////////////////////////////////////////////
+bool Font::loadFromFile(const std::string& filename)
+{
+    #ifndef SFML_SYSTEM_ANDROID
 
     // Cleanup the previous resources
     cleanup();
-
-    auto fontHandles = std::make_unique<FontHandles>();
+    m_refCount = new int(1);
 
     // Initialize FreeType
     // Note: we initialize FreeType for every font instance in order to avoid having a single
@@ -164,51 +152,55 @@ bool Font::loadFromFile(const std::filesystem::path& filename)
     FT_Library library;
     if (FT_Init_FreeType(&library) != 0)
     {
-        err() << "Failed to load font (failed to initialize FreeType)\n" << formatDebugPathInfo(filename) << std::endl;
+        err() << "Failed to load font \"" << filename << "\" (failed to initialize FreeType)" << std::endl;
         return false;
     }
-    fontHandles->library.reset(library);
+    m_library = library;
 
     // Load the new font face from the specified file
     FT_Face face;
-    if (FT_New_Face(library, filename.string().c_str(), 0, &face) != 0)
+    if (FT_New_Face(static_cast<FT_Library>(m_library), filename.c_str(), 0, &face) != 0)
     {
-        err() << "Failed to load font (failed to create the font face)\n" << formatDebugPathInfo(filename) << std::endl;
+        err() << "Failed to load font \"" << filename << "\" (failed to create the font face)" << std::endl;
         return false;
     }
-    fontHandles->face.reset(face);
 
     // Load the stroker that will be used to outline the font
     FT_Stroker stroker;
-    if (FT_Stroker_New(library, &stroker) != 0)
+    if (FT_Stroker_New(static_cast<FT_Library>(m_library), &stroker) != 0)
     {
-        err() << "Failed to load font (failed to create the stroker)\n" << formatDebugPathInfo(filename) << std::endl;
+        err() << "Failed to load font \"" << filename << "\" (failed to create the stroker)" << std::endl;
+        FT_Done_Face(face);
         return false;
     }
-    fontHandles->stroker.reset(stroker);
 
     // Select the unicode character map
     if (FT_Select_Charmap(face, FT_ENCODING_UNICODE) != 0)
     {
-        err() << "Failed to load font (failed to set the Unicode character set)\n"
-              << formatDebugPathInfo(filename) << std::endl;
+        err() << "Failed to load font \"" << filename << "\" (failed to set the Unicode character set)" << std::endl;
+        FT_Stroker_Done(stroker);
+        FT_Done_Face(face);
         return false;
     }
 
-    // Store the loaded font handles
-    m_fontHandles = std::move(fontHandles);
+    // Store the loaded font in our ugly void* :)
+    m_stroker = stroker;
+    m_face = face;
 
     // Store the font information
     m_info.family = face->family_name ? face->family_name : std::string();
 
     return true;
 
-#else
+    #else
 
-    m_stream = std::make_unique<priv::ResourceStream>(filename);
-    return loadFromStream(*m_stream);
+    if (m_stream)
+        delete static_cast<priv::ResourceStream*>(m_stream);
 
-#endif
+    m_stream = new priv::ResourceStream(filename);
+    return loadFromStream(*static_cast<priv::ResourceStream*>(m_stream));
+
+    #endif
 }
 
 
@@ -217,8 +209,7 @@ bool Font::loadFromMemory(const void* data, std::size_t sizeInBytes)
 {
     // Cleanup the previous resources
     cleanup();
-
-    auto fontHandles = std::make_unique<FontHandles>();
+    m_refCount = new int(1);
 
     // Initialize FreeType
     // Note: we initialize FreeType for every font instance in order to avoid having a single
@@ -229,35 +220,37 @@ bool Font::loadFromMemory(const void* data, std::size_t sizeInBytes)
         err() << "Failed to load font from memory (failed to initialize FreeType)" << std::endl;
         return false;
     }
-    fontHandles->library.reset(library);
+    m_library = library;
 
     // Load the new font face from the specified file
     FT_Face face;
-    if (FT_New_Memory_Face(library, reinterpret_cast<const FT_Byte*>(data), static_cast<FT_Long>(sizeInBytes), 0, &face) != 0)
+    if (FT_New_Memory_Face(static_cast<FT_Library>(m_library), reinterpret_cast<const FT_Byte*>(data), static_cast<FT_Long>(sizeInBytes), 0, &face) != 0)
     {
         err() << "Failed to load font from memory (failed to create the font face)" << std::endl;
         return false;
     }
-    fontHandles->face.reset(face);
 
     // Load the stroker that will be used to outline the font
     FT_Stroker stroker;
-    if (FT_Stroker_New(library, &stroker) != 0)
+    if (FT_Stroker_New(static_cast<FT_Library>(m_library), &stroker) != 0)
     {
         err() << "Failed to load font from memory (failed to create the stroker)" << std::endl;
+        FT_Done_Face(face);
         return false;
     }
-    fontHandles->stroker.reset(stroker);
 
     // Select the Unicode character map
     if (FT_Select_Charmap(face, FT_ENCODING_UNICODE) != 0)
     {
         err() << "Failed to load font from memory (failed to set the Unicode character set)" << std::endl;
+        FT_Stroker_Done(stroker);
+        FT_Done_Face(face);
         return false;
     }
 
-    // Store the loaded font handles
-    m_fontHandles = std::move(fontHandles);
+    // Store the loaded font in our ugly void* :)
+    m_stroker = stroker;
+    m_face = face;
 
     // Store the font information
     m_info.family = face->family_name ? face->family_name : std::string();
@@ -271,8 +264,7 @@ bool Font::loadFromStream(InputStream& stream)
 {
     // Cleanup the previous resources
     cleanup();
-
-    auto fontHandles = std::make_unique<FontHandles>();
+    m_refCount = new int(1);
 
     // Initialize FreeType
     // Note: we initialize FreeType for every font instance in order to avoid having a single
@@ -283,58 +275,60 @@ bool Font::loadFromStream(InputStream& stream)
         err() << "Failed to load font from stream (failed to initialize FreeType)" << std::endl;
         return false;
     }
-    fontHandles->library.reset(library);
+    m_library = library;
 
     // Make sure that the stream's reading position is at the beginning
-    if (stream.seek(0) == -1)
-    {
-        err() << "Failed to seek font stream" << std::endl;
-        return false;
-    }
+    stream.seek(0);
 
     // Prepare a wrapper for our stream, that we'll pass to FreeType callbacks
-    fontHandles->streamRec = std::make_unique<FT_StreamRec>();
-    std::memset(fontHandles->streamRec.get(), 0, sizeof(*fontHandles->streamRec));
-    fontHandles->streamRec->base               = nullptr;
-    fontHandles->streamRec->size               = static_cast<unsigned long>(stream.getSize());
-    fontHandles->streamRec->pos                = 0;
-    fontHandles->streamRec->descriptor.pointer = &stream;
-    fontHandles->streamRec->read               = &read;
-    fontHandles->streamRec->close              = &close;
+    FT_StreamRec* rec = new FT_StreamRec;
+    std::memset(rec, 0, sizeof(*rec));
+    rec->base               = NULL;
+    rec->size               = static_cast<unsigned long>(stream.getSize());
+    rec->pos                = 0;
+    rec->descriptor.pointer = &stream;
+    rec->read               = &read;
+    rec->close              = &close;
 
     // Setup the FreeType callbacks that will read our stream
     FT_Open_Args args;
     args.flags  = FT_OPEN_STREAM;
-    args.stream = fontHandles->streamRec.get();
-    args.driver = nullptr;
+    args.stream = rec;
+    args.driver = 0;
 
     // Load the new font face from the specified stream
     FT_Face face;
-    if (FT_Open_Face(library, &args, 0, &face) != 0)
+    if (FT_Open_Face(static_cast<FT_Library>(m_library), &args, 0, &face) != 0)
     {
         err() << "Failed to load font from stream (failed to create the font face)" << std::endl;
+        delete rec;
         return false;
     }
-    fontHandles->face.reset(face);
 
     // Load the stroker that will be used to outline the font
     FT_Stroker stroker;
-    if (FT_Stroker_New(library, &stroker) != 0)
+    if (FT_Stroker_New(static_cast<FT_Library>(m_library), &stroker) != 0)
     {
         err() << "Failed to load font from stream (failed to create the stroker)" << std::endl;
+        FT_Done_Face(face);
+        delete rec;
         return false;
     }
-    fontHandles->stroker.reset(stroker);
 
     // Select the Unicode character map
     if (FT_Select_Charmap(face, FT_ENCODING_UNICODE) != 0)
     {
         err() << "Failed to load font from stream (failed to set the Unicode character set)" << std::endl;
+        FT_Done_Face(face);
+        FT_Stroker_Done(stroker);
+        delete rec;
         return false;
     }
 
-    // Store the loaded font handles
-    m_fontHandles = std::move(fontHandles);
+    // Store the loaded font in our ugly void* :)
+    m_stroker = stroker;
+    m_face = face;
+    m_streamRec = rec;
 
     // Store the font information
     m_info.family = face->family_name ? face->family_name : std::string();
@@ -351,18 +345,17 @@ const Font::Info& Font::getInfo() const
 
 
 ////////////////////////////////////////////////////////////
-const Glyph& Font::getGlyph(std::uint32_t codePoint, unsigned int characterSize, bool bold, float outlineThickness) const
+const Glyph& Font::getGlyph(Uint32 codePoint, unsigned int characterSize, bool bold, float outlineThickness) const
 {
     // Get the page corresponding to the character size
     GlyphTable& glyphs = loadPage(characterSize).glyphs;
 
     // Build the key by combining the glyph index (based on code point), bold flag, and outline thickness
-    std::uint64_t key = combine(outlineThickness,
-                                bold,
-                                FT_Get_Char_Index(m_fontHandles ? m_fontHandles->face.get() : nullptr, codePoint));
+    Uint64 key = combine(outlineThickness, bold, FT_Get_Char_Index(static_cast<FT_Face>(m_face), codePoint));
 
     // Search the glyph into the cache
-    if (auto it = glyphs.find(key); it != glyphs.end())
+    GlyphTable::const_iterator it = glyphs.find(key);
+    if (it != glyphs.end())
     {
         // Found: just return it
         return it->second;
@@ -371,26 +364,26 @@ const Glyph& Font::getGlyph(std::uint32_t codePoint, unsigned int characterSize,
     {
         // Not found: we have to load it
         Glyph glyph = loadGlyph(codePoint, characterSize, bold, outlineThickness);
-        return glyphs.emplace(key, glyph).first->second;
+        return glyphs.insert(std::make_pair(key, glyph)).first->second;
     }
 }
 
 
 ////////////////////////////////////////////////////////////
-bool Font::hasGlyph(std::uint32_t codePoint) const
+bool Font::hasGlyph(Uint32 codePoint) const
 {
-    return FT_Get_Char_Index(m_fontHandles ? m_fontHandles->face.get() : nullptr, codePoint) != 0;
+    return FT_Get_Char_Index(static_cast<FT_Face>(m_face), codePoint) != 0;
 }
 
 
 ////////////////////////////////////////////////////////////
-float Font::getKerning(std::uint32_t first, std::uint32_t second, unsigned int characterSize, bool bold) const
+float Font::getKerning(Uint32 first, Uint32 second, unsigned int characterSize, bool bold) const
 {
     // Special case where first or second is 0 (null character)
     if (first == 0 || second == 0)
         return 0.f;
 
-    auto face = m_fontHandles ? m_fontHandles->face.get() : nullptr;
+    FT_Face face = static_cast<FT_Face>(m_face);
 
     if (face && setCurrentSize(characterSize))
     {
@@ -399,8 +392,8 @@ float Font::getKerning(std::uint32_t first, std::uint32_t second, unsigned int c
         FT_UInt index2 = FT_Get_Char_Index(face, second);
 
         // Retrieve position compensation deltas generated by FT_LOAD_FORCE_AUTOHINT flag
-        auto firstRsbDelta  = static_cast<float>(getGlyph(first, characterSize, bold).rsbDelta);
-        auto secondLsbDelta = static_cast<float>(getGlyph(second, characterSize, bold).lsbDelta);
+        float firstRsbDelta = static_cast<float>(getGlyph(first, characterSize, bold).rsbDelta);
+        float secondLsbDelta = static_cast<float>(getGlyph(second, characterSize, bold).lsbDelta);
 
         // Get the kerning vector if present
         FT_Vector kerning;
@@ -414,8 +407,7 @@ float Font::getKerning(std::uint32_t first, std::uint32_t second, unsigned int c
 
         // Combine kerning with compensation deltas and return the X advance
         // Flooring is required as we use FT_KERNING_UNFITTED flag which is not quantized in 64 based grid
-        return std::floor(
-            (secondLsbDelta - firstRsbDelta + static_cast<float>(kerning.x) + 32) / static_cast<float>(1 << 6));
+        return std::floor((secondLsbDelta - firstRsbDelta + static_cast<float>(kerning.x) + 32) / static_cast<float>(1 << 6));
     }
     else
     {
@@ -428,7 +420,7 @@ float Font::getKerning(std::uint32_t first, std::uint32_t second, unsigned int c
 ////////////////////////////////////////////////////////////
 float Font::getLineSpacing(unsigned int characterSize) const
 {
-    auto face = m_fontHandles ? m_fontHandles->face.get() : nullptr;
+    FT_Face face = static_cast<FT_Face>(m_face);
 
     if (face && setCurrentSize(characterSize))
     {
@@ -444,7 +436,7 @@ float Font::getLineSpacing(unsigned int characterSize) const
 ////////////////////////////////////////////////////////////
 float Font::getUnderlinePosition(unsigned int characterSize) const
 {
-    auto face = m_fontHandles ? m_fontHandles->face.get() : nullptr;
+    FT_Face face = static_cast<FT_Face>(m_face);
 
     if (face && setCurrentSize(characterSize))
     {
@@ -452,8 +444,7 @@ float Font::getUnderlinePosition(unsigned int characterSize) const
         if (!FT_IS_SCALABLE(face))
             return static_cast<float>(characterSize) / 10.f;
 
-        return -static_cast<float>(FT_MulFix(face->underline_position, face->size->metrics.y_scale)) /
-               static_cast<float>(1 << 6);
+        return -static_cast<float>(FT_MulFix(face->underline_position, face->size->metrics.y_scale)) / static_cast<float>(1 << 6);
     }
     else
     {
@@ -465,7 +456,7 @@ float Font::getUnderlinePosition(unsigned int characterSize) const
 ////////////////////////////////////////////////////////////
 float Font::getUnderlineThickness(unsigned int characterSize) const
 {
-    auto face = m_fontHandles ? m_fontHandles->face.get() : nullptr;
+    FT_Face face = static_cast<FT_Face>(m_face);
 
     if (face && setCurrentSize(characterSize))
     {
@@ -473,8 +464,7 @@ float Font::getUnderlineThickness(unsigned int characterSize) const
         if (!FT_IS_SCALABLE(face))
             return static_cast<float>(characterSize) / 14.f;
 
-        return static_cast<float>(FT_MulFix(face->underline_thickness, face->size->metrics.y_scale)) /
-               static_cast<float>(1 << 6);
+        return static_cast<float>(FT_MulFix(face->underline_thickness, face->size->metrics.y_scale)) / static_cast<float>(1 << 6);
     }
     else
     {
@@ -496,9 +486,9 @@ void Font::setSmooth(bool smooth)
     {
         m_isSmooth = smooth;
 
-        for (auto& [key, page] : m_pages)
+        for (sf::Font::PageTable::iterator page = m_pages.begin(); page != m_pages.end(); ++page)
         {
-            page.texture.setSmooth(m_isSmooth);
+            page->second.texture.setSmooth(m_isSmooth);
         }
     }
 }
@@ -511,19 +501,23 @@ bool Font::isSmooth() const
 
 
 ////////////////////////////////////////////////////////////
-Font& Font::operator=(const Font& right)
+Font& Font::operator =(const Font& right)
 {
     Font temp(right);
 
-    std::swap(m_fontHandles, temp.m_fontHandles);
-    std::swap(m_isSmooth, temp.m_isSmooth);
-    std::swap(m_info, temp.m_info);
-    std::swap(m_pages, temp.m_pages);
+    std::swap(m_library,     temp.m_library);
+    std::swap(m_face,        temp.m_face);
+    std::swap(m_streamRec,   temp.m_streamRec);
+    std::swap(m_stroker,     temp.m_stroker);
+    std::swap(m_refCount,    temp.m_refCount);
+    std::swap(m_isSmooth,    temp.m_isSmooth);
+    std::swap(m_info,        temp.m_info);
+    std::swap(m_pages,       temp.m_pages);
     std::swap(m_pixelBuffer, temp.m_pixelBuffer);
 
-#ifdef SFML_SYSTEM_ANDROID
-    std::swap(m_stream, temp.m_stream);
-#endif
+    #ifdef SFML_SYSTEM_ANDROID
+        std::swap(m_stream, temp.m_stream);
+    #endif
 
     return *this;
 }
@@ -532,34 +526,67 @@ Font& Font::operator=(const Font& right)
 ////////////////////////////////////////////////////////////
 void Font::cleanup()
 {
-    // Drop ownership of shared FreeType pointers
-    m_fontHandles.reset();
+    // Check if we must destroy the FreeType pointers
+    if (m_refCount)
+    {
+        // Decrease the reference counter
+        (*m_refCount)--;
+
+        // Free the resources only if we are the last owner
+        if (*m_refCount == 0)
+        {
+            // Delete the reference counter
+            delete m_refCount;
+
+            // Destroy the stroker
+            if (m_stroker)
+                FT_Stroker_Done(static_cast<FT_Stroker>(m_stroker));
+
+            // Destroy the font face
+            if (m_face)
+                FT_Done_Face(static_cast<FT_Face>(m_face));
+
+            // Destroy the stream rec instance, if any (must be done after FT_Done_Face!)
+            if (m_streamRec)
+                delete static_cast<FT_StreamRec*>(m_streamRec);
+
+            // Close the library
+            if (m_library)
+                FT_Done_FreeType(static_cast<FT_Library>(m_library));
+        }
+    }
 
     // Reset members
+    m_library   = NULL;
+    m_face      = NULL;
+    m_stroker   = NULL;
+    m_streamRec = NULL;
+    m_refCount  = NULL;
     m_pages.clear();
-    std::vector<std::uint8_t>().swap(m_pixelBuffer);
+    std::vector<Uint8>().swap(m_pixelBuffer);
 }
 
 
 ////////////////////////////////////////////////////////////
 Font::Page& Font::loadPage(unsigned int characterSize) const
 {
-    return m_pages.try_emplace(characterSize, m_isSmooth).first->second;
+    // TODO: Remove this method and use try_emplace instead when updating to C++17
+    PageTable::iterator pageIterator = m_pages.find(characterSize);
+    if (pageIterator == m_pages.end())
+        pageIterator = m_pages.insert(std::make_pair(characterSize, Page(m_isSmooth))).first;
+
+    return pageIterator->second;
 }
 
 
 ////////////////////////////////////////////////////////////
-Glyph Font::loadGlyph(std::uint32_t codePoint, unsigned int characterSize, bool bold, float outlineThickness) const
+Glyph Font::loadGlyph(Uint32 codePoint, unsigned int characterSize, bool bold, float outlineThickness) const
 {
     // The glyph to return
     Glyph glyph;
 
-    // Stop if no font is loaded
-    if (!m_fontHandles)
-        return glyph;
-
-    // Get our FT_Face
-    auto face = m_fontHandles->face.get();
+    // First, transform our ugly void* to a FT_Face
+    FT_Face face = static_cast<FT_Face>(m_face);
     if (!face)
         return glyph;
 
@@ -580,25 +607,21 @@ Glyph Font::loadGlyph(std::uint32_t codePoint, unsigned int characterSize, bool 
         return glyph;
 
     // Apply bold and outline (there is no fallback for outline) if necessary -- first technique using outline (highest quality)
-    FT_Pos weight  = 1 << 6;
-    bool   outline = (glyphDesc->format == FT_GLYPH_FORMAT_OUTLINE);
+    FT_Pos weight = 1 << 6;
+    bool outline = (glyphDesc->format == FT_GLYPH_FORMAT_OUTLINE);
     if (outline)
     {
         if (bold)
         {
-            auto outlineGlyph = reinterpret_cast<FT_OutlineGlyph>(glyphDesc);
+            FT_OutlineGlyph outlineGlyph = reinterpret_cast<FT_OutlineGlyph>(glyphDesc);
             FT_Outline_Embolden(&outlineGlyph->outline, weight);
         }
 
         if (outlineThickness != 0)
         {
-            auto stroker = m_fontHandles->stroker.get();
+            FT_Stroker stroker = static_cast<FT_Stroker>(m_stroker);
 
-            FT_Stroker_Set(stroker,
-                           static_cast<FT_Fixed>(outlineThickness * static_cast<float>(1 << 6)),
-                           FT_STROKER_LINECAP_ROUND,
-                           FT_STROKER_LINEJOIN_ROUND,
-                           0);
+            FT_Stroker_Set(stroker, static_cast<FT_Fixed>(outlineThickness * static_cast<float>(1 << 6)), FT_STROKER_LINECAP_ROUND, FT_STROKER_LINEJOIN_ROUND, 0);
             FT_Glyph_Stroke(&glyphDesc, stroker, true);
         }
     }
@@ -606,15 +629,15 @@ Glyph Font::loadGlyph(std::uint32_t codePoint, unsigned int characterSize, bool 
     // Convert the glyph to a bitmap (i.e. rasterize it)
     // Warning! After this line, do not read any data from glyphDesc directly, use
     // bitmapGlyph.root to access the FT_Glyph data.
-    FT_Glyph_To_Bitmap(&glyphDesc, FT_RENDER_MODE_NORMAL, nullptr, 1);
-    auto       bitmapGlyph = reinterpret_cast<FT_BitmapGlyph>(glyphDesc);
-    FT_Bitmap& bitmap      = bitmapGlyph->bitmap;
+    FT_Glyph_To_Bitmap(&glyphDesc, FT_RENDER_MODE_NORMAL, 0, 1);
+    FT_BitmapGlyph bitmapGlyph = reinterpret_cast<FT_BitmapGlyph>(glyphDesc);
+    FT_Bitmap& bitmap = bitmapGlyph->bitmap;
 
     // Apply bold if necessary -- fallback technique using bitmap (lower quality)
     if (!outline)
     {
         if (bold)
-            FT_Bitmap_Embolden(m_fontHandles->library.get(), &bitmap, weight, weight);
+            FT_Bitmap_Embolden(static_cast<FT_Library>(m_library), &bitmap, weight, weight);
 
         if (outlineThickness != 0)
             err() << "Failed to outline glyph (no fallback available)" << std::endl;
@@ -644,26 +667,26 @@ Glyph Font::loadGlyph(std::uint32_t codePoint, unsigned int characterSize, bool 
         Page& page = loadPage(characterSize);
 
         // Find a good position for the new glyph into the texture
-        glyph.textureRect = findGlyphRect(page, {width, height});
+        glyph.textureRect = findGlyphRect(page, width, height);
 
         // Make sure the texture data is positioned in the center
         // of the allocated texture rectangle
-        glyph.textureRect.left += static_cast<int>(padding);
-        glyph.textureRect.top += static_cast<int>(padding);
-        glyph.textureRect.width -= static_cast<int>(2 * padding);
+        glyph.textureRect.left   += static_cast<int>(padding);
+        glyph.textureRect.top    += static_cast<int>(padding);
+        glyph.textureRect.width  -= static_cast<int>(2 * padding);
         glyph.textureRect.height -= static_cast<int>(2 * padding);
 
         // Compute the glyph's bounding box
-        glyph.bounds.left   = static_cast<float>(bitmapGlyph->left);
+        glyph.bounds.left   = static_cast<float>( bitmapGlyph->left);
         glyph.bounds.top    = static_cast<float>(-bitmapGlyph->top);
-        glyph.bounds.width  = static_cast<float>(bitmap.width);
-        glyph.bounds.height = static_cast<float>(bitmap.rows);
+        glyph.bounds.width  = static_cast<float>( bitmap.width);
+        glyph.bounds.height = static_cast<float>( bitmap.rows);
 
         // Resize the pixel buffer to the new size and fill it with transparent white pixels
-        m_pixelBuffer.resize(static_cast<std::size_t>(width) * static_cast<std::size_t>(height) * 4);
+        m_pixelBuffer.resize(width * height * 4);
 
-        std::uint8_t* current = m_pixelBuffer.data();
-        std::uint8_t* end     = current + width * height * 4;
+        Uint8* current = &m_pixelBuffer[0];
+        Uint8* end = current + width * height * 4;
 
         while (current != end)
         {
@@ -674,7 +697,7 @@ Glyph Font::loadGlyph(std::uint32_t codePoint, unsigned int characterSize, bool 
         }
 
         // Extract the glyph's pixels from the bitmap
-        const std::uint8_t* pixels = bitmap.buffer;
+        const Uint8* pixels = bitmap.buffer;
         if (bitmap.pixel_mode == FT_PIXEL_MODE_MONO)
         {
             // Pixels are 1 bit monochrome values
@@ -683,7 +706,7 @@ Glyph Font::loadGlyph(std::uint32_t codePoint, unsigned int characterSize, bool 
                 for (unsigned int x = padding; x < width - padding; ++x)
                 {
                     // The color channels remain white, just fill the alpha channel
-                    std::size_t index            = x + y * width;
+                    std::size_t index = x + y * width;
                     m_pixelBuffer[index * 4 + 3] = ((pixels[(x - padding) / 8]) & (1 << (7 - ((x - padding) % 8)))) ? 255 : 0;
                 }
                 pixels += bitmap.pitch;
@@ -697,7 +720,7 @@ Glyph Font::loadGlyph(std::uint32_t codePoint, unsigned int characterSize, bool 
                 for (unsigned int x = padding; x < width - padding; ++x)
                 {
                     // The color channels remain white, just fill the alpha channel
-                    std::size_t index            = x + y * width;
+                    std::size_t index = x + y * width;
                     m_pixelBuffer[index * 4 + 3] = pixels[x - padding];
                 }
                 pixels += bitmap.pitch;
@@ -709,7 +732,7 @@ Glyph Font::loadGlyph(std::uint32_t codePoint, unsigned int characterSize, bool 
         unsigned int y = static_cast<unsigned int>(glyph.textureRect.top) - padding;
         unsigned int w = static_cast<unsigned int>(glyph.textureRect.width) + 2 * padding;
         unsigned int h = static_cast<unsigned int>(glyph.textureRect.height) + 2 * padding;
-        page.texture.update(m_pixelBuffer.data(), {w, h}, {x, y});
+        page.texture.update(&m_pixelBuffer[0], w, h, x, y);
     }
 
     // Delete the FT glyph
@@ -721,21 +744,21 @@ Glyph Font::loadGlyph(std::uint32_t codePoint, unsigned int characterSize, bool 
 
 
 ////////////////////////////////////////////////////////////
-IntRect Font::findGlyphRect(Page& page, const Vector2u& size) const
+IntRect Font::findGlyphRect(Page& page, unsigned int width, unsigned int height) const
 {
     // Find the line that fits well the glyph
-    Row*  row       = nullptr;
+    Row* row = NULL;
     float bestRatio = 0;
-    for (auto it = page.rows.begin(); it != page.rows.end() && !row; ++it)
+    for (std::vector<Row>::iterator it = page.rows.begin(); it != page.rows.end() && !row; ++it)
     {
-        float ratio = static_cast<float>(size.y) / static_cast<float>(it->height);
+        float ratio = static_cast<float>(height) / static_cast<float>(it->height);
 
         // Ignore rows that are either too small or too high
         if ((ratio < 0.7f) || (ratio > 1.f))
             continue;
 
         // Check if there's enough horizontal space left in the row
-        if (size.x > page.texture.getSize().x - it->width)
+        if (width > page.texture.getSize().x - it->width)
             continue;
 
         // Make sure that this new row is the best found so far
@@ -743,28 +766,24 @@ IntRect Font::findGlyphRect(Page& page, const Vector2u& size) const
             continue;
 
         // The current row passed all the tests: we can select it
-        row       = &*it;
+        row = &*it;
         bestRatio = ratio;
     }
 
     // If we didn't find a matching row, create a new one (10% taller than the glyph)
     if (!row)
     {
-        unsigned int rowHeight = size.y + size.y / 10;
-        while ((page.nextRow + rowHeight >= page.texture.getSize().y) || (size.x >= page.texture.getSize().x))
+        unsigned int rowHeight = height + height / 10;
+        while ((page.nextRow + rowHeight >= page.texture.getSize().y) || (width >= page.texture.getSize().x))
         {
             // Not enough space: resize the texture if possible
-            Vector2u textureSize = page.texture.getSize();
-            if ((textureSize.x * 2 <= Texture::getMaximumSize()) && (textureSize.y * 2 <= Texture::getMaximumSize()))
+            unsigned int textureWidth  = page.texture.getSize().x;
+            unsigned int textureHeight = page.texture.getSize().y;
+            if ((textureWidth * 2 <= Texture::getMaximumSize()) && (textureHeight * 2 <= Texture::getMaximumSize()))
             {
                 // Make the texture 2 times bigger
                 Texture newTexture;
-                if (!newTexture.create(textureSize * 2u))
-                {
-                    err() << "Failed to create new page texture" << std::endl;
-                    return IntRect({0, 0}, {2, 2});
-                }
-
+                newTexture.create(textureWidth * 2, textureHeight * 2);
                 newTexture.setSmooth(m_isSmooth);
                 newTexture.update(page.texture);
                 page.texture.swap(newTexture);
@@ -772,23 +791,22 @@ IntRect Font::findGlyphRect(Page& page, const Vector2u& size) const
             else
             {
                 // Oops, we've reached the maximum texture size...
-                err() << "Failed to add a new character to the font: the maximum texture size has been reached"
-                      << std::endl;
-                return IntRect({0, 0}, {2, 2});
+                err() << "Failed to add a new character to the font: the maximum texture size has been reached" << std::endl;
+                return IntRect(0, 0, 2, 2);
             }
         }
 
         // We can now create the new row
-        page.rows.emplace_back(page.nextRow, rowHeight);
+        page.rows.push_back(Row(page.nextRow, rowHeight));
         page.nextRow += rowHeight;
         row = &page.rows.back();
     }
 
     // Find the glyph's rectangle on the selected row
-    IntRect rect(Rect<unsigned int>({row->width, row->top}, size));
+    IntRect rect(Rect<unsigned int>(row->width, row->top, width, height));
 
     // Update the row informations
-    row->width += size.x;
+    row->width += width;
 
     return rect;
 }
@@ -800,8 +818,7 @@ bool Font::setCurrentSize(unsigned int characterSize) const
     // FT_Set_Pixel_Sizes is an expensive function, so we must call it
     // only when necessary to avoid killing performances
 
-    // m_fontHandles and m_fontHandles->face are checked to be non-null before calling this method
-    auto      face        = m_fontHandles->face.get();
+    FT_Face face = static_cast<FT_Face>(m_face);
     FT_UShort currentSize = face->size->metrics.x_ppem;
 
     if (currentSize != characterSize)
@@ -832,28 +849,25 @@ bool Font::setCurrentSize(unsigned int characterSize) const
         return result == FT_Err_Ok;
     }
 
-    return true;
+     return true;
 }
 
 
 ////////////////////////////////////////////////////////////
-Font::Page::Page(bool smooth) : nextRow(3)
+Font::Page::Page(bool smooth) :
+nextRow(3)
 {
     // Make sure that the texture is initialized by default
     sf::Image image;
-    image.create({128, 128}, Color(255, 255, 255, 0));
+    image.create(128, 128, Color(255, 255, 255, 0));
 
     // Reserve a 2x2 white square for texturing underlines
     for (unsigned int x = 0; x < 2; ++x)
         for (unsigned int y = 0; y < 2; ++y)
-            image.setPixel({x, y}, Color(255, 255, 255, 255));
+            image.setPixel(x, y, Color(255, 255, 255, 255));
 
     // Create the texture
-    if (!texture.loadFromImage(image))
-    {
-        err() << "Failed to load font page texture" << std::endl;
-    }
-
+    texture.loadFromImage(image);
     texture.setSmooth(smooth);
 }
 

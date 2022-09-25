@@ -29,9 +29,10 @@
 // Headers
 ////////////////////////////////////////////////////////////
 #include <SFML/Graphics/Export.hpp>
-
 #include <SFML/Graphics/RenderTarget.hpp>
+#include <SFML/Graphics/Image.hpp>
 #include <SFML/Window/Window.hpp>
+#include <string>
 
 
 namespace sf
@@ -43,6 +44,7 @@ namespace sf
 class SFML_GRAPHICS_API RenderWindow : public Window, public RenderTarget
 {
 public:
+
     ////////////////////////////////////////////////////////////
     /// \brief Default constructor
     ///
@@ -71,10 +73,7 @@ public:
     /// \param settings Additional settings for the underlying OpenGL context
     ///
     ////////////////////////////////////////////////////////////
-    RenderWindow(VideoMode              mode,
-                 const String&          title,
-                 std::uint32_t          style    = Style::Default,
-                 const ContextSettings& settings = ContextSettings());
+    RenderWindow(VideoMode mode, const String& title, Uint32 style = Style::Default, const ContextSettings& settings = ContextSettings());
 
     ////////////////////////////////////////////////////////////
     /// \brief Construct the window from an existing control
@@ -100,7 +99,7 @@ public:
     /// Closes the window and frees all the resources attached to it.
     ///
     ////////////////////////////////////////////////////////////
-    ~RenderWindow() override;
+    virtual ~RenderWindow();
 
     ////////////////////////////////////////////////////////////
     /// \brief Get the size of the rendering region of the window
@@ -111,7 +110,7 @@ public:
     /// \return Size in pixels
     ///
     ////////////////////////////////////////////////////////////
-    Vector2u getSize() const override;
+    virtual Vector2u getSize() const;
 
 
     ////////////////////////////////////////////////////////////
@@ -122,7 +121,7 @@ public:
     /// \return True if the window use sRGB encoding, false otherwise
     ///
     ////////////////////////////////////////////////////////////
-    bool isSrgb() const override;
+    virtual bool isSrgb() const;
 
     ////////////////////////////////////////////////////////////
     /// \brief Activate or deactivate the window as the current target
@@ -140,9 +139,37 @@ public:
     /// \return True if operation was successful, false otherwise
     ///
     ////////////////////////////////////////////////////////////
-    [[nodiscard]] bool setActive(bool active = true) override;
+    bool setActive(bool active = true);
+
+    ////////////////////////////////////////////////////////////
+    /// \brief Copy the current contents of the window to an image
+    ///
+    /// \deprecated
+    /// Use a sf::Texture and its sf::Texture::update(const Window&)
+    /// function and copy its contents into an sf::Image instead.
+    /// \code
+    /// sf::Vector2u windowSize = window.getSize();
+    /// sf::Texture texture;
+    /// texture.create(windowSize.x, windowSize.y);
+    /// texture.update(window);
+    /// sf::Image screenshot = texture.copyToImage();
+    /// \endcode
+    ///
+    /// This is a slow operation, whose main purpose is to make
+    /// screenshots of the application. If you want to update an
+    /// image with the contents of the window and then use it for
+    /// drawing, you should rather use a sf::Texture and its
+    /// update(Window&) function.
+    /// You can also draw things directly to a texture with the
+    /// sf::RenderTexture class.
+    ///
+    /// \return Image containing the captured contents
+    ///
+    ////////////////////////////////////////////////////////////
+    SFML_DEPRECATED Image capture() const;
 
 protected:
+
     ////////////////////////////////////////////////////////////
     /// \brief Function called after the window has been created
     ///
@@ -151,7 +178,7 @@ protected:
     /// the window is created.
     ///
     ////////////////////////////////////////////////////////////
-    void onCreate() override;
+    virtual void onCreate();
 
     ////////////////////////////////////////////////////////////
     /// \brief Function called after the window has been resized
@@ -160,9 +187,10 @@ protected:
     /// perform custom actions when the size of the window changes.
     ///
     ////////////////////////////////////////////////////////////
-    void onResize() override;
+    virtual void onResize();
 
 private:
+
     ////////////////////////////////////////////////////////////
     // Member data
     ////////////////////////////////////////////////////////////
@@ -204,7 +232,8 @@ private:
 /// while (window.isOpen())
 /// {
 ///    // Event processing
-///    for (sf::Event event; window.pollEvent(event);)
+///    sf::Event event;
+///    while (window.pollEvent(event))
 ///    {
 ///        // Request for closing the window
 ///        if (event.type == sf::Event::Closed)
@@ -253,7 +282,7 @@ private:
 ///     window.popGLStates();
 ///
 ///     // Draw a 3D object using OpenGL
-///     glBegin(GL_TRIANGLES);
+///     glBegin(GL_QUADS);
 ///         glVertex3f(...);
 ///         ...
 ///     glEnd();

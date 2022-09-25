@@ -26,11 +26,9 @@
 ////////////////////////////////////////////////////////////
 // Headers
 ////////////////////////////////////////////////////////////
-#include <SFML/System/Err.hpp>
 #include <SFML/Window/OSX/HIDInputManager.hpp>
-
+#include <SFML/System/Err.hpp>
 #include <AppKit/AppKit.h>
-#include <ostream>
 
 namespace sf
 {
@@ -57,7 +55,8 @@ long HIDInputManager::getLocationID(IOHIDDeviceRef device)
     long loc = 0;
 
     // Get a unique ID: its USB location ID
-    CFTypeRef typeRef = IOHIDDeviceGetProperty(device, CFSTR(kIOHIDLocationIDKey));
+    CFTypeRef typeRef = IOHIDDeviceGetProperty(device,
+                                               CFSTR(kIOHIDLocationIDKey));
     if (!typeRef || (CFGetTypeID(typeRef) != CFNumberGetTypeID()))
         return 0;
 
@@ -74,8 +73,7 @@ long HIDInputManager::getLocationID(IOHIDDeviceRef device)
 CFDictionaryRef HIDInputManager::copyDevicesMask(UInt32 page, UInt32 usage)
 {
     // Create the dictionary.
-    CFMutableDictionaryRef dict = CFDictionaryCreateMutable(kCFAllocatorDefault,
-                                                            2,
+    CFMutableDictionaryRef dict = CFDictionaryCreateMutable(kCFAllocatorDefault, 2,
                                                             &kCFTypeDictionaryKeyCallBacks,
                                                             &kCFTypeDictionaryValueCallBacks);
 
@@ -94,11 +92,15 @@ CFDictionaryRef HIDInputManager::copyDevicesMask(UInt32 page, UInt32 usage)
 
 
 ////////////////////////////////////////////////////////////
-HIDInputManager::HIDInputManager() : m_isValid(true), m_layoutData(0), m_layout(0), m_manager(0)
+HIDInputManager::HIDInputManager() :
+m_isValid(true),
+m_layoutData(0),
+m_layout(0),
+m_manager(0)
 {
     // Get the current keyboard layout
     TISInputSourceRef tis = TISCopyCurrentKeyboardLayoutInputSource();
-    m_layoutData          = static_cast<CFDataRef>(TISGetInputSourceProperty(tis, kTISPropertyUnicodeKeyLayoutData));
+    m_layoutData = static_cast<CFDataRef>(TISGetInputSourceProperty(tis, kTISPropertyUnicodeKeyLayoutData));
 
     if (m_layoutData == 0)
     {
@@ -147,7 +149,7 @@ void HIDInputManager::initializeKeyboard()
 
     // Get only keyboards
     CFSetRef keyboards = copyDevices(kHIDPage_GenericDesktop, kHIDUsage_GD_Keyboard);
-    if (keyboards == nullptr)
+    if (keyboards == NULL)
     {
         sf::err() << "No keyboard detected by the HID manager!" << std::endl;
         freeUp();
@@ -177,8 +179,10 @@ void HIDInputManager::initializeKeyboard()
 ////////////////////////////////////////////////////////////
 void HIDInputManager::loadKeyboard(IOHIDDeviceRef keyboard)
 {
-    CFArrayRef keys = IOHIDDeviceCopyMatchingElements(keyboard, nullptr, kIOHIDOptionsTypeNone);
-    if (keys == nullptr)
+    CFArrayRef keys = IOHIDDeviceCopyMatchingElements(keyboard,
+                                                      NULL,
+                                                      kIOHIDOptionsTypeNone);
+    if (keys == NULL)
     {
         sf::err() << "We got a keyboard without any keys (1)" << std::endl;
         return;
@@ -224,24 +228,24 @@ void HIDInputManager::loadKey(IOHIDElementRef key)
     // Now translate the virtual code to Unicode according to
     // the current keyboard layout
 
-    UInt32 deadKeyState = 0;
+    UInt32       deadKeyState = 0;
     // Unicode string length is usually less or equal to 4
-    UniCharCount         maxStringLength    = 4;
-    UniCharCount         actualStringLength = 0;
+    UniCharCount maxStringLength = 4;
+    UniCharCount actualStringLength = 0;
     std::vector<UniChar> unicodeString(maxStringLength);
 
-    OSStatus error;
+    OSStatus     error;
 
-    error = UCKeyTranslate(m_layout,                     // current layout
-                           virtualCode,                  // our key
-                           kUCKeyActionDown,             // or kUCKeyActionUp ?
-                           0x100,                        // no modifiers
-                           LMGetKbdType(),               // keyboard's type
-                           kUCKeyTranslateNoDeadKeysBit, // some sort of option
-                           &deadKeyState,                // unused stuff
-                           maxStringLength,              // our memory limit
-                           &actualStringLength,          // length of what we get
-                           unicodeString.data());        // what we get
+    error = UCKeyTranslate(m_layout,                    // current layout
+                           virtualCode,                 // our key
+                           kUCKeyActionDown,            // or kUCKeyActionUp ?
+                           0x100,                       // no modifiers
+                           LMGetKbdType(),              // keyboard's type
+                           kUCKeyTranslateNoDeadKeysBit,// some sort of option
+                           &deadKeyState,               // unused stuff
+                           maxStringLength,             // our memory limit
+                           &actualStringLength,         // length of what we get
+                           unicodeString.data());       // what we get
 
     if (error == noErr)
     {
@@ -295,7 +299,9 @@ void HIDInputManager::loadKey(IOHIDElementRef key)
     } /* if (error == noErr) */
     else
     {
-        sf::err() << "Cannot translate the virtual key code, error: " << error << std::endl;
+        sf::err() << "Cannot translate the virtual key code, error: "
+                  << error
+                  << std::endl;
     }
 }
 
@@ -307,19 +313,16 @@ void HIDInputManager::freeUp()
 
     if (m_layoutData != 0)
         CFRelease(m_layoutData);
-
     m_layoutData = 0;
-
     // Do not release m_layout! It is owned by m_layoutData.
     if (m_manager != 0)
         CFRelease(m_manager);
-
     m_manager = 0;
 
     for (unsigned int i = 0; i < Keyboard::KeyCount; ++i)
     {
-        for (IOHIDElementRef iohidElementRef : m_keys[i])
-            CFRelease(iohidElementRef);
+        for (IOHIDElements::iterator it = m_keys[i].begin(); it != m_keys[i].end(); ++it)
+            CFRelease(*it);
 
         m_keys[i].clear();
     }
@@ -338,15 +341,15 @@ CFSetRef HIDInputManager::copyDevices(UInt32 page, UInt32 usage)
     mask = 0;
 
     CFSetRef devices = IOHIDManagerCopyDevices(m_manager);
-    if (devices == nullptr)
-        return nullptr;
+    if (devices == NULL)
+        return NULL;
 
     // Is there at least one device?
     CFIndex deviceCount = CFSetGetCount(devices);
     if (deviceCount < 1)
     {
         CFRelease(devices);
-        return nullptr;
+        return NULL;
     }
 
     return devices;
@@ -354,13 +357,13 @@ CFSetRef HIDInputManager::copyDevices(UInt32 page, UInt32 usage)
 
 bool HIDInputManager::isPressed(IOHIDElements& elements)
 {
-    if (!m_isValid)
+    if (!m_isValid) 
         return false;
 
     // state = true if at least one corresponding HID button is pressed
     bool state = false;
 
-    for (auto it = elements.begin(); it != elements.end(); /* noop */)
+    for (IOHIDElements::iterator it = elements.begin(); it != elements.end(); /* noop */)
     {
         IOHIDValueRef value = 0;
 
@@ -396,7 +399,6 @@ UInt8 HIDInputManager::usageToVirtualCode(UInt32 usage)
 {
     // Some usage key doesn't have any corresponding virtual
     // code or it was not found (return 0xff).
-    // clang-format off
     switch (usage)
     {
         case kHIDUsage_KeyboardErrorRollOver:       return 0xff;
@@ -596,14 +598,12 @@ UInt8 HIDInputManager::usageToVirtualCode(UInt32 usage)
         case kHIDUsage_Keyboard_Reserved:           return 0xff;
         default:                                    return 0xff;
     }
-    // clang-format on
 }
 
 
 ////////////////////////////////////////////////////////
 Keyboard::Key HIDInputManager::localizedKeys(UniChar ch)
 {
-    // clang-format off
     switch (ch)
     {
         case 'a':
@@ -687,7 +687,6 @@ Keyboard::Key HIDInputManager::localizedKeys(UniChar ch)
             // The key is not 'localized'.
         default:                    return sf::Keyboard::Unknown;
     }
-    // clang-format on
 }
 
 
@@ -696,7 +695,6 @@ Keyboard::Key HIDInputManager::nonLocalizedKeys(UniChar virtualKeycode)
 {
     // (Some) 0x code based on https://forums.macrumors.com/showthread.php?t=780577
     // Some sf::Keyboard::Key are present twice.
-    // clang-format off
     switch (virtualKeycode)
     {
             // These cases should not be used but anyway...
@@ -862,10 +860,10 @@ Keyboard::Key HIDInputManager::nonLocalizedKeys(UniChar virtualKeycode)
             // An unknown key.
         default:                        return sf::Keyboard::Unknown;
     }
-    // clang-format on
 }
 
 
 } // namespace priv
 
 } // namespace sf
+

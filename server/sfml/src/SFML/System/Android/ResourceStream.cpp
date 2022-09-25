@@ -26,10 +26,9 @@
 ////////////////////////////////////////////////////////////
 // Headers
 ////////////////////////////////////////////////////////////
-#include <SFML/System/Android/Activity.hpp>
 #include <SFML/System/Android/ResourceStream.hpp>
-
-#include <mutex>
+#include <SFML/System/Android/Activity.hpp>
+#include <SFML/System/Lock.hpp>
 
 
 namespace sf
@@ -38,10 +37,11 @@ namespace priv
 {
 
 ////////////////////////////////////////////////////////////
-ResourceStream::ResourceStream(const std::filesystem::path& filename) : m_file(nullptr)
+ResourceStream::ResourceStream(const std::string& filename) :
+m_file (NULL)
 {
-    ActivityStates&  states = getActivity();
-    std::scoped_lock lock(states.mutex);
+    ActivityStates& states = getActivity();
+    Lock lock(states.mutex);
     m_file = AAssetManager_open(states.activity->assetManager, filename.c_str(), AASSET_MODE_UNKNOWN);
 }
 
@@ -57,11 +57,11 @@ ResourceStream::~ResourceStream()
 
 
 ////////////////////////////////////////////////////////////
-std::int64_t ResourceStream::read(void* data, std::int64_t size)
+Int64 ResourceStream::read(void *data, Int64 size)
 {
     if (m_file)
     {
-        return AAsset_read(m_file, data, static_cast<std::size_t>(size));
+        return AAsset_read(m_file, data, static_cast<size_t>(size));
     }
     else
     {
@@ -71,7 +71,7 @@ std::int64_t ResourceStream::read(void* data, std::int64_t size)
 
 
 ////////////////////////////////////////////////////////////
-std::int64_t ResourceStream::seek(std::int64_t position)
+Int64 ResourceStream::seek(Int64 position)
 {
     if (m_file)
     {
@@ -85,7 +85,7 @@ std::int64_t ResourceStream::seek(std::int64_t position)
 
 
 ////////////////////////////////////////////////////////////
-std::int64_t ResourceStream::tell()
+Int64 ResourceStream::tell()
 {
     if (m_file)
     {
@@ -99,7 +99,7 @@ std::int64_t ResourceStream::tell()
 
 
 ////////////////////////////////////////////////////////////
-std::int64_t ResourceStream::getSize()
+Int64 ResourceStream::getSize()
 {
     if (m_file)
     {

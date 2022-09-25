@@ -5,16 +5,18 @@ Server::Server()
 {
 	m_PlayerAmount = 0;
 	m_Port = 12500;
+	m_Port2 = 12501;
 	m_GameStarted = false;
-	m_Socket.bind(m_Port);
+	//m_Socket.bind(m_Port);
 	m_Socket.setBlocking(false);
 }
 
 void Server::AddConnection()
 {
 	sf::Packet packet;
+	unsigned short prt;
 	sf::IpAddress ClientAdress(127, 0, 0, 1);
-	if (m_Socket.receive(packet, std::optional<sf::IpAddress>(ClientAdress), m_Port) != sf::Socket::Done)
+	if (m_Socket.receive(packet, ClientAdress, prt) != sf::Socket::Done)
 	{
 		std::cout << "No new connections\n";
 	}
@@ -22,8 +24,9 @@ void Server::AddConnection()
 	{
 		m_Connections.push_back(ClientAdress);
 		m_PlayerAmount++;
-
 	}
+	Check();
+	std::cout << m_Connections.size() << std::endl;
 	std::cout << ClientAdress.toString() << std::endl;
 }
 

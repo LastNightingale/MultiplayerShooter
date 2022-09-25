@@ -1,10 +1,13 @@
+
+set(SRCROOT ${PROJECT_SOURCE_DIR}/examples/opengl)
+
 # all source files
-set(SRC OpenGL.cpp)
+set(SRC ${SRCROOT}/OpenGL.cpp)
 
 if (SFML_OS_IOS)
     set(RESOURCES
-        resources/background.jpg
-        resources/tuffy.ttf)
+        ${CMAKE_CURRENT_SOURCE_DIR}/resources/background.jpg
+        ${CMAKE_CURRENT_SOURCE_DIR}/resources/tuffy.ttf)
     set_source_files_properties(${RESOURCES} PROPERTIES MACOSX_PACKAGE_LOCATION Resources)
 endif()
 
@@ -12,7 +15,7 @@ endif()
 sfml_add_example(opengl GUI_APP
                  SOURCES ${SRC}
                  BUNDLE_RESOURCES ${RESOURCES}
-                 DEPENDS SFML::Graphics
+                 DEPENDS sfml-graphics
                  RESOURCES_DIR resources)
 
 # external dependency headers

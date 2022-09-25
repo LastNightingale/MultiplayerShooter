@@ -1,9 +1,12 @@
+
+set(SRCROOT ${PROJECT_SOURCE_DIR}/examples/tennis)
+
 # all source files
-set(SRC Tennis.cpp)
+set(SRC ${SRCROOT}/Tennis.cpp)
 if (SFML_OS_IOS)
     set(RESOURCES
-        resources/ball.wav
-        resources/tuffy.ttf)
+        ${CMAKE_CURRENT_SOURCE_DIR}/resources/ball.wav
+        ${CMAKE_CURRENT_SOURCE_DIR}/resources/tuffy.ttf)
     set_source_files_properties(${RESOURCES} PROPERTIES MACOSX_PACKAGE_LOCATION Resources)
 endif()
 
@@ -11,5 +14,5 @@ endif()
 sfml_add_example(tennis GUI_APP
                  SOURCES ${SRC}
                  BUNDLE_RESOURCES ${RESOURCES}
-                 DEPENDS SFML::Audio SFML::Graphics
+                 DEPENDS sfml-audio sfml-graphics
                  RESOURCES_DIR resources)

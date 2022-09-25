@@ -26,10 +26,10 @@
 ////////////////////////////////////////////////////////////
 // Headers
 ////////////////////////////////////////////////////////////
-#include <SFML/Window/OSX/AutoreleasePoolWrapper.hpp>
 #include <SFML/Window/OSX/CursorImpl.hpp>
-#import <SFML/Window/OSX/NSImage+raw.h>
+#include <SFML/Window/OSX/AutoreleasePoolWrapper.hpp>
 
+#import <SFML/Window/OSX/NSImage+raw.h>
 #import <AppKit/AppKit.h>
 
 namespace
@@ -53,8 +53,10 @@ namespace priv
 {
 
 ////////////////////////////////////////////////////////////
-CursorImpl::CursorImpl() : m_cursor(nil)
+CursorImpl::CursorImpl() :
+m_cursor(nil)
 {
+
 }
 
 
@@ -67,7 +69,7 @@ CursorImpl::~CursorImpl()
 
 
 ////////////////////////////////////////////////////////////
-bool CursorImpl::loadFromPixels(const std::uint8_t* pixels, Vector2u size, Vector2u hotspot)
+bool CursorImpl::loadFromPixels(const Uint8* pixels, Vector2u size, Vector2u hotspot)
 {
     AutoreleasePool pool;
     if (m_cursor)
@@ -89,9 +91,8 @@ bool CursorImpl::loadFromPixels(const std::uint8_t* pixels, Vector2u size, Vecto
 bool CursorImpl::loadFromSystem(Cursor::Type type)
 {
     AutoreleasePool pool;
-    NSCursor*       newCursor = nil;
+    NSCursor* newCursor = nil;
 
-    // clang-format off
     switch (type)
     {
         default: return false;
@@ -107,10 +108,10 @@ bool CursorImpl::loadFromSystem(Cursor::Type type)
         case Cursor::SizeRight:       newCursor = [NSCursor resizeLeftRightCursor];     break;
         case Cursor::SizeTop:         newCursor = [NSCursor resizeUpDownCursor];        break;
         case Cursor::SizeBottom:      newCursor = [NSCursor resizeUpDownCursor];        break;
-
+            
         // These cursor types are undocumented, may not be available on some platforms
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wundeclared-selector"
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wundeclared-selector"
         case Cursor::SizeTopRight:
         case Cursor::SizeBottomLeft:
         case Cursor::SizeBottomLeftTopRight:
@@ -126,9 +127,8 @@ bool CursorImpl::loadFromSystem(Cursor::Type type)
         case Cursor::Help:
             newCursor = loadFromSelector(@selector(_helpCursor));
             break;
-#pragma GCC diagnostic pop
+#pragma clang diagnostic pop
     }
-    // clang-format on
 
     if (newCursor)
     {
@@ -144,3 +144,4 @@ bool CursorImpl::loadFromSystem(Cursor::Type type)
 } // namespace priv
 
 } // namespace sf
+

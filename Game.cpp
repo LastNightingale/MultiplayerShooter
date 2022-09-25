@@ -7,8 +7,9 @@ Game::Game()
 	m_isRunning = true;
 	m_Dt = m_Spawntime = 0;
 	m_Port = 12500;
+	m_Port2 = 12501;
 	m_Socket.setBlocking(false);
-	m_Socket.bind(m_Port);
+	//m_Socket.bind(m_Port2);
 }
 
 void Game::SpawnEnemy()
@@ -54,7 +55,7 @@ void Game::GameUpdate(float dt)
 		{
 			for (Entity* inner : m_Entities)
 			{
-				if (outer->GetGlobalBounds().findIntersection(inner->GetGlobalBounds()))
+				if (outer->GetGlobalBounds().intersects(inner->GetGlobalBounds()))
 				{
 					if (outer->Collided(inner))
 					{
@@ -130,20 +131,22 @@ void Game::Run()
 	srand(time(NULL));	
 	while (true)
 	{
+		sf::Packet pack;
+		m_Socket.send(pack, "127.0.0.1", m_Port2);
 		if (m_GameStarted)
-		{
-			sf::Packet pack;
-			m_Socket.send(pack, IpAddress(127, 0, 0, 1), m_Port);
+		{			
 			thread updatethread([this]
 				{
 					GameUpdate(m_Dt);
 				});
 			GameDraw();
-			updatethread.join();
-			sf::Packet packe;
-			IpAddress adr(127, 0, 0, 1);
-			if (m_Socket.receive(packe, std::optional<sf::IpAddress>(adr), m_Port) == Socket::Done)
-				packe >> m_GameStarted;
+			updatethread.join();		
 		}
+		sf::Packet packe;
+		IpAddress adr;
+		unsigned short prt;
+		if (m_Socket.receive(packe, adr, prt) == Socket::Done)
+			packe >> m_GameStarted;
+
 	}
 }

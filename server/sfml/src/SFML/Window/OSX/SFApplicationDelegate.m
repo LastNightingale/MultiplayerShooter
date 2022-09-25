@@ -28,14 +28,20 @@
 ////////////////////////////////////////////////////////////
 #import <SFML/Window/OSX/SFApplicationDelegate.h>
 
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#if defined(__APPLE__)
+    #if defined(__clang__)
+        #pragma clang diagnostic ignored "-Wdeprecated-declarations"
+    #elif defined(__GNUC__)
+        #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+    #endif
+#endif
 
 ////////////////////////////////////////////////////////////
 @implementation SFApplicationDelegate
 
 
 ////////////////////////////////////////////////////////////
-- (NSApplicationTerminateReply)applicationShouldTerminate:(NSApplication*)sender
+-(NSApplicationTerminateReply)applicationShouldTerminate:(NSApplication*)sender
 {
     (void)sender;
     // Generate close event for each SFML window
@@ -45,7 +51,7 @@
 
 
 ////////////////////////////////////////////////////////////
-- (BOOL)applicationShouldTerminateAfterLastWindowClosed:(NSApplication*)theApplication
+-(BOOL)applicationShouldTerminateAfterLastWindowClosed:(NSApplication*)theApplication
 {
     (void)theApplication;
     return YES;
@@ -53,3 +59,4 @@
 
 
 @end
+

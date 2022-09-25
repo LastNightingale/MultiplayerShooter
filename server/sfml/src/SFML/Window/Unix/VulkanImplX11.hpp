@@ -30,7 +30,6 @@
 ////////////////////////////////////////////////////////////
 #include <SFML/Window/Vulkan.hpp>
 #include <SFML/Window/WindowHandle.hpp>
-
 #include <vector>
 
 
@@ -45,6 +44,7 @@ namespace priv
 class VulkanImplX11
 {
 public:
+
     ////////////////////////////////////////////////////////////
     /// \brief Tell whether or not the system supports Vulkan
     ///
@@ -92,10 +92,7 @@ public:
     /// \return True if surface creation was successful, false otherwise
     ///
     ////////////////////////////////////////////////////////////
-    static bool createVulkanSurface(const VkInstance&            instance,
-                                    WindowHandle                 windowHandle,
-                                    VkSurfaceKHR&                surface,
-                                    const VkAllocationCallbacks* allocator);
+    static bool createVulkanSurface(const VkInstance& instance, WindowHandle windowHandle, VkSurfaceKHR& surface, const VkAllocationCallbacks* allocator);
 };
 
 } // namespace priv

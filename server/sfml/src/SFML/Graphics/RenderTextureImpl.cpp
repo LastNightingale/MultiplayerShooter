@@ -33,7 +33,10 @@ namespace sf
 namespace priv
 {
 ////////////////////////////////////////////////////////////
-RenderTextureImpl::~RenderTextureImpl() = default;
+RenderTextureImpl::~RenderTextureImpl()
+{
+    // Nothing to do
+}
 
 } // namespace priv
 

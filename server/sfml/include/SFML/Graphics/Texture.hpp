@@ -29,11 +29,8 @@
 // Headers
 ////////////////////////////////////////////////////////////
 #include <SFML/Graphics/Export.hpp>
-
-#include <SFML/Graphics/Rect.hpp>
+#include <SFML/Graphics/Image.hpp>
 #include <SFML/Window/GlResource.hpp>
-
-#include <filesystem>
 
 
 namespace sf
@@ -43,7 +40,6 @@ class RenderTarget;
 class RenderTexture;
 class Text;
 class Window;
-class Image;
 
 ////////////////////////////////////////////////////////////
 /// \brief Image living on the graphics card that can be used for drawing
@@ -52,6 +48,7 @@ class Image;
 class SFML_GRAPHICS_API Texture : GlResource
 {
 public:
+
     ////////////////////////////////////////////////////////////
     /// \brief Types of texture coordinates that can be used for rendering
     ///
@@ -63,6 +60,7 @@ public:
     };
 
 public:
+
     ////////////////////////////////////////////////////////////
     /// \brief Default constructor
     ///
@@ -90,12 +88,13 @@ public:
     ///
     /// If this function fails, the texture is left unchanged.
     ///
-    /// \param size Width and height of the texture
+    /// \param width  Width of the texture
+    /// \param height Height of the texture
     ///
     /// \return True if creation was successful
     ///
     ////////////////////////////////////////////////////////////
-    [[nodiscard]] bool create(const Vector2u& size);
+    bool create(unsigned int width, unsigned int height);
 
     ////////////////////////////////////////////////////////////
     /// \brief Load the texture from a file on disk
@@ -126,7 +125,7 @@ public:
     /// \see loadFromMemory, loadFromStream, loadFromImage
     ///
     ////////////////////////////////////////////////////////////
-    [[nodiscard]] bool loadFromFile(const std::filesystem::path& filename, const IntRect& area = IntRect());
+    bool loadFromFile(const std::string& filename, const IntRect& area = IntRect());
 
     ////////////////////////////////////////////////////////////
     /// \brief Load the texture from a file in memory
@@ -158,7 +157,7 @@ public:
     /// \see loadFromFile, loadFromStream, loadFromImage
     ///
     ////////////////////////////////////////////////////////////
-    [[nodiscard]] bool loadFromMemory(const void* data, std::size_t size, const IntRect& area = IntRect());
+    bool loadFromMemory(const void* data, std::size_t size, const IntRect& area = IntRect());
 
     ////////////////////////////////////////////////////////////
     /// \brief Load the texture from a custom stream
@@ -189,7 +188,7 @@ public:
     /// \see loadFromFile, loadFromMemory, loadFromImage
     ///
     ////////////////////////////////////////////////////////////
-    [[nodiscard]] bool loadFromStream(InputStream& stream, const IntRect& area = IntRect());
+    bool loadFromStream(InputStream& stream, const IntRect& area = IntRect());
 
     ////////////////////////////////////////////////////////////
     /// \brief Load the texture from an image
@@ -213,7 +212,7 @@ public:
     /// \see loadFromFile, loadFromMemory
     ///
     ////////////////////////////////////////////////////////////
-    [[nodiscard]] bool loadFromImage(const Image& image, const IntRect& area = IntRect());
+    bool loadFromImage(const Image& image, const IntRect& area = IntRect());
 
     ////////////////////////////////////////////////////////////
     /// \brief Return the size of the texture
@@ -254,7 +253,7 @@ public:
     /// \param pixels Array of pixels to copy to the texture
     ///
     ////////////////////////////////////////////////////////////
-    void update(const std::uint8_t* pixels);
+    void update(const Uint8* pixels);
 
     ////////////////////////////////////////////////////////////
     /// \brief Update a part of the texture from an array of pixels
@@ -270,11 +269,13 @@ public:
     /// texture was not previously created.
     ///
     /// \param pixels Array of pixels to copy to the texture
-    /// \param size   Width and height of the pixel region contained in \a pixels
-    /// \param dest   Coordinates of the destination position
+    /// \param width  Width of the pixel region contained in \a pixels
+    /// \param height Height of the pixel region contained in \a pixels
+    /// \param x      X offset in the texture where to copy the source pixels
+    /// \param y      Y offset in the texture where to copy the source pixels
     ///
     ////////////////////////////////////////////////////////////
-    void update(const std::uint8_t* pixels, const Vector2u& size, const Vector2u& dest);
+    void update(const Uint8* pixels, unsigned int width, unsigned int height, unsigned int x, unsigned int y);
 
     ////////////////////////////////////////////////////////////
     /// \brief Update a part of this texture from another texture
@@ -300,17 +301,18 @@ public:
     /// \brief Update a part of this texture from another texture
     ///
     /// No additional check is performed on the size of the texture,
-    /// passing an invalid combination of texture size and destination
+    /// passing an invalid combination of texture size and offset
     /// will lead to an undefined behavior.
     ///
     /// This function does nothing if either texture was not
     /// previously created.
     ///
     /// \param texture Source texture to copy to this texture
-    /// \param dest    Coordinates of the destination position
+    /// \param x       X offset in this texture where to copy the source texture
+    /// \param y       Y offset in this texture where to copy the source texture
     ///
     ////////////////////////////////////////////////////////////
-    void update(const Texture& texture, const Vector2u& dest);
+    void update(const Texture& texture, unsigned int x, unsigned int y);
 
     ////////////////////////////////////////////////////////////
     /// \brief Update the texture from an image
@@ -336,17 +338,18 @@ public:
     /// \brief Update a part of the texture from an image
     ///
     /// No additional check is performed on the size of the image,
-    /// passing an invalid combination of image size and destination
+    /// passing an invalid combination of image size and offset
     /// will lead to an undefined behavior.
     ///
     /// This function does nothing if the texture was not
     /// previously created.
     ///
     /// \param image Image to copy to the texture
-    /// \param dest  Coordinates of the destination position
+    /// \param x     X offset in the texture where to copy the source image
+    /// \param y     Y offset in the texture where to copy the source image
     ///
     ////////////////////////////////////////////////////////////
-    void update(const Image& image, const Vector2u& dest);
+    void update(const Image& image, unsigned int x, unsigned int y);
 
     ////////////////////////////////////////////////////////////
     /// \brief Update the texture from the contents of a window
@@ -372,17 +375,18 @@ public:
     /// \brief Update a part of the texture from the contents of a window
     ///
     /// No additional check is performed on the size of the window,
-    /// passing an invalid combination of window size and destination
+    /// passing an invalid combination of window size and offset
     /// will lead to an undefined behavior.
     ///
     /// This function does nothing if either the texture or the window
     /// was not previously created.
     ///
     /// \param window Window to copy to the texture
-    /// \param dest   Coordinates of the destination position
+    /// \param x      X offset in the texture where to copy the source window
+    /// \param y      Y offset in the texture where to copy the source window
     ///
     ////////////////////////////////////////////////////////////
-    void update(const Window& window, const Vector2u& dest);
+    void update(const Window& window, unsigned int x, unsigned int y);
 
     ////////////////////////////////////////////////////////////
     /// \brief Enable or disable the smooth filter
@@ -502,7 +506,7 @@ public:
     /// \return True if mipmap generation was successful, false if unsuccessful
     ///
     ////////////////////////////////////////////////////////////
-    [[nodiscard]] bool generateMipmap();
+    bool generateMipmap();
 
     ////////////////////////////////////////////////////////////
     /// \brief Overload of assignment operator
@@ -512,7 +516,7 @@ public:
     /// \return Reference to self
     ///
     ////////////////////////////////////////////////////////////
-    Texture& operator=(const Texture& right);
+    Texture& operator =(const Texture& right);
 
     ////////////////////////////////////////////////////////////
     /// \brief Swap the contents of this texture with those of another
@@ -548,7 +552,7 @@ public:
     /// // draw OpenGL stuff that use t1...
     /// sf::Texture::bind(&t2);
     /// // draw OpenGL stuff that use t2...
-    /// sf::Texture::bind(nullptr);
+    /// sf::Texture::bind(NULL);
     /// // draw OpenGL stuff that use no texture...
     /// \endcode
     ///
@@ -580,6 +584,7 @@ public:
     static unsigned int getMaximumSize();
 
 private:
+
     friend class Text;
     friend class RenderTexture;
     friend class RenderTarget;
@@ -611,16 +616,16 @@ private:
     ////////////////////////////////////////////////////////////
     // Member data
     ////////////////////////////////////////////////////////////
-    Vector2u      m_size;          //!< Public texture size
-    Vector2u      m_actualSize;    //!< Actual texture size (can be greater than public size because of padding)
-    unsigned int  m_texture;       //!< Internal texture identifier
-    bool          m_isSmooth;      //!< Status of the smooth filter
-    bool          m_sRgb;          //!< Should the texture source be converted from sRGB?
-    bool          m_isRepeated;    //!< Is the texture in repeat mode?
-    mutable bool  m_pixelsFlipped; //!< To work around the inconsistency in Y orientation
-    bool          m_fboAttachment; //!< Is this texture owned by a framebuffer object?
-    bool          m_hasMipmap;     //!< Has the mipmap been generated?
-    std::uint64_t m_cacheId;       //!< Unique number that identifies the texture to the render target's cache
+    Vector2u     m_size;          //!< Public texture size
+    Vector2u     m_actualSize;    //!< Actual texture size (can be greater than public size because of padding)
+    unsigned int m_texture;       //!< Internal texture identifier
+    bool         m_isSmooth;      //!< Status of the smooth filter
+    bool         m_sRgb;          //!< Should the texture source be converted from sRGB?
+    bool         m_isRepeated;    //!< Is the texture in repeat mode?
+    mutable bool m_pixelsFlipped; //!< To work around the inconsistency in Y orientation
+    bool         m_fboAttachment; //!< Is this texture owned by a framebuffer object?
+    bool         m_hasMipmap;     //!< Has the mipmap been generated?
+    Uint64       m_cacheId;       //!< Unique number that identifies the texture to the render target's cache
 };
 
 } // namespace sf
@@ -703,7 +708,7 @@ private:
 ///     ...
 ///
 ///     // update the texture
-///     std::uint8_t* pixels = ...; // get a fresh chunk of pixels (the next frame of a movie, for example)
+///     sf::Uint8* pixels = ...; // get a fresh chunk of pixels (the next frame of a movie, for example)
 ///     texture.update(pixels);
 ///
 ///     // draw it
@@ -720,7 +725,7 @@ private:
 /// \code
 /// sf::Texture::bind(&texture);
 /// ... render OpenGL geometry ...
-/// sf::Texture::bind(nullptr);
+/// sf::Texture::bind(NULL);
 /// \endcode
 ///
 /// \see sf::Sprite, sf::Image, sf::RenderTexture

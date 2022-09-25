@@ -37,19 +37,19 @@
 #ifdef __OBJC__
 
 @class NSOpenGLContext;
-using NSOpenGLContextRef = NSOpenGLContext*;
+typedef NSOpenGLContext* NSOpenGLContextRef;
 
 @class NSOpenGLView;
-using NSOpenGLViewRef = NSOpenGLView*;
+typedef NSOpenGLView* NSOpenGLViewRef;
 
 @class NSWindow;
-using NSWindowRef = NSWindow*;
+typedef NSWindow* NSWindowRef;
 
 #else // If C++
 
-using NSOpenGLContextRef = void*;
-using NSOpenGLViewRef    = void*;
-using NSWindowRef        = void*;
+typedef void* NSOpenGLContextRef;
+typedef void* NSOpenGLViewRef;
+typedef void* NSWindowRef;
 
 #endif
 
@@ -68,7 +68,7 @@ public:
     ////////////////////////////////////////////////////////////
     /// \brief Create a new context, not associated to a window
     ///
-    /// \param shared Context to share the new one with (can be a null pointer)
+    /// \param shared Context to share the new one with (can be NULL)
     ///
     ////////////////////////////////////////////////////////////
     SFContext(SFContext* shared);
@@ -82,17 +82,20 @@ public:
     /// \param bitsPerPixel Pixel depth, in bits per pixel
     ///
     ////////////////////////////////////////////////////////////
-    SFContext(SFContext* shared, const ContextSettings& settings, const WindowImpl& owner, unsigned int bitsPerPixel);
+    SFContext(SFContext* shared, const ContextSettings& settings,
+              const WindowImpl* owner, unsigned int bitsPerPixel);
 
     ////////////////////////////////////////////////////////////
     /// \brief Create a new context that embeds its own rendering target
     ///
     /// \param shared   Context to share the new one with
     /// \param settings Creation parameters
-    /// \param size     Back buffer width and height, in pixels
+    /// \param width    Back buffer width, in pixels
+    /// \param height   Back buffer height, in pixels
     ///
     ////////////////////////////////////////////////////////////
-    SFContext(SFContext* shared, const ContextSettings& settings, const Vector2u& size);
+    SFContext(SFContext* shared, const ContextSettings& settings,
+              unsigned int width, unsigned int height);
 
     ////////////////////////////////////////////////////////////
     /// \brief Destructor
@@ -114,7 +117,7 @@ public:
     /// \brief Display what has been rendered to the context so far
     ///
     ////////////////////////////////////////////////////////////
-    void display() override;
+    virtual void display();
 
     ////////////////////////////////////////////////////////////
     /// \brief Enable or disable vertical synchronization
@@ -127,7 +130,7 @@ public:
     /// \param enabled True to enable v-sync, false to deactivate
     ///
     ////////////////////////////////////////////////////////////
-    void setVerticalSyncEnabled(bool enabled) override;
+    virtual void setVerticalSyncEnabled(bool enabled);
 
 protected:
     ////////////////////////////////////////////////////////////
@@ -139,26 +142,28 @@ protected:
     /// \return True on success, false if any error happened
     ///
     ////////////////////////////////////////////////////////////
-    bool makeCurrent(bool current) override;
+    virtual bool makeCurrent(bool current);
 
 private:
     ////////////////////////////////////////////////////////////
     /// \brief Create the context
     /// \note Must only be called from Ctor.
     ///
-    /// \param shared       Context to share the new one with (can be a null pointer)
+    /// \param shared       Context to share the new one with (can be NULL)
     /// \param bitsPerPixel bpp
     /// \param settings     Creation parameters
     ///
     ////////////////////////////////////////////////////////////
-    void createContext(SFContext* shared, unsigned int bitsPerPixel, const ContextSettings& settings);
+    void createContext(SFContext* shared,
+                       unsigned int bitsPerPixel,
+                       const ContextSettings& settings);
 
     ////////////////////////////////////////////////////////////
     // Member data
     ////////////////////////////////////////////////////////////
-    NSOpenGLContextRef m_context; ///< OpenGL context.
-    NSOpenGLViewRef    m_view;    ///< Only for offscreen context.
-    NSWindowRef        m_window;  ///< Only for offscreen context.
+    NSOpenGLContextRef    m_context;       ///< OpenGL context.
+    NSOpenGLViewRef       m_view;          ///< Only for offscreen context.
+    NSWindowRef           m_window;        ///< Only for offscreen context.
 };
 
 } // namespace priv

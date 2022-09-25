@@ -29,12 +29,11 @@
 // Headers
 ////////////////////////////////////////////////////////////
 #include <SFML/Window/Export.hpp>
+#include <SFML/System/String.hpp>
 
 
 namespace sf
 {
-class String;
-
 ////////////////////////////////////////////////////////////
 /// \brief Give access to the system clipboard
 ///
@@ -42,6 +41,7 @@ class String;
 class SFML_WINDOW_API Clipboard
 {
 public:
+
     ////////////////////////////////////////////////////////////
     /// \brief Get the content of the clipboard as string data
     ///
@@ -96,7 +96,8 @@ public:
 /// sf::String string = sf::Clipboard::getString();
 ///
 /// // or use it in the event loop
-/// for (sf::Event event; window.pollEvent(event);)
+/// sf::Event event;
+/// while(window.pollEvent(event))
 /// {
 ///     if(event.type == sf::Event::Closed)
 ///         window.close();

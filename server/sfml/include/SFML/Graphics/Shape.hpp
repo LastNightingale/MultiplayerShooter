@@ -29,7 +29,6 @@
 // Headers
 ////////////////////////////////////////////////////////////
 #include <SFML/Graphics/Export.hpp>
-
 #include <SFML/Graphics/Drawable.hpp>
 #include <SFML/Graphics/Transformable.hpp>
 #include <SFML/Graphics/VertexArray.hpp>
@@ -38,8 +37,6 @@
 
 namespace sf
 {
-class Texture;
-
 ////////////////////////////////////////////////////////////
 /// \brief Base class for textured shapes with outline
 ///
@@ -47,11 +44,12 @@ class Texture;
 class SFML_GRAPHICS_API Shape : public Drawable, public Transformable
 {
 public:
+
     ////////////////////////////////////////////////////////////
     /// \brief Virtual destructor
     ///
     ////////////////////////////////////////////////////////////
-    ~Shape() override;
+    virtual ~Shape();
 
     ////////////////////////////////////////////////////////////
     /// \brief Change the source texture of the shape
@@ -62,7 +60,7 @@ public:
     /// a pointer to the one that you passed to this function.
     /// If the source texture is destroyed and the shape tries to
     /// use it, the behavior is undefined.
-    /// \a texture can be a null pointer to disable texturing.
+    /// \a texture can be NULL to disable texturing.
     /// If \a resetRect is true, the TextureRect property of
     /// the shape is automatically adjusted to the size of the new
     /// texture. If it is false, the texture rect is left unchanged.
@@ -136,7 +134,7 @@ public:
     ////////////////////////////////////////////////////////////
     /// \brief Get the source texture of the shape
     ///
-    /// If the shape has no source texture, a null pointer is returned.
+    /// If the shape has no source texture, a NULL pointer is returned.
     /// The returned pointer is const, which means that you can't
     /// modify the texture when you retrieve it with this function.
     ///
@@ -250,6 +248,7 @@ public:
     FloatRect getGlobalBounds() const;
 
 protected:
+
     ////////////////////////////////////////////////////////////
     /// \brief Default constructor
     ///
@@ -267,6 +266,7 @@ protected:
     void update();
 
 private:
+
     ////////////////////////////////////////////////////////////
     /// \brief Draw the shape to a render target
     ///
@@ -274,7 +274,7 @@ private:
     /// \param states Current render states
     ///
     ////////////////////////////////////////////////////////////
-    void draw(RenderTarget& target, const RenderStates& states) const override;
+    virtual void draw(RenderTarget& target, RenderStates states) const;
 
     ////////////////////////////////////////////////////////////
     /// \brief Update the fill vertices' color
@@ -301,6 +301,7 @@ private:
     void updateOutlineColors();
 
 private:
+
     ////////////////////////////////////////////////////////////
     // Member data
     ////////////////////////////////////////////////////////////

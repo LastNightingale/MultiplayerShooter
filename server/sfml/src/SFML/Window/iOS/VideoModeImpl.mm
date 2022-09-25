@@ -27,7 +27,6 @@
 ////////////////////////////////////////////////////////////
 #include <SFML/Window/VideoModeImpl.hpp>
 #include <SFML/Window/iOS/SFAppDelegate.hpp>
-
 #include <UIKit/UIKit.h>
 
 namespace sf
@@ -42,7 +41,7 @@ std::vector<VideoMode> VideoModeImpl::getFullscreenModes()
     // Return both portrait and landscape resolutions
     std::vector<VideoMode> modes;
     modes.push_back(desktop);
-    modes.emplace_back(Vector2u(desktop.size.y, desktop.size.x), desktop.bitsPerPixel);
+    modes.push_back(VideoMode(desktop.height, desktop.width, desktop.bitsPerPixel));
     return modes;
 }
 
@@ -50,10 +49,9 @@ std::vector<VideoMode> VideoModeImpl::getFullscreenModes()
 ////////////////////////////////////////////////////////////
 VideoMode VideoModeImpl::getDesktopMode()
 {
-    CGRect bounds       = [[UIScreen mainScreen] bounds];
+    CGRect bounds = [[UIScreen mainScreen] bounds];
     double backingScale = [SFAppDelegate getInstance].backingScaleFactor;
-    return VideoMode({static_cast<unsigned int>(bounds.size.width * backingScale),
-                      static_cast<unsigned int>(bounds.size.height * backingScale)});
+    return VideoMode(static_cast<unsigned int>(bounds.size.width * backingScale), static_cast<unsigned int>(bounds.size.height * backingScale));
 }
 
 } // namespace priv

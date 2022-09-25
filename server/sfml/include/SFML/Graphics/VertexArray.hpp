@@ -29,12 +29,10 @@
 // Headers
 ////////////////////////////////////////////////////////////
 #include <SFML/Graphics/Export.hpp>
-
-#include <SFML/Graphics/Drawable.hpp>
+#include <SFML/Graphics/Vertex.hpp>
 #include <SFML/Graphics/PrimitiveType.hpp>
 #include <SFML/Graphics/Rect.hpp>
-#include <SFML/Graphics/Vertex.hpp>
-
+#include <SFML/Graphics/Drawable.hpp>
 #include <vector>
 
 
@@ -47,6 +45,7 @@ namespace sf
 class SFML_GRAPHICS_API VertexArray : public Drawable
 {
 public:
+
     ////////////////////////////////////////////////////////////
     /// \brief Default constructor
     ///
@@ -86,7 +85,7 @@ public:
     /// \see getVertexCount
     ///
     ////////////////////////////////////////////////////////////
-    Vertex& operator[](std::size_t index);
+    Vertex& operator [](std::size_t index);
 
     ////////////////////////////////////////////////////////////
     /// \brief Get a read-only access to a vertex by its index
@@ -102,7 +101,7 @@ public:
     /// \see getVertexCount
     ///
     ////////////////////////////////////////////////////////////
-    const Vertex& operator[](std::size_t index) const;
+    const Vertex& operator [](std::size_t index) const;
 
     ////////////////////////////////////////////////////////////
     /// \brief Clear the vertex array
@@ -145,6 +144,7 @@ public:
     /// \li As points
     /// \li As lines
     /// \li As triangles
+    /// \li As quads
     /// The default primitive type is sf::Points.
     ///
     /// \param type Type of primitive
@@ -172,6 +172,7 @@ public:
     FloatRect getBounds() const;
 
 private:
+
     ////////////////////////////////////////////////////////////
     /// \brief Draw the vertex array to a render target
     ///
@@ -179,9 +180,10 @@ private:
     /// \param states Current render states
     ///
     ////////////////////////////////////////////////////////////
-    void draw(RenderTarget& target, const RenderStates& states) const override;
+    virtual void draw(RenderTarget& target, RenderStates states) const;
 
 private:
+
     ////////////////////////////////////////////////////////////
     // Member data
     ////////////////////////////////////////////////////////////

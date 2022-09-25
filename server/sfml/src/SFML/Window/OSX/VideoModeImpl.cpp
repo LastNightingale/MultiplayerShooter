@@ -26,12 +26,10 @@
 ////////////////////////////////////////////////////////////
 // Headers
 ////////////////////////////////////////////////////////////
-#include <SFML/System/Err.hpp>
-#include <SFML/Window/OSX/cg_sf_conversion.hpp>
 #include <SFML/Window/VideoModeImpl.hpp>
-
+#include <SFML/Window/OSX/cg_sf_conversion.hpp>
+#include <SFML/System/Err.hpp>
 #include <algorithm>
-#include <ostream>
 
 namespace sf
 {
@@ -44,9 +42,9 @@ std::vector<VideoMode> VideoModeImpl::getFullscreenModes()
     std::vector<VideoMode> modes;
 
     // Retrieve all modes available for main screen only.
-    CFArrayRef cgmodes = CGDisplayCopyAllDisplayModes(CGMainDisplayID(), nullptr);
+    CFArrayRef cgmodes = CGDisplayCopyAllDisplayModes(CGMainDisplayID(), NULL);
 
-    if (cgmodes == nullptr)
+    if (cgmodes == NULL)
     {
         sf::err() << "Couldn't get VideoMode for main display." << std::endl;
         return modes;
@@ -56,14 +54,14 @@ std::vector<VideoMode> VideoModeImpl::getFullscreenModes()
 
     // Loop on each mode and convert it into a sf::VideoMode object.
     const CFIndex modesCount = CFArrayGetCount(cgmodes);
-    for (CFIndex i = 0; i < modesCount; ++i)
+    for (CFIndex i = 0; i < modesCount; i++)
     {
         CGDisplayModeRef cgmode = static_cast<CGDisplayModeRef>(const_cast<void*>(CFArrayGetValueAtIndex(cgmodes, i)));
 
         VideoMode mode = convertCGModeToSFMode(cgmode);
 
         // Skip if bigger than desktop as we currently don't perform hard resolution switch
-        if ((mode.size.x > desktop.size.x) || (mode.size.y > desktop.size.y))
+        if ((mode.width > desktop.width) || (mode.height > desktop.height))
             continue;
 
         // If not yet listed we add it to our modes array.
@@ -87,7 +85,7 @@ VideoMode VideoModeImpl::getDesktopMode()
     // instead of display id and CGDisplayPixelsHigh/Wide.
 
     CGDirectDisplayID display = CGMainDisplayID();
-    CGDisplayModeRef  cgmode  = CGDisplayCopyDisplayMode(display);
+    CGDisplayModeRef cgmode = CGDisplayCopyDisplayMode(display);
 
     mode = convertCGModeToSFMode(cgmode);
 
@@ -98,3 +96,4 @@ VideoMode VideoModeImpl::getDesktopMode()
 
 } // namespace priv
 } // namespace sf
+

@@ -25,42 +25,36 @@
 ////////////////////////////////////////////////////////////
 // Headers
 ////////////////////////////////////////////////////////////
-#include <SFML/System/Err.hpp>
 #include <SFML/Window/Context.hpp>
 #include <SFML/Window/GlContext.hpp>
-
-#include <ostream>
+#include <SFML/System/ThreadLocalPtr.hpp>
 
 
 namespace
 {
-// A nested named namespace is used here to allow unity builds of SFML.
-namespace ContextImpl
-{
-// This per-thread variable holds the current context for each thread
-thread_local sf::Context* currentContext(nullptr);
-} // namespace ContextImpl
-} // namespace
+    // A nested named namespace is used here to allow unity builds of SFML.
+    namespace ContextImpl
+    {
+        // This per-thread variable holds the current context for each thread
+        sf::ThreadLocalPtr<sf::Context> currentContext(NULL);
+    }
+}
 
 namespace sf
 {
 ////////////////////////////////////////////////////////////
-Context::Context() : m_context(priv::GlContext::create())
+Context::Context()
 {
-    if (!setActive(true))
-    {
-        err() << "Failed to set context as active during construction" << std::endl;
-    }
+    m_context = priv::GlContext::create();
+    setActive(true);
 }
 
 
 ////////////////////////////////////////////////////////////
 Context::~Context()
 {
-    if (!setActive(false))
-    {
-        err() << "Failed to set context as inactive during destruction" << std::endl;
-    }
+    setActive(false);
+    delete m_context;
 }
 
 
@@ -70,7 +64,7 @@ bool Context::setActive(bool active)
     bool result = m_context->setActive(active);
 
     if (result)
-        ContextImpl::currentContext = (active ? this : nullptr);
+        ContextImpl::currentContext = (active ? this : NULL);
 
     return result;
 }
@@ -89,15 +83,15 @@ const Context* Context::getActiveContext()
     using ContextImpl::currentContext;
 
     // We have to check that the last activated sf::Context is still active (a RenderTarget activation may have deactivated it)
-    if (currentContext && currentContext->m_context.get() == priv::GlContext::getActiveContext())
+    if (currentContext && currentContext->m_context == priv::GlContext::getActiveContext())
         return currentContext;
     else
-        return nullptr;
+        return NULL;
 }
 
 
 ////////////////////////////////////////////////////////////
-std::uint64_t Context::getActiveContextId()
+Uint64 Context::getActiveContextId()
 {
     return priv::GlContext::getActiveContextId();
 }
@@ -118,13 +112,10 @@ GlFunctionPointer Context::getFunction(const char* name)
 
 
 ////////////////////////////////////////////////////////////
-Context::Context(const ContextSettings& settings, const Vector2u& size) :
-m_context(priv::GlContext::create(settings, size))
+Context::Context(const ContextSettings& settings, unsigned int width, unsigned int height)
 {
-    if (!setActive(true))
-    {
-        err() << "Failed to set context as active during construction" << std::endl;
-    }
+    m_context = priv::GlContext::create(settings, width, height);
+    setActive(true);
 }
 
 } // namespace sf

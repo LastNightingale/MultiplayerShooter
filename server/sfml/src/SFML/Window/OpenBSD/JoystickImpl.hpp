@@ -37,6 +37,7 @@ namespace priv
 class JoystickImpl
 {
 public:
+
     ////////////////////////////////////////////////////////////
     /// \brief Perform the global initialization of the joystick module
     ///
@@ -67,7 +68,7 @@ public:
     /// \return True on success, false on failure
     ///
     ////////////////////////////////////////////////////////////
-    [[nodiscard]] bool open(unsigned int index);
+    bool open(unsigned int index);
 
     ////////////////////////////////////////////////////////////
     /// \brief Close the joystick
@@ -97,13 +98,14 @@ public:
     /// \return Joystick state
     ///
     ////////////////////////////////////////////////////////////
-    [[nodiscard]] JoystickState update();
+    JoystickState update();
 
 private:
+
     ////////////////////////////////////////////////////////////
     // Member data
     ////////////////////////////////////////////////////////////
-    int                      m_index;          ///< Index of the joystick
+    int m_index;                               ///< Index of the joystick
     Joystick::Identification m_identification; ///< Joystick identification
 };
 

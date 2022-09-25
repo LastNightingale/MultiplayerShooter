@@ -32,11 +32,11 @@
 #ifdef __OBJC__
 
 @class NSAutoreleasePool;
-using NSAutoreleasePoolRef = NSAutoreleasePool*;
+typedef NSAutoreleasePool* NSAutoreleasePoolRef;
 
 #else // If C++
 
-using NSAutoreleasePoolRef = void*;
+typedef void* NSAutoreleasePoolRef;
 
 #endif
 
@@ -64,6 +64,7 @@ public:
     ~AutoreleasePool();
 
 private:
+
     ////////////////////////////////////////////////////////////
     // Member data
     ////////////////////////////////////////////////////////////

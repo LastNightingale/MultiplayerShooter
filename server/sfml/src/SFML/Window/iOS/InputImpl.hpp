@@ -43,6 +43,7 @@ namespace priv
 class InputImpl
 {
 public:
+
     ////////////////////////////////////////////////////////////
     /// \brief Check if a key is pressed
     ///

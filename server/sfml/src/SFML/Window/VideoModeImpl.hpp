@@ -42,6 +42,7 @@ namespace priv
 class VideoModeImpl
 {
 public:
+
     ////////////////////////////////////////////////////////////
     /// \brief Get the list of all the supported fullscreen video modes
     ///

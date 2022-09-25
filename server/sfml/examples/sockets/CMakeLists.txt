@@ -1,9 +1,12 @@
+
+set(SRCROOT ${PROJECT_SOURCE_DIR}/examples/sockets)
+
 # all source files
-set(SRC Sockets.cpp
-        TCP.cpp
-        UDP.cpp)
+set(SRC ${SRCROOT}/Sockets.cpp
+        ${SRCROOT}/TCP.cpp
+        ${SRCROOT}/UDP.cpp)
 
 # define the sockets target
 sfml_add_example(sockets
                  SOURCES ${SRC}
-                 DEPENDS SFML::Network)
+                 DEPENDS sfml-network)

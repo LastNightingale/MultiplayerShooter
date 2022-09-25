@@ -28,15 +28,15 @@
 ////////////////////////////////////////////////////////////
 // Headers
 ////////////////////////////////////////////////////////////
+#include <SFML/Window/VideoMode.hpp>
 #include <SFML/Window/ContextSettings.hpp>
 #include <SFML/Window/EGLCheck.hpp>
 #include <SFML/Window/GlContext.hpp>
-#include <SFML/Window/VideoMode.hpp>
 #include <SFML/Window/WindowStyle.hpp> // Prevent conflict with macro None from Xlib
-
 #include <glad/egl.h>
 #if defined(SFML_SYSTEM_LINUX) && !defined(SFML_USE_DRM)
-#include <X11/Xlib.h>
+    #include <X11/Xlib.h>
+    #include <X11/Xutil.h>
 #endif
 
 namespace sf
@@ -46,10 +46,11 @@ namespace priv
 class EglContext : public GlContext
 {
 public:
+
     ////////////////////////////////////////////////////////////
     /// \brief Create a new context, not associated to a window
     ///
-    /// \param shared Context to share the new one with (can be a null pointer)
+    /// \param shared Context to share the new one with (can be NULL)
     ///
     ////////////////////////////////////////////////////////////
     EglContext(EglContext* shared);
@@ -63,7 +64,7 @@ public:
     /// \param bitsPerPixel Pixel depth, in bits per pixel
     ///
     ////////////////////////////////////////////////////////////
-    EglContext(EglContext* shared, const ContextSettings& settings, const WindowImpl& owner, unsigned int bitsPerPixel);
+    EglContext(EglContext* shared, const ContextSettings& settings, const WindowImpl* owner, unsigned int bitsPerPixel);
 
     ////////////////////////////////////////////////////////////
     /// \brief Create a new context that embeds its own rendering target
@@ -71,16 +72,17 @@ public:
     ///
     /// \param shared   Context to share the new one with
     /// \param settings Creation parameters
-    /// \param size     Back buffer width and height, in pixels
+    /// \param width    Back buffer width, in pixels
+    /// \param height   Back buffer height, in pixels
     ///
     ////////////////////////////////////////////////////////////
-    EglContext(EglContext* shared, const ContextSettings& settings, const Vector2u& size);
+    EglContext(EglContext* shared, const ContextSettings& settings, unsigned int width, unsigned int height);
 
     ////////////////////////////////////////////////////////////
     /// \brief Destructor
     ///
     ////////////////////////////////////////////////////////////
-    ~EglContext() override;
+    ~EglContext();
 
     ////////////////////////////////////////////////////////////
     /// \brief Get the address of an OpenGL function
@@ -101,13 +103,13 @@ public:
     /// \return True on success, false if any error happened
     ///
     ////////////////////////////////////////////////////////////
-    bool makeCurrent(bool current) override;
+    virtual bool makeCurrent(bool current);
 
     ////////////////////////////////////////////////////////////
     /// \brief Display what has been rendered to the context so far
     ///
     ////////////////////////////////////////////////////////////
-    void display() override;
+    virtual void display();
 
     ////////////////////////////////////////////////////////////
     /// \brief Enable or disable vertical synchronization
@@ -120,12 +122,12 @@ public:
     /// \param enabled: True to enable v-sync, false to deactivate
     ///
     ////////////////////////////////////////////////////////////
-    void setVerticalSyncEnabled(bool enabled) override;
+    virtual void setVerticalSyncEnabled(bool enabled);
 
     ////////////////////////////////////////////////////////////
     /// \brief Create the context
     ///
-    /// \param shared       Context to share the new one with (can be a null pointer)
+    /// \param shared       Context to share the new one with (can be NULL)
     /// \param bitsPerPixel Pixel depth, in bits per pixel
     /// \param settings     Creation parameters
     ///
@@ -179,6 +181,7 @@ public:
 #endif
 
 private:
+
     ////////////////////////////////////////////////////////////
     /// \brief Helper to copy the picked EGL configuration
     ////////////////////////////////////////////////////////////
@@ -187,10 +190,11 @@ private:
     ////////////////////////////////////////////////////////////
     // Member data
     ////////////////////////////////////////////////////////////
-    EGLDisplay m_display; //!< The internal EGL display
-    EGLContext m_context; //!< The internal EGL context
-    EGLSurface m_surface; //!< The internal EGL surface
-    EGLConfig  m_config;  //!< The internal EGL config
+    EGLDisplay  m_display; //!< The internal EGL display
+    EGLContext  m_context; //!< The internal EGL context
+    EGLSurface  m_surface; //!< The internal EGL surface
+    EGLConfig   m_config;  //!< The internal EGL config
+
 };
 
 } // namespace priv

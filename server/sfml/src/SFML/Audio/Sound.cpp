@@ -25,31 +25,39 @@
 ////////////////////////////////////////////////////////////
 // Headers
 ////////////////////////////////////////////////////////////
-#include <SFML/Audio/ALCheck.hpp>
 #include <SFML/Audio/Sound.hpp>
 #include <SFML/Audio/SoundBuffer.hpp>
+#include <SFML/Audio/ALCheck.hpp>
 
 #if defined(__APPLE__)
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+    #if defined(__clang__)
+        #pragma clang diagnostic ignored "-Wdeprecated-declarations"
+    #elif defined(__GNUC__)
+        #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+    #endif
 #endif
 
 namespace sf
 {
 ////////////////////////////////////////////////////////////
-Sound::Sound() : m_buffer(nullptr)
+Sound::Sound() :
+m_buffer(NULL)
 {
 }
 
 
 ////////////////////////////////////////////////////////////
-Sound::Sound(const SoundBuffer& buffer) : m_buffer(nullptr)
+Sound::Sound(const SoundBuffer& buffer) :
+m_buffer(NULL)
 {
     setBuffer(buffer);
 }
 
 
 ////////////////////////////////////////////////////////////
-Sound::Sound(const Sound& copy) : SoundSource(copy), m_buffer(nullptr)
+Sound::Sound(const Sound& copy) :
+SoundSource(copy),
+m_buffer   (NULL)
 {
     if (copy.m_buffer)
         setBuffer(*copy.m_buffer);
@@ -153,7 +161,7 @@ Sound::Status Sound::getStatus() const
 
 
 ////////////////////////////////////////////////////////////
-Sound& Sound::operator=(const Sound& right)
+Sound& Sound::operator =(const Sound& right)
 {
     // Here we don't use the copy-and-swap idiom, because it would mess up
     // the list of sound instances contained in the buffers and unnecessarily
@@ -171,7 +179,7 @@ Sound& Sound::operator=(const Sound& right)
     {
         stop();
         m_buffer->detachSound(this);
-        m_buffer = nullptr;
+        m_buffer = NULL;
     }
 
     // Copy the remaining sound attributes
@@ -194,7 +202,7 @@ void Sound::resetBuffer()
     {
         alCheck(alSourcei(m_source, AL_BUFFER, 0));
         m_buffer->detachSound(this);
-        m_buffer = nullptr;
+        m_buffer = NULL;
     }
 }
 

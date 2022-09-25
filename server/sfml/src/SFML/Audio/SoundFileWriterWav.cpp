@@ -27,54 +27,71 @@
 ////////////////////////////////////////////////////////////
 #include <SFML/Audio/SoundFileWriterWav.hpp>
 #include <SFML/System/Err.hpp>
-#include <SFML/System/Utils.hpp>
-
+#include <algorithm>
+#include <cctype>
 #include <cassert>
-#include <ostream>
 
 
 namespace
 {
-// The following functions takes integers in host byte order
-// and writes them to a stream as little endian
+    // The following functions takes integers in host byte order
+    // and writes them to a stream as little endian
 
-void encode(std::ostream& stream, std::int16_t value)
-{
-    unsigned char bytes[] = {static_cast<unsigned char>(value & 0xFF), static_cast<unsigned char>(value >> 8)};
-    stream.write(reinterpret_cast<const char*>(bytes), sizeof(bytes));
-}
+    void encode(std::ostream& stream, sf::Int16 value)
+    {
+        unsigned char bytes[] =
+        {
+            static_cast<unsigned char>(value & 0xFF),
+            static_cast<unsigned char>(value >> 8)
+        };
+        stream.write(reinterpret_cast<const char*>(bytes), sizeof(bytes));
+    }
 
-void encode(std::ostream& stream, std::uint16_t value)
-{
-    unsigned char bytes[] = {static_cast<unsigned char>(value & 0xFF), static_cast<unsigned char>(value >> 8)};
-    stream.write(reinterpret_cast<const char*>(bytes), sizeof(bytes));
-}
+    void encode(std::ostream& stream, sf::Uint16 value)
+    {
+        unsigned char bytes[] =
+        {
+            static_cast<unsigned char>(value & 0xFF),
+            static_cast<unsigned char>(value >> 8)
+        };
+        stream.write(reinterpret_cast<const char*>(bytes), sizeof(bytes));
+    }
 
-void encode(std::ostream& stream, std::uint32_t value)
-{
-    unsigned char bytes[] = {
-        static_cast<unsigned char>(value & 0x000000FF),
-        static_cast<unsigned char>((value & 0x0000FF00) >> 8),
-        static_cast<unsigned char>((value & 0x00FF0000) >> 16),
-        static_cast<unsigned char>((value & 0xFF000000) >> 24),
-    };
-    stream.write(reinterpret_cast<const char*>(bytes), sizeof(bytes));
+    void encode(std::ostream& stream, sf::Uint32 value)
+    {
+        unsigned char bytes[] =
+        {
+            static_cast<unsigned char>(value & 0x000000FF),
+            static_cast<unsigned char>((value & 0x0000FF00) >> 8),
+            static_cast<unsigned char>((value & 0x00FF0000) >> 16),
+            static_cast<unsigned char>((value & 0xFF000000) >> 24),
+        };
+        stream.write(reinterpret_cast<const char*>(bytes), sizeof(bytes));
+    }
+
+    unsigned char toLower(unsigned char character)
+    {
+        return static_cast<unsigned char>(std::tolower(character));
+    }
 }
-} // namespace
 
 namespace sf
 {
 namespace priv
 {
 ////////////////////////////////////////////////////////////
-bool SoundFileWriterWav::check(const std::filesystem::path& filename)
+bool SoundFileWriterWav::check(const std::string& filename)
 {
-    return toLower(filename.extension().string()) == ".wav";
+    std::string extension = filename.substr(filename.find_last_of('.') + 1);
+    std::transform(extension.begin(), extension.end(), extension.begin(), toLower);
+
+    return extension == "wav";
 }
 
 
 ////////////////////////////////////////////////////////////
-SoundFileWriterWav::SoundFileWriterWav() : m_file()
+SoundFileWriterWav::SoundFileWriterWav() :
+m_file()
 {
 }
 
@@ -87,20 +104,20 @@ SoundFileWriterWav::~SoundFileWriterWav()
 
 
 ////////////////////////////////////////////////////////////
-bool SoundFileWriterWav::open(const std::filesystem::path& filename, unsigned int sampleRate, unsigned int channelCount)
+bool SoundFileWriterWav::open(const std::string& filename, unsigned int sampleRate, unsigned int channelCount)
 {
     // Open the file
     m_file.open(filename.c_str(), std::ios::binary);
     if (!m_file)
     {
-        err() << "Failed to open WAV sound file for writing\n" << formatDebugPathInfo(filename) << std::endl;
+        err() << "Failed to open WAV sound file \"" << filename << "\" for writing" << std::endl;
         return false;
     }
 
     // Write the header
     if (!writeHeader(sampleRate, channelCount))
     {
-        err() << "Failed to write header of WAV sound file\n" << formatDebugPathInfo(filename) << std::endl;
+        err() << "Failed to write header of WAV sound file \"" << filename << "\"" << std::endl;
         return false;
     }
 
@@ -109,7 +126,7 @@ bool SoundFileWriterWav::open(const std::filesystem::path& filename, unsigned in
 
 
 ////////////////////////////////////////////////////////////
-void SoundFileWriterWav::write(const std::int16_t* samples, std::uint64_t count)
+void SoundFileWriterWav::write(const Int16* samples, Uint64 count)
 {
     assert(m_file.good());
 
@@ -128,34 +145,35 @@ bool SoundFileWriterWav::writeHeader(unsigned int sampleRate, unsigned int chann
     m_file.write(mainChunkId, sizeof(mainChunkId));
 
     // Write the main chunk header
-    encode(m_file, static_cast<std::uint32_t>(0)); // 0 is a placeholder, will be written later
+    Uint32 mainChunkSize = 0; // placeholder, will be written later
+    encode(m_file, mainChunkSize);
     char mainChunkFormat[4] = {'W', 'A', 'V', 'E'};
     m_file.write(mainChunkFormat, sizeof(mainChunkFormat));
 
     // Write the sub-chunk 1 ("format") id and size
     char fmtChunkId[4] = {'f', 'm', 't', ' '};
     m_file.write(fmtChunkId, sizeof(fmtChunkId));
-    std::uint32_t fmtChunkSize = 16;
+    Uint32 fmtChunkSize = 16;
     encode(m_file, fmtChunkSize);
 
     // Write the format (PCM)
-    std::uint16_t format = 1;
+    Uint16 format = 1;
     encode(m_file, format);
 
     // Write the sound attributes
-    encode(m_file, static_cast<std::uint16_t>(channelCount));
+    encode(m_file, static_cast<Uint16>(channelCount));
     encode(m_file, sampleRate);
-    std::uint32_t byteRate = sampleRate * channelCount * 2;
+    Uint32 byteRate = sampleRate * channelCount * 2;
     encode(m_file, byteRate);
-    auto blockAlign = static_cast<std::uint16_t>(channelCount * 2);
+    Uint16 blockAlign = static_cast<Uint16>(channelCount * 2);
     encode(m_file, blockAlign);
-    std::uint16_t bitsPerSample = 16;
+    Uint16 bitsPerSample = 16;
     encode(m_file, bitsPerSample);
 
     // Write the sub-chunk 2 ("data") id and size
     char dataChunkId[4] = {'d', 'a', 't', 'a'};
     m_file.write(dataChunkId, sizeof(dataChunkId));
-    std::uint32_t dataChunkSize = 0; // placeholder, will be written later
+    Uint32 dataChunkSize = 0; // placeholder, will be written later
     encode(m_file, dataChunkSize);
 
     return true;
@@ -171,11 +189,13 @@ void SoundFileWriterWav::close()
         m_file.flush();
 
         // Update the main chunk size and data sub-chunk size
-        std::uint32_t fileSize = static_cast<std::uint32_t>(m_file.tellp());
+        Uint32 fileSize = static_cast<Uint32>(m_file.tellp());
+        Uint32 mainChunkSize = fileSize - 8;  // 8 bytes RIFF header
+        Uint32 dataChunkSize = fileSize - 44; // 44 bytes RIFF + WAVE headers
         m_file.seekp(4);
-        encode(m_file, fileSize - 8); // 8 bytes RIFF header
+        encode(m_file, mainChunkSize);
         m_file.seekp(40);
-        encode(m_file, fileSize - 44); // 44 bytes RIFF + WAVE headers
+        encode(m_file, dataChunkSize);
 
         m_file.close();
     }

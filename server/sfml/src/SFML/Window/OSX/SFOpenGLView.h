@@ -28,15 +28,20 @@
 ////////////////////////////////////////////////////////////
 #import <AppKit/AppKit.h>
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#if defined(__APPLE__)
+    #if defined(__clang__)
+        #pragma clang diagnostic push
+        #pragma clang diagnostic ignored "-Wdeprecated-declarations"
+    #elif defined(__GNUC__)
+        #pragma GCC diagnostic push
+        #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+    #endif
+#endif
 
-namespace sf
-{
-namespace priv
-{
-class WindowImplCocoa;
-}
+namespace sf {
+    namespace priv {
+        class WindowImplCocoa;
+    }
 }
 
 @class SFSilentResponder;
@@ -73,22 +78,22 @@ class WindowImplCocoa;
 ////////////////////////////////////////////////////////////
 @interface SFOpenGLView : NSOpenGLView
 {
-    sf::priv::WindowImplCocoa* m_requester;     ///< View's requester
-    BOOL                       m_useKeyRepeat;  ///< Key repeat setting
-    BOOL                       m_mouseIsIn;     ///< Mouse positional state
-    NSCursor*                  m_cursor;        ///< Active cursor
-    NSTrackingArea*            m_trackingArea;  ///< Mouse tracking area
-    BOOL                       m_fullscreen;    ///< Indicate whether the window is fullscreen or not
-    CGFloat                    m_scaleFactor;   ///< Display scale factor (e.g. 1x for classic display, 2x for retina)
-    BOOL                       m_cursorGrabbed; ///< Is the mouse cursor trapped?
-    CGFloat                    m_deltaXBuffer;  ///< See note about cursor grabbing above
-    CGFloat                    m_deltaYBuffer;  ///< See note about cursor grabbing above
-    BOOL                       m_highDpi;       ///< Is high-DPI enabled?
+    sf::priv::WindowImplCocoa*    m_requester;      ///< View's requester
+    BOOL                          m_useKeyRepeat;   ///< Key repeat setting
+    BOOL                          m_mouseIsIn;      ///< Mouse positional state
+    NSCursor*                     m_cursor;         ///< Active cursor
+    NSTrackingArea*               m_trackingArea;   ///< Mouse tracking area
+    BOOL                          m_fullscreen;     ///< Indicate whether the window is fullscreen or not
+    CGFloat                       m_scaleFactor;    ///< Display scale factor (e.g. 1x for classic display, 2x for retina)
+    BOOL                          m_cursorGrabbed;  ///< Is the mouse cursor trapped?
+    CGFloat                       m_deltaXBuffer;   ///< See note about cursor grabbing above
+    CGFloat                       m_deltaYBuffer;   ///< See note about cursor grabbing above
+    BOOL                          m_highDpi;        ///< Is high-DPI enabled?
 
     // Hidden text view used to convert key event to actual chars.
     // We use a silent responder to prevent sound alerts.
-    SFSilentResponder* m_silentResponder;
-    NSTextView*        m_hiddenTextView;
+    SFSilentResponder*  m_silentResponder;
+    NSTextView*         m_hiddenTextView;
 }
 
 ////////////////////////////////////////////////////////////
@@ -105,7 +110,7 @@ class WindowImplCocoa;
 /// \return an initialized view
 ///
 ////////////////////////////////////////////////////////////
-- (id)initWithFrame:(NSRect)frameRect fullscreen:(BOOL)isFullscreen highDpi:(BOOL)isHighDpi;
+-(id)initWithFrame:(NSRect)frameRect fullscreen:(BOOL)isFullscreen highDpi:(BOOL)isHighDpi;
 
 ////////////////////////////////////////////////////////////
 /// \brief Finish the creation of the SFML OpenGL view
@@ -113,7 +118,7 @@ class WindowImplCocoa;
 /// This method should be called after the view was added to a window
 ///
 ////////////////////////////////////////////////////////////
-- (void)finishInit;
+-(void)finishInit;
 
 ////////////////////////////////////////////////////////////
 /// \brief Apply the given requester to the view
@@ -121,7 +126,7 @@ class WindowImplCocoa;
 /// \param requester new 'requester' of the view
 ///
 ////////////////////////////////////////////////////////////
-- (void)setRequesterTo:(sf::priv::WindowImplCocoa*)requester;
+-(void)setRequesterTo:(sf::priv::WindowImplCocoa*)requester;
 
 ////////////////////////////////////////////////////////////
 /// \brief Compute the position in global coordinate
@@ -131,7 +136,7 @@ class WindowImplCocoa;
 /// \return the global coordinates of the point
 ///
 ////////////////////////////////////////////////////////////
-- (NSPoint)computeGlobalPositionOfRelativePoint:(NSPoint)point;
+-(NSPoint)computeGlobalPositionOfRelativePoint:(NSPoint)point;
 
 ////////////////////////////////////////////////////////////
 /// \brief Get the display scale factor
@@ -139,7 +144,7 @@ class WindowImplCocoa;
 /// \return e.g. 1.0 for classic display, 2.0 for retina display
 ///
 ////////////////////////////////////////////////////////////
-- (CGFloat)displayScaleFactor;
+-(CGFloat)displayScaleFactor;
 
 @end
 
@@ -149,13 +154,13 @@ class WindowImplCocoa;
 /// \brief Enable key repeat
 ///
 ////////////////////////////////////////////////////////////
-- (void)enableKeyRepeat;
+-(void)enableKeyRepeat;
 
 ////////////////////////////////////////////////////////////
 /// \brief Disable key repeat
 ///
 ////////////////////////////////////////////////////////////
-- (void)disableKeyRepeat;
+-(void)disableKeyRepeat;
 
 @end
 
@@ -165,7 +170,7 @@ class WindowImplCocoa;
 /// \brief Set the system cursor for the window area
 ///
 ////////////////////////////////////////////////////////////
-- (void)setCursor:(NSCursor*)cursor;
+-(void)setCursor:(NSCursor*)cursor;
 
 ////////////////////////////////////////////////////////////
 /// \brief Compute the position of the cursor
@@ -175,7 +180,7 @@ class WindowImplCocoa;
 /// \return the mouse position in SFML coord system
 ///
 ////////////////////////////////////////////////////////////
-- (NSPoint)cursorPositionFromEvent:(NSEvent*)eventOrNil;
+-(NSPoint)cursorPositionFromEvent:(NSEvent*)eventOrNil;
 
 ////////////////////////////////////////////////////////////
 /// \brief Determine where the mouse is
@@ -183,7 +188,7 @@ class WindowImplCocoa;
 /// \return true when the mouse is inside the OpenGL view, false otherwise
 ///
 ////////////////////////////////////////////////////////////
-- (BOOL)isMouseInside;
+-(BOOL)isMouseInside;
 
 ////////////////////////////////////////////////////////////
 /// Clips or releases the mouse cursor
@@ -193,7 +198,7 @@ class WindowImplCocoa;
 /// \param grabbed YES to grab, NO to release
 ///
 ////////////////////////////////////////////////////////////
-- (void)setCursorGrabbed:(BOOL)grabbed;
+-(void)setCursorGrabbed:(BOOL)grabbed;
 
 ////////////////////////////////////////////////////////////
 /// Update the cursor position according to the grabbing behaviour
@@ -201,8 +206,14 @@ class WindowImplCocoa;
 /// This function has to be called when the window's state change
 ///
 ////////////////////////////////////////////////////////////
-- (void)updateCursorGrabbed;
+-(void)updateCursorGrabbed;
 
 @end
 
-#pragma GCC diagnostic pop
+#if defined(__APPLE__)
+    #if defined(__clang__)
+        #pragma clang diagnostic pop
+    #elif defined(__GNUC__)
+        #pragma GCC diagnostic pop
+    #endif
+#endif

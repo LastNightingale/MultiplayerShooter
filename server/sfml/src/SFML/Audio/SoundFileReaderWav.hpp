@@ -29,6 +29,7 @@
 // Headers
 ////////////////////////////////////////////////////////////
 #include <SFML/Audio/SoundFileReader.hpp>
+#include <string>
 
 
 namespace sf
@@ -42,6 +43,7 @@ namespace priv
 class SoundFileReaderWav : public SoundFileReader
 {
 public:
+
     ////////////////////////////////////////////////////////////
     /// \brief Check if this reader can handle a file given by an input stream
     ///
@@ -50,9 +52,10 @@ public:
     /// \return True if the file is supported by this reader
     ///
     ////////////////////////////////////////////////////////////
-    [[nodiscard]] static bool check(InputStream& stream);
+    static bool check(InputStream& stream);
 
 public:
+
     ////////////////////////////////////////////////////////////
     /// \brief Default constructor
     ///
@@ -66,7 +69,7 @@ public:
     /// \param info   Structure to fill with the attributes of the loaded sound
     ///
     ////////////////////////////////////////////////////////////
-    [[nodiscard]] bool open(sf::InputStream& stream, Info& info) override;
+    virtual bool open(sf::InputStream& stream, Info& info);
 
     ////////////////////////////////////////////////////////////
     /// \brief Change the current read position to the given sample offset
@@ -81,7 +84,7 @@ public:
     /// \param sampleOffset Index of the sample to jump to, relative to the beginning
     ///
     ////////////////////////////////////////////////////////////
-    void seek(std::uint64_t sampleOffset) override;
+    virtual void seek(Uint64 sampleOffset);
 
     ////////////////////////////////////////////////////////////
     /// \brief Read audio samples from the open file
@@ -92,9 +95,10 @@ public:
     /// \return Number of samples actually read (may be less than \a maxCount)
     ///
     ////////////////////////////////////////////////////////////
-    [[nodiscard]] std::uint64_t read(std::int16_t* samples, std::uint64_t maxCount) override;
+    virtual Uint64 read(Int16* samples, Uint64 maxCount);
 
 private:
+
     ////////////////////////////////////////////////////////////
     /// \brief Read the header of the open file
     ///
@@ -108,10 +112,10 @@ private:
     ////////////////////////////////////////////////////////////
     // Member data
     ////////////////////////////////////////////////////////////
-    InputStream*  m_stream;         //!< Source stream to read from
-    unsigned int  m_bytesPerSample; //!< Size of a sample, in bytes
-    std::uint64_t m_dataStart;      //!< Starting position of the audio data in the open file
-    std::uint64_t m_dataEnd;        //!< Position one byte past the end of the audio data in the open file
+    InputStream* m_stream;         //!< Source stream to read from
+    unsigned int m_bytesPerSample; //!< Size of a sample, in bytes
+    Uint64       m_dataStart;      //!< Starting position of the audio data in the open file
+    Uint64       m_dataEnd;        //!< Position one byte past the end of the audio data in the open file
 };
 
 } // namespace priv

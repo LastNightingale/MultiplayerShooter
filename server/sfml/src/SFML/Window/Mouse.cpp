@@ -25,8 +25,9 @@
 ////////////////////////////////////////////////////////////
 // Headers
 ////////////////////////////////////////////////////////////
-#include <SFML/Window/InputImpl.hpp>
 #include <SFML/Window/Mouse.hpp>
+#include <SFML/Window/InputImpl.hpp>
+#include <SFML/Window/Window.hpp>
 
 
 namespace sf

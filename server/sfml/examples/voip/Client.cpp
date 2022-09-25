@@ -4,12 +4,11 @@
 ////////////////////////////////////////////////////////////
 #include <SFML/Audio.hpp>
 #include <SFML/Network.hpp>
-
 #include <iostream>
 
 
-const std::uint8_t clientAudioData   = 1;
-const std::uint8_t clientEndOfStream = 2;
+const sf::Uint8 clientAudioData   = 1;
+const sf::Uint8 clientEndOfStream = 2;
 
 
 ////////////////////////////////////////////////////////////
@@ -19,6 +18,7 @@ const std::uint8_t clientEndOfStream = 2;
 class NetworkRecorder : public sf::SoundRecorder
 {
 public:
+
     ////////////////////////////////////////////////////////////
     /// Constructor
     ///
@@ -26,7 +26,9 @@ public:
     /// \param port Port of the remote host
     ///
     ////////////////////////////////////////////////////////////
-    NetworkRecorder(const sf::IpAddress& host, unsigned short port) : m_host(host), m_port(port)
+    NetworkRecorder(const sf::IpAddress& host, unsigned short port) :
+    m_host(host),
+    m_port(port)
     {
     }
 
@@ -36,18 +38,19 @@ public:
     /// \see SoundRecorder::~SoundRecorder()
     ///
     ////////////////////////////////////////////////////////////
-    ~NetworkRecorder() override
+    ~NetworkRecorder()
     {
         // Make sure to stop the recording thread
         stop();
     }
 
 private:
+
     ////////////////////////////////////////////////////////////
     /// \see SoundRecorder::onStart
     ///
     ////////////////////////////////////////////////////////////
-    bool onStart() override
+    virtual bool onStart()
     {
         if (m_socket.connect(m_host, m_port) == sf::Socket::Done)
         {
@@ -64,12 +67,12 @@ private:
     /// \see SoundRecorder::onProcessSamples
     ///
     ////////////////////////////////////////////////////////////
-    bool onProcessSamples(const std::int16_t* samples, std::size_t sampleCount) override
+    virtual bool onProcessSamples(const sf::Int16* samples, std::size_t sampleCount)
     {
         // Pack the audio samples into a network packet
         sf::Packet packet;
         packet << clientAudioData;
-        packet.append(samples, sampleCount * sizeof(std::int16_t));
+        packet.append(samples, sampleCount * sizeof(sf::Int16));
 
         // Send the audio packet to the server
         return m_socket.send(packet) == sf::Socket::Done;
@@ -79,16 +82,12 @@ private:
     /// \see SoundRecorder::onStop
     ///
     ////////////////////////////////////////////////////////////
-    void onStop() override
+    virtual void onStop()
     {
         // Send a "end-of-stream" packet
         sf::Packet packet;
         packet << clientEndOfStream;
-
-        if (m_socket.send(packet) != sf::Socket::Done)
-        {
-            std::cerr << "Failed to send end-of-stream packet" << std::endl;
-        }
+        m_socket.send(packet);
 
         // Close the socket
         m_socket.disconnect();
@@ -118,15 +117,16 @@ void doClient(unsigned short port)
     }
 
     // Ask for server address
-    std::optional<sf::IpAddress> server;
+    sf::IpAddress server;
     do
     {
         std::cout << "Type address or name of the server to connect to: ";
-        std::cin >> server;
-    } while (!server.has_value());
+        std::cin  >> server;
+    }
+    while (server == sf::IpAddress::None);
 
     // Create an instance of our custom recorder
-    NetworkRecorder recorder(server.value(), port);
+    NetworkRecorder recorder(server, port);
 
     // Wait for user input...
     std::cin.ignore(10000, '\n');
@@ -134,12 +134,7 @@ void doClient(unsigned short port)
     std::cin.ignore(10000, '\n');
 
     // Start capturing audio data
-    if (!recorder.start(44100))
-    {
-        std::cerr << "Failed to start recorder" << std::endl;
-        return;
-    }
-
+    recorder.start(44100);
     std::cout << "Recording... press enter to stop";
     std::cin.ignore(10000, '\n');
     recorder.stop();

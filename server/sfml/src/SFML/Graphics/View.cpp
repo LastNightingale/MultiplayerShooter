@@ -26,7 +26,6 @@
 // Headers
 ////////////////////////////////////////////////////////////
 #include <SFML/Graphics/View.hpp>
-
 #include <cmath>
 
 
@@ -34,24 +33,24 @@ namespace sf
 {
 ////////////////////////////////////////////////////////////
 View::View() :
-m_center(),
-m_size(),
-m_rotation(),
-m_viewport({0, 0}, {1, 1}),
-m_transformUpdated(false),
+m_center             (),
+m_size               (),
+m_rotation           (0),
+m_viewport           (0, 0, 1, 1),
+m_transformUpdated   (false),
 m_invTransformUpdated(false)
 {
-    reset(FloatRect({0, 0}, {1000, 1000}));
+    reset(FloatRect(0, 0, 1000, 1000));
 }
 
 
 ////////////////////////////////////////////////////////////
 View::View(const FloatRect& rectangle) :
-m_center(),
-m_size(),
-m_rotation(),
-m_viewport({0, 0}, {1, 1}),
-m_transformUpdated(false),
+m_center             (),
+m_size               (),
+m_rotation           (0),
+m_viewport           (0, 0, 1, 1),
+m_transformUpdated   (false),
 m_invTransformUpdated(false)
 {
     reset(rectangle);
@@ -60,38 +59,58 @@ m_invTransformUpdated(false)
 
 ////////////////////////////////////////////////////////////
 View::View(const Vector2f& center, const Vector2f& size) :
-m_center(center),
-m_size(size),
-m_rotation(),
-m_viewport({0, 0}, {1, 1}),
-m_transformUpdated(false),
+m_center             (center),
+m_size               (size),
+m_rotation           (0),
+m_viewport           (0, 0, 1, 1),
+m_transformUpdated   (false),
 m_invTransformUpdated(false)
 {
+
+}
+
+////////////////////////////////////////////////////////////
+void View::setCenter(float x, float y)
+{
+    m_center.x = x;
+    m_center.y = y;
+
+    m_transformUpdated    = false;
+    m_invTransformUpdated = false;
 }
 
 
 ////////////////////////////////////////////////////////////
 void View::setCenter(const Vector2f& center)
 {
-    m_center              = center;
+    setCenter(center.x, center.y);
+}
+
+
+////////////////////////////////////////////////////////////
+void View::setSize(float width, float height)
+{
+    m_size.x = width;
+    m_size.y = height;
+
     m_transformUpdated    = false;
     m_invTransformUpdated = false;
 }
+
 
 ////////////////////////////////////////////////////////////
 void View::setSize(const Vector2f& size)
 {
-    m_size = size;
-
-    m_transformUpdated    = false;
-    m_invTransformUpdated = false;
+    setSize(size.x, size.y);
 }
 
 
 ////////////////////////////////////////////////////////////
-void View::setRotation(Angle angle)
+void View::setRotation(float angle)
 {
-    m_rotation = angle.wrapUnsigned();
+    m_rotation = std::fmod(angle, 360.f);
+    if (m_rotation < 0)
+        m_rotation += 360.f;
 
     m_transformUpdated    = false;
     m_invTransformUpdated = false;
@@ -112,7 +131,7 @@ void View::reset(const FloatRect& rectangle)
     m_center.y = rectangle.top + rectangle.height / 2.f;
     m_size.x   = rectangle.width;
     m_size.y   = rectangle.height;
-    m_rotation = Angle::Zero;
+    m_rotation = 0;
 
     m_transformUpdated    = false;
     m_invTransformUpdated = false;
@@ -134,7 +153,7 @@ const Vector2f& View::getSize() const
 
 
 ////////////////////////////////////////////////////////////
-Angle View::getRotation() const
+float View::getRotation() const
 {
     return m_rotation;
 }
@@ -148,6 +167,13 @@ const FloatRect& View::getViewport() const
 
 
 ////////////////////////////////////////////////////////////
+void View::move(float offsetX, float offsetY)
+{
+    setCenter(m_center.x + offsetX, m_center.y + offsetY);
+}
+
+
+////////////////////////////////////////////////////////////
 void View::move(const Vector2f& offset)
 {
     setCenter(m_center + offset);
@@ -155,7 +181,7 @@ void View::move(const Vector2f& offset)
 
 
 ////////////////////////////////////////////////////////////
-void View::rotate(Angle angle)
+void View::rotate(float angle)
 {
     setRotation(m_rotation + angle);
 }
@@ -164,7 +190,7 @@ void View::rotate(Angle angle)
 ////////////////////////////////////////////////////////////
 void View::zoom(float factor)
 {
-    setSize(m_size * factor);
+    setSize(m_size.x * factor, m_size.y * factor);
 }
 
 
@@ -175,24 +201,22 @@ const Transform& View::getTransform() const
     if (!m_transformUpdated)
     {
         // Rotation components
-        float angle  = m_rotation.asRadians();
+        float angle  = m_rotation * 3.141592654f / 180.f;
         float cosine = std::cos(angle);
         float sine   = std::sin(angle);
         float tx     = -m_center.x * cosine - m_center.y * sine + m_center.x;
-        float ty     = m_center.x * sine - m_center.y * cosine + m_center.y;
+        float ty     =  m_center.x * sine - m_center.y * cosine + m_center.y;
 
         // Projection components
-        float a = 2.f / m_size.x;
+        float a =  2.f / m_size.x;
         float b = -2.f / m_size.y;
         float c = -a * m_center.x;
         float d = -b * m_center.y;
 
         // Rebuild the projection matrix
-        // clang-format off
         m_transform = Transform( a * cosine, a * sine,   a * tx + c,
                                 -b * sine,   b * cosine, b * ty + d,
                                  0.f,        0.f,        1.f);
-        // clang-format on
         m_transformUpdated = true;
     }
 
@@ -206,7 +230,7 @@ const Transform& View::getInverseTransform() const
     // Recompute the matrix if needed
     if (!m_invTransformUpdated)
     {
-        m_inverseTransform    = getTransform().getInverse();
+        m_inverseTransform = getTransform().getInverse();
         m_invTransformUpdated = true;
     }
 

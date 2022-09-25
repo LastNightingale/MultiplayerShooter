@@ -26,19 +26,17 @@
 ////////////////////////////////////////////////////////////
 // Headers
 ////////////////////////////////////////////////////////////
-#include <SFML/System/Err.hpp>
-#include <SFML/System/String.hpp>
 #include <SFML/Window/OSX/AutoreleasePoolWrapper.hpp>
+#include <SFML/Window/OSX/WindowImplCocoa.hpp>
+#include <SFML/System/Err.hpp>
+
+#import <SFML/Window/OSX/cpp_objc_conversion.h>
+#import <SFML/Window/OSX/Scaling.h>
 #import <SFML/Window/OSX/SFApplication.h>
 #import <SFML/Window/OSX/SFApplicationDelegate.h>
 #import <SFML/Window/OSX/SFKeyboardModifiersHelper.h>
 #import <SFML/Window/OSX/SFViewController.h>
 #import <SFML/Window/OSX/SFWindowController.h>
-#import <SFML/Window/OSX/Scaling.h>
-#include <SFML/Window/OSX/WindowImplCocoa.hpp>
-#import <SFML/Window/OSX/cpp_objc_conversion.h>
-
-#include <ostream>
 
 namespace sf
 {
@@ -54,7 +52,7 @@ namespace priv
 
 namespace
 {
-bool isCursorHidden = false; // initially, the cursor is visible
+    bool isCursorHidden = false; // initially, the cursor is visible
 }
 
 
@@ -85,7 +83,8 @@ void showMouseCursor()
 #pragma mark WindowImplCocoa's ctor/dtor
 
 ////////////////////////////////////////////////////////////
-WindowImplCocoa::WindowImplCocoa(WindowHandle handle) : m_showCursor(true)
+WindowImplCocoa::WindowImplCocoa(WindowHandle handle) :
+m_showCursor(true)
 {
     AutoreleasePool pool;
     // Treat the handle as it real type
@@ -105,9 +104,12 @@ WindowImplCocoa::WindowImplCocoa(WindowHandle handle) : m_showCursor(true)
 
         sf::err() << "Cannot import this Window Handle because it is neither "
                   << "a <NSWindow*> nor <NSView*> object "
-                  << "(or any of their subclasses). You gave a <" << [[nsHandle className] UTF8String] << "> object."
+                  << "(or any of their subclasses). You gave a <"
+                  << [[nsHandle className] UTF8String]
+                  << "> object."
                   << std::endl;
         return;
+
     }
 
     [m_delegate setRequesterTo:this];
@@ -118,7 +120,10 @@ WindowImplCocoa::WindowImplCocoa(WindowHandle handle) : m_showCursor(true)
 
 
 ////////////////////////////////////////////////////////////
-WindowImplCocoa::WindowImplCocoa(VideoMode mode, const String& title, unsigned long style, const ContextSettings& /*settings*/) :
+WindowImplCocoa::WindowImplCocoa(VideoMode mode,
+                                 const String& title,
+                                 unsigned long style,
+                                 const ContextSettings& /*settings*/) :
 m_showCursor(true)
 {
     AutoreleasePool pool;
@@ -149,7 +154,7 @@ WindowImplCocoa::~WindowImplCocoa()
     NSArray* windows = [NSApp orderedWindows];
     if ([windows count] > 0)
     {
-        NSWindow* nextWindow = [windows objectAtIndex:0];
+        NSWindow *nextWindow = [windows objectAtIndex:0];
         if ([nextWindow isVisible])
             [nextWindow makeKeyAndOrderFront:nil];
     }
@@ -165,10 +170,10 @@ void WindowImplCocoa::applyContext(NSOpenGLContextRef context) const
 
 
 ////////////////////////////////////////////////////////////
-void WindowImplCocoa::setUpProcess()
+void WindowImplCocoa::setUpProcess(void)
 {
     AutoreleasePool pool;
-    static bool     isTheProcessSetAsApplication = false;
+    static bool isTheProcessSetAsApplication = false;
 
     if (!isTheProcessSetAsApplication)
     {
@@ -202,7 +207,7 @@ void WindowImplCocoa::setUpProcess()
 
 
 ////////////////////////////////////////////////////////////
-void WindowImplCocoa::windowClosed()
+void WindowImplCocoa::windowClosed(void)
 {
     Event event;
     event.type = Event::Closed;
@@ -212,20 +217,20 @@ void WindowImplCocoa::windowClosed()
 
 
 ////////////////////////////////////////////////////////////
-void WindowImplCocoa::windowResized(const Vector2u& size)
+void WindowImplCocoa::windowResized(unsigned int width, unsigned int height)
 {
     Event event;
-    event.type        = Event::Resized;
-    event.size.width  = size.x;
-    event.size.height = size.y;
-    scaleOutWidthHeight(event.size.width, event.size.height, m_delegate);
+    event.type = Event::Resized;
+    event.size.width  = width;
+    event.size.height = height;
+    scaleOutWidthHeight(event.size, m_delegate);
 
     pushEvent(event);
 }
 
 
 ////////////////////////////////////////////////////////////
-void WindowImplCocoa::windowLostFocus()
+void WindowImplCocoa::windowLostFocus(void)
 {
     if (!m_showCursor && [m_delegate isMouseInside])
         showMouseCursor(); // Make sure the cursor is visible
@@ -238,7 +243,7 @@ void WindowImplCocoa::windowLostFocus()
 
 
 ////////////////////////////////////////////////////////////
-void WindowImplCocoa::windowGainedFocus()
+void WindowImplCocoa::windowGainedFocus(void)
 {
     if (!m_showCursor && [m_delegate isMouseInside])
         hideMouseCursor(); // Restore user's setting
@@ -257,10 +262,10 @@ void WindowImplCocoa::windowGainedFocus()
 void WindowImplCocoa::mouseDownAt(Mouse::Button button, int x, int y)
 {
     Event event;
-    event.type               = Event::MouseButtonPressed;
+    event.type = Event::MouseButtonPressed;
     event.mouseButton.button = button;
-    event.mouseButton.x      = x;
-    event.mouseButton.y      = y;
+    event.mouseButton.x = x;
+    event.mouseButton.y = y;
     scaleOutXY(event.mouseButton, m_delegate);
 
     pushEvent(event);
@@ -271,10 +276,10 @@ void WindowImplCocoa::mouseDownAt(Mouse::Button button, int x, int y)
 void WindowImplCocoa::mouseUpAt(Mouse::Button button, int x, int y)
 {
     Event event;
-    event.type               = Event::MouseButtonReleased;
+    event.type = Event::MouseButtonReleased;
     event.mouseButton.button = button;
-    event.mouseButton.x      = x;
-    event.mouseButton.y      = y;
+    event.mouseButton.x = x;
+    event.mouseButton.y = y;
     scaleOutXY(event.mouseButton, m_delegate);
 
     pushEvent(event);
@@ -285,7 +290,7 @@ void WindowImplCocoa::mouseUpAt(Mouse::Button button, int x, int y)
 void WindowImplCocoa::mouseMovedAt(int x, int y)
 {
     Event event;
-    event.type        = Event::MouseMoved;
+    event.type = Event::MouseMoved;
     event.mouseMove.x = x;
     event.mouseMove.y = y;
     scaleOutXY(event.mouseMove, m_delegate);
@@ -298,25 +303,32 @@ void WindowImplCocoa::mouseWheelScrolledAt(float deltaX, float deltaY, int x, in
 {
     Event event;
 
-    event.type                   = Event::MouseWheelScrolled;
+    event.type = Event::MouseWheelMoved;
+    event.mouseWheel.delta = static_cast<int>(deltaY);
+    event.mouseWheel.x = x;
+    event.mouseWheel.y = y;
+    scaleOutXY(event.mouseWheel, m_delegate);
+    pushEvent(event);
+
+    event.type = Event::MouseWheelScrolled;
     event.mouseWheelScroll.wheel = Mouse::VerticalWheel;
     event.mouseWheelScroll.delta = deltaY;
-    event.mouseWheelScroll.x     = x;
-    event.mouseWheelScroll.y     = y;
+    event.mouseWheelScroll.x = x;
+    event.mouseWheelScroll.y = y;
     scaleOutXY(event.mouseWheelScroll, m_delegate);
     pushEvent(event);
 
-    event.type                   = Event::MouseWheelScrolled;
+    event.type = Event::MouseWheelScrolled;
     event.mouseWheelScroll.wheel = Mouse::HorizontalWheel;
     event.mouseWheelScroll.delta = deltaX;
-    event.mouseWheelScroll.x     = x;
-    event.mouseWheelScroll.y     = y;
+    event.mouseWheelScroll.x = x;
+    event.mouseWheelScroll.y = y;
     scaleOutXY(event.mouseWheelScroll, m_delegate);
     pushEvent(event);
 }
 
 ////////////////////////////////////////////////////////////
-void WindowImplCocoa::mouseMovedIn()
+void WindowImplCocoa::mouseMovedIn(void)
 {
     if (!m_showCursor)
         hideMouseCursor(); // Restore user's setting
@@ -328,7 +340,7 @@ void WindowImplCocoa::mouseMovedIn()
 }
 
 ////////////////////////////////////////////////////////////
-void WindowImplCocoa::mouseMovedOut()
+void WindowImplCocoa::mouseMovedOut(void)
 {
     if (!m_showCursor)
         showMouseCursor(); // Make sure the cursor is visible
@@ -349,7 +361,7 @@ void WindowImplCocoa::keyDown(Event::KeyEvent key)
 {
     Event event;
     event.type = Event::KeyPressed;
-    event.key  = key;
+    event.key = key;
 
     pushEvent(event);
 }
@@ -360,7 +372,7 @@ void WindowImplCocoa::keyUp(Event::KeyEvent key)
 {
     Event event;
     event.type = Event::KeyReleased;
-    event.key  = key;
+    event.key = key;
 
     pushEvent(event);
 }
@@ -370,7 +382,7 @@ void WindowImplCocoa::keyUp(Event::KeyEvent key)
 void WindowImplCocoa::textEntered(unichar charcode)
 {
     Event event;
-    event.type         = Event::TextEntered;
+    event.type = Event::TextEntered;
     event.text.unicode = charcode;
 
     pushEvent(event);
@@ -402,8 +414,8 @@ WindowHandle WindowImplCocoa::getSystemHandle() const
 Vector2i WindowImplCocoa::getPosition() const
 {
     AutoreleasePool pool;
-    NSPoint         pos = [m_delegate position];
-    sf::Vector2i    ret(static_cast<int>(pos.x), static_cast<int>(pos.y));
+    NSPoint pos = [m_delegate position];
+    sf::Vector2i ret(static_cast<int>(pos.x), static_cast<int>(pos.y));
     scaleOutXY(ret, m_delegate);
     return ret;
 }
@@ -413,7 +425,7 @@ Vector2i WindowImplCocoa::getPosition() const
 void WindowImplCocoa::setPosition(const Vector2i& position)
 {
     AutoreleasePool pool;
-    sf::Vector2i    backingPosition = position;
+    sf::Vector2i backingPosition = position;
     scaleInXY(backingPosition, m_delegate);
     [m_delegate setWindowPositionToX:backingPosition.x Y:backingPosition.y];
 }
@@ -423,8 +435,8 @@ void WindowImplCocoa::setPosition(const Vector2i& position)
 Vector2u WindowImplCocoa::getSize() const
 {
     AutoreleasePool pool;
-    NSSize          size = [m_delegate size];
-    Vector2u        ret(static_cast<unsigned int>(size.width), static_cast<unsigned int>(size.height));
+    NSSize size = [m_delegate size];
+    Vector2u ret(static_cast<unsigned int>(size.width), static_cast<unsigned int>(size.height));
     scaleOutXY(ret, m_delegate);
     return ret;
 }
@@ -448,10 +460,10 @@ void WindowImplCocoa::setTitle(const String& title)
 
 
 ////////////////////////////////////////////////////////////
-void WindowImplCocoa::setIcon(const Vector2u& size, const std::uint8_t* pixels)
+void WindowImplCocoa::setIcon(unsigned int width, unsigned int height, const Uint8* pixels)
 {
     AutoreleasePool pool;
-    [m_delegate setIconTo:size.x by:size.y with:pixels];
+    [m_delegate setIconTo:width by:height with:pixels];
 }
 
 

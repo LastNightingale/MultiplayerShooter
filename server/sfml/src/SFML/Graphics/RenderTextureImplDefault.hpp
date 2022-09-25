@@ -30,15 +30,11 @@
 ////////////////////////////////////////////////////////////
 #include <SFML/Graphics/RenderTextureImpl.hpp>
 #include <SFML/Window/GlResource.hpp>
-
-#include <memory>
+#include <SFML/Window/Context.hpp>
 
 
 namespace sf
 {
-class Context;
-
-
 namespace priv
 {
 ////////////////////////////////////////////////////////////
@@ -49,6 +45,7 @@ namespace priv
 class RenderTextureImplDefault : public RenderTextureImpl, GlResource
 {
 public:
+
     ////////////////////////////////////////////////////////////
     /// \brief Default constructor
     ///
@@ -59,7 +56,7 @@ public:
     /// \brief Destructor
     ///
     ////////////////////////////////////////////////////////////
-    ~RenderTextureImplDefault() override;
+    ~RenderTextureImplDefault();
 
     ////////////////////////////////////////////////////////////
     /// \brief Get the maximum anti-aliasing level supported by the system
@@ -70,17 +67,19 @@ public:
     static unsigned int getMaximumAntialiasingLevel();
 
 private:
+
     ////////////////////////////////////////////////////////////
     /// \brief Create the render texture implementation
     ///
-    /// \param size       Width and height of the texture to render to
+    /// \param width      Width of the texture to render to
+    /// \param height     Height of the texture to render to
     /// \param textureId  OpenGL identifier of the target texture
     /// \param settings   Context settings to create render-texture with
     ///
     /// \return True if creation has been successful
     ///
     ////////////////////////////////////////////////////////////
-    bool create(const Vector2u& size, unsigned int textureId, const ContextSettings& settings) override;
+    virtual bool create(unsigned int width, unsigned int height, unsigned int textureId, const ContextSettings& settings);
 
     ////////////////////////////////////////////////////////////
     /// \brief Activate or deactivate the render texture for rendering
@@ -90,7 +89,7 @@ private:
     /// \return True on success, false on failure
     ///
     ////////////////////////////////////////////////////////////
-    bool activate(bool active) override;
+    virtual bool activate(bool active);
 
     ////////////////////////////////////////////////////////////
     /// \brief Tell if the render-texture will use sRGB encoding when drawing on it
@@ -101,7 +100,7 @@ private:
     /// \return True if the render-texture use sRGB encoding, false otherwise
     ///
     ////////////////////////////////////////////////////////////
-    bool isSrgb() const override;
+    virtual bool isSrgb() const;
 
     ////////////////////////////////////////////////////////////
     /// \brief Update the pixels of the target texture
@@ -109,13 +108,14 @@ private:
     /// \param textureId OpenGL identifier of the target texture
     ///
     ////////////////////////////////////////////////////////////
-    void updateTexture(unsigned textureId) override;
+    virtual void updateTexture(unsigned textureId);
 
     ////////////////////////////////////////////////////////////
     // Member data
     ////////////////////////////////////////////////////////////
-    std::unique_ptr<Context> m_context; //!< P-Buffer based context
-    Vector2u                 m_size;    //!< Width and height of the P-Buffer
+    Context*     m_context; //!< P-Buffer based context
+    unsigned int m_width;   //!< Width of the P-Buffer
+    unsigned int m_height;  //!< Height of the P-Buffer
 };
 
 } // namespace priv

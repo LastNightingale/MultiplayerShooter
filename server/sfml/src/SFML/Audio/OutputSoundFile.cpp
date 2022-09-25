@@ -26,14 +26,15 @@
 // Headers
 ////////////////////////////////////////////////////////////
 #include <SFML/Audio/OutputSoundFile.hpp>
-#include <SFML/Audio/SoundFileFactory.hpp>
 #include <SFML/Audio/SoundFileWriter.hpp>
+#include <SFML/Audio/SoundFileFactory.hpp>
 
 
 namespace sf
 {
 ////////////////////////////////////////////////////////////
-OutputSoundFile::OutputSoundFile() : m_writer(nullptr)
+OutputSoundFile::OutputSoundFile() :
+m_writer(NULL)
 {
 }
 
@@ -47,7 +48,7 @@ OutputSoundFile::~OutputSoundFile()
 
 
 ////////////////////////////////////////////////////////////
-bool OutputSoundFile::openFromFile(const std::filesystem::path& filename, unsigned int sampleRate, unsigned int channelCount)
+bool OutputSoundFile::openFromFile(const std::string& filename, unsigned int sampleRate, unsigned int channelCount)
 {
     // If the file is already open, first close it
     close();
@@ -69,7 +70,7 @@ bool OutputSoundFile::openFromFile(const std::filesystem::path& filename, unsign
 
 
 ////////////////////////////////////////////////////////////
-void OutputSoundFile::write(const std::int16_t* samples, std::uint64_t count)
+void OutputSoundFile::write(const Int16* samples, Uint64 count)
 {
     if (m_writer && samples && count)
         m_writer->write(samples, count);
@@ -80,7 +81,8 @@ void OutputSoundFile::write(const std::int16_t* samples, std::uint64_t count)
 void OutputSoundFile::close()
 {
     // Destroy the reader
-    m_writer.reset();
+    delete m_writer;
+    m_writer = NULL;
 }
 
 } // namespace sf

@@ -26,13 +26,19 @@
 // Headers
 ////////////////////////////////////////////////////////////
 #include <SFML/System/Clock.hpp>
-#include <SFML/System/Time.hpp>
+
+#if defined(SFML_SYSTEM_WINDOWS)
+    #include <SFML/System/Win32/ClockImpl.hpp>
+#else
+    #include <SFML/System/Unix/ClockImpl.hpp>
+#endif
 
 
 namespace sf
 {
 ////////////////////////////////////////////////////////////
-Clock::Clock() : m_startTime(ClockImpl::now())
+Clock::Clock() :
+m_startTime(priv::ClockImpl::getCurrentTime())
 {
 }
 
@@ -40,27 +46,18 @@ Clock::Clock() : m_startTime(ClockImpl::now())
 ////////////////////////////////////////////////////////////
 Time Clock::getElapsedTime() const
 {
-    return durationToTime(ClockImpl::now() - m_startTime);
+    return priv::ClockImpl::getCurrentTime() - m_startTime;
 }
 
 
 ////////////////////////////////////////////////////////////
 Time Clock::restart()
 {
-    const ClockImpl::time_point now     = ClockImpl::now();
-    Time                        elapsed = durationToTime(now - m_startTime);
-    m_startTime                         = now;
+    Time now = priv::ClockImpl::getCurrentTime();
+    Time elapsed = now - m_startTime;
+    m_startTime = now;
 
     return elapsed;
-}
-
-
-////////////////////////////////////////////////////////////
-Time Clock::durationToTime(Clock::ClockImpl::duration duration)
-{
-    using std::chrono::duration_cast;
-    using std::chrono::microseconds;
-    return duration_cast<microseconds>(duration);
 }
 
 } // namespace sf

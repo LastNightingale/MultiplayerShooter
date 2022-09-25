@@ -29,10 +29,8 @@
 // Headers
 ////////////////////////////////////////////////////////////
 #include <SFML/Window/GlContext.hpp>
-#include <SFML/Window/WindowStyle.hpp> // Prevent conflict with macro None from Xlib
-
-#include <X11/Xlib.h>
 #include <glad/glx.h>
+#include <X11/Xlib.h>
 
 
 namespace sf
@@ -46,10 +44,11 @@ namespace priv
 class GlxContext : public GlContext
 {
 public:
+
     ////////////////////////////////////////////////////////////
     /// \brief Create a new default context
     ///
-    /// \param shared Context to share the new one with (can be a null pointer)
+    /// \param shared Context to share the new one with (can be NULL)
     ///
     ////////////////////////////////////////////////////////////
     GlxContext(GlxContext* shared);
@@ -63,17 +62,18 @@ public:
     /// \param bitsPerPixel Pixel depth, in bits per pixel
     ///
     ////////////////////////////////////////////////////////////
-    GlxContext(GlxContext* shared, const ContextSettings& settings, const WindowImpl& owner, unsigned int bitsPerPixel);
+    GlxContext(GlxContext* shared, const ContextSettings& settings, const WindowImpl* owner, unsigned int bitsPerPixel);
 
     ////////////////////////////////////////////////////////////
     /// \brief Create a new context that embeds its own rendering target
     ///
     /// \param shared   Context to share the new one with
     /// \param settings Creation parameters
-    /// \param size     Back buffer width and height, in pixels
+    /// \param width    Back buffer width, in pixels
+    /// \param height   Back buffer height, in pixels
     ///
     ////////////////////////////////////////////////////////////
-    GlxContext(GlxContext* shared, const ContextSettings& settings, const Vector2u& size);
+    GlxContext(GlxContext* shared, const ContextSettings& settings, unsigned int width, unsigned int height);
 
     ////////////////////////////////////////////////////////////
     /// \brief Destructor
@@ -99,13 +99,13 @@ public:
     /// \return True on success, false if any error happened
     ///
     ////////////////////////////////////////////////////////////
-    bool makeCurrent(bool current) override;
+    virtual bool makeCurrent(bool current);
 
     ////////////////////////////////////////////////////////////
     /// \brief Display what has been rendered to the context so far
     ///
     ////////////////////////////////////////////////////////////
-    void display() override;
+    virtual void display();
 
     ////////////////////////////////////////////////////////////
     /// \brief Enable or disable vertical synchronization
@@ -118,7 +118,7 @@ public:
     /// \param enabled True to enable v-sync, false to deactivate
     ///
     ////////////////////////////////////////////////////////////
-    void setVerticalSyncEnabled(bool enabled) override;
+    virtual void setVerticalSyncEnabled(bool enabled);
 
     ////////////////////////////////////////////////////////////
     /// \brief Select the best GLX visual for a given set of settings
@@ -133,6 +133,7 @@ public:
     static XVisualInfo selectBestVisual(::Display* display, unsigned int bitsPerPixel, const ContextSettings& settings);
 
 private:
+
     ////////////////////////////////////////////////////////////
     /// \brief Update the context visual settings from XVisualInfo
     ///
@@ -150,12 +151,13 @@ private:
     ////////////////////////////////////////////////////////////
     /// \brief Create the context's drawing surface
     ///
-    /// \param shared       Context to share the new one with (can be a null pointer)
-    /// \param size         Back buffer width and height, in pixels
+    /// \param shared       Context to share the new one with (can be NULL)
+    /// \param width        Back buffer width, in pixels
+    /// \param height       Back buffer height, in pixels
     /// \param bitsPerPixel Pixel depth, in bits per pixel
     ///
     ////////////////////////////////////////////////////////////
-    void createSurface(GlxContext* shared, const Vector2u& size, unsigned int bitsPerPixel);
+    void createSurface(GlxContext* shared, unsigned int width, unsigned int height, unsigned int bitsPerPixel);
 
     ////////////////////////////////////////////////////////////
     /// \brief Create the context's drawing surface from an existing window
@@ -168,7 +170,7 @@ private:
     ////////////////////////////////////////////////////////////
     /// \brief Create the context
     ///
-    /// \param shared Context to share the new one with (can be a null pointer)
+    /// \param shared Context to share the new one with (can be NULL)
     ///
     ////////////////////////////////////////////////////////////
     void createContext(GlxContext* shared);
@@ -176,11 +178,11 @@ private:
     ////////////////////////////////////////////////////////////
     // Member data
     ////////////////////////////////////////////////////////////
-    ::Display* m_display;    ///< Connection to the X server
-    ::Window   m_window;     ///< Window to which the context is attached
-    GLXContext m_context;    ///< OpenGL context
-    GLXPbuffer m_pbuffer;    ///< GLX pbuffer ID if one was created
-    bool       m_ownsWindow; ///< Do we own the window associated to the context?
+    ::Display*        m_display;    ///< Connection to the X server
+    ::Window          m_window;     ///< Window to which the context is attached
+    GLXContext        m_context;    ///< OpenGL context
+    GLXPbuffer        m_pbuffer;    ///< GLX pbuffer ID if one was created
+    bool              m_ownsWindow; ///< Do we own the window associated to the context?
 };
 
 } // namespace priv

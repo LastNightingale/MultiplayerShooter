@@ -29,12 +29,14 @@ set(SRC
 
 # add platform specific sources
 if(SFML_OS_WINDOWS)
-    list(APPEND SRC
+    set(SRC
+        ${SRC}
         ${SRCROOT}/Win32/SocketImpl.cpp
         ${SRCROOT}/Win32/SocketImpl.hpp
     )
 else()
-    list(APPEND SRC
+    set(SRC
+        ${SRC}
         ${SRCROOT}/Unix/SocketImpl.cpp
         ${SRCROOT}/Unix/SocketImpl.hpp
     )
@@ -43,11 +45,11 @@ endif()
 source_group("" FILES ${SRC})
 
 # define the sfml-network target
-sfml_add_library(Network
+sfml_add_library(sfml-network
                  SOURCES ${SRC})
 
 # setup dependencies
-target_link_libraries(sfml-network PUBLIC SFML::System)
+target_link_libraries(sfml-network PUBLIC sfml-system)
 if(SFML_OS_WINDOWS)
     target_link_libraries(sfml-network PRIVATE ws2_32)
 endif()

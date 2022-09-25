@@ -40,7 +40,14 @@ CursorImpl::CursorImpl()
 
 
 ////////////////////////////////////////////////////////////
-bool CursorImpl::loadFromPixels(const std::uint8_t* /* pixels */, Vector2u /* size */, Vector2u /* hotspot */)
+CursorImpl::~CursorImpl()
+{
+    // Nothing.
+}
+
+
+////////////////////////////////////////////////////////////
+bool CursorImpl::loadFromPixels(const Uint8* /* pixels */, Vector2u /* size */, Vector2u /* hotspot */)
 {
     // Not supported
     return false;
@@ -58,3 +65,4 @@ bool CursorImpl::loadFromSystem(Cursor::Type /* type */)
 } // namespace priv
 
 } // namespace sf
+

@@ -26,16 +26,20 @@
 ////////////////////////////////////////////////////////////
 // Headers
 ////////////////////////////////////////////////////////////
-#include <SFML/System/Err.hpp>
 #include <SFML/Window/OSX/AutoreleasePoolWrapper.hpp>
 #include <SFML/Window/OSX/SFContext.hpp>
 #include <SFML/Window/OSX/WindowImplCocoa.hpp>
-
+#include <SFML/System/Err.hpp>
 #include <dlfcn.h>
-#include <ostream>
 #include <stdint.h>
 
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#if defined(__APPLE__)
+    #if defined(__clang__)
+        #pragma clang diagnostic ignored "-Wdeprecated-declarations"
+    #elif defined(__GNUC__)
+        #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+    #endif
+#endif
 
 namespace sf
 {
@@ -44,16 +48,22 @@ namespace priv
 
 
 ////////////////////////////////////////////////////////////
-SFContext::SFContext(SFContext* shared) : m_context(0), m_view(0), m_window(0)
+SFContext::SFContext(SFContext* shared) :
+m_context(0),
+m_view(0),
+m_window(0)
 {
     AutoreleasePool pool;
     // Create the context
-    createContext(shared, VideoMode::getDesktopMode().bitsPerPixel, ContextSettings(0, 0, 0));
+    createContext(shared,
+                  VideoMode::getDesktopMode().bitsPerPixel,
+                  ContextSettings(0, 0, 0));
 }
 
 
 ////////////////////////////////////////////////////////////
-SFContext::SFContext(SFContext* shared, const ContextSettings& settings, const WindowImpl& owner, unsigned int bitsPerPixel) :
+SFContext::SFContext(SFContext* shared, const ContextSettings& settings,
+                     const WindowImpl* owner, unsigned int bitsPerPixel) :
 m_context(0),
 m_view(0),
 m_window(0)
@@ -63,13 +73,14 @@ m_window(0)
     createContext(shared, bitsPerPixel, settings);
 
     // Apply context.
-    const auto& ownerCocoa = static_cast<const WindowImplCocoa&>(owner);
-    ownerCocoa.applyContext(m_context);
+    const WindowImplCocoa* ownerCocoa = static_cast<const WindowImplCocoa*>(owner);
+    ownerCocoa->applyContext(m_context);
 }
 
 
 ////////////////////////////////////////////////////////////
-SFContext::SFContext(SFContext* shared, const ContextSettings& settings, const Vector2u& size) :
+SFContext::SFContext(SFContext* shared, const ContextSettings& settings,
+                     unsigned int width, unsigned int height) :
 m_context(0),
 m_view(0),
 m_window(0)
@@ -82,12 +93,11 @@ m_window(0)
     createContext(shared, VideoMode::getDesktopMode().bitsPerPixel, settings);
 
     // Create a dummy window/view pair (hidden) and assign it our context.
-    m_window = [[NSWindow alloc]
-        initWithContentRect:NSMakeRect(0, 0, size.x, size.y)
-                  styleMask:NSBorderlessWindowMask
-                    backing:NSBackingStoreBuffered
-                      defer:NO]; // Don't defer it!
-    m_view   = [[NSOpenGLView alloc] initWithFrame:NSMakeRect(0, 0, size.x, size.y)];
+    m_window = [[NSWindow alloc] initWithContentRect:NSMakeRect(0, 0, width, height)
+                                           styleMask:NSBorderlessWindowMask
+                                             backing:NSBackingStoreBuffered
+                                               defer:NO]; // Don't defer it!
+    m_view = [[NSOpenGLView alloc] initWithFrame:NSMakeRect(0, 0, width, height)];
     [m_window setContentView:m_view];
     [m_view setOpenGLContext:m_context];
     [m_context setView:m_view];
@@ -108,7 +118,7 @@ SFContext::~SFContext()
 
     [m_context release];
 
-    [m_view release];   // Might be nil but we don't care.
+    [m_view release]; // Might be nil but we don't care.
     [m_window release]; // Idem.
 }
 
@@ -117,7 +127,7 @@ SFContext::~SFContext()
 GlFunctionPointer SFContext::getFunction(const char* name)
 {
     AutoreleasePool pool;
-    static void*    image = nullptr;
+    static void* image = NULL;
 
     if (!image)
         image = dlopen("/System/Library/Frameworks/OpenGL.framework/Versions/Current/OpenGL", RTLD_LAZY);
@@ -155,14 +165,16 @@ void SFContext::display()
 void SFContext::setVerticalSyncEnabled(bool enabled)
 {
     AutoreleasePool pool;
-    GLint           swapInterval = enabled ? 1 : 0;
+    GLint swapInterval = enabled ? 1 : 0;
 
     [m_context setValues:&swapInterval forParameter:NSOpenGLCPSwapInterval];
 }
 
 
 ////////////////////////////////////////////////////////////
-void SFContext::createContext(SFContext* shared, unsigned int bitsPerPixel, const ContextSettings& settings)
+void SFContext::createContext(SFContext* shared,
+                              unsigned int bitsPerPixel,
+                              const ContextSettings& settings)
 {
     AutoreleasePool pool;
     // Save the settings. (OpenGL version is updated elsewhere.)
@@ -259,7 +271,7 @@ void SFContext::createContext(SFContext* shared, unsigned int bitsPerPixel, cons
     m_settings.sRgbCapable = true;
 
     // Create the pixel format.
-    NSOpenGLPixelFormat* pixFmt = [[NSOpenGLPixelFormat alloc] initWithAttributes:attrs.data()];
+    NSOpenGLPixelFormat* pixFmt = [[NSOpenGLPixelFormat alloc] initWithAttributes:&attrs[0]];
 
     if (pixFmt == nil)
     {
@@ -268,7 +280,7 @@ void SFContext::createContext(SFContext* shared, unsigned int bitsPerPixel, cons
     }
 
     // Use the shared context if one is given.
-    NSOpenGLContext* sharedContext = shared != nullptr ? shared->m_context : nil;
+    NSOpenGLContext* sharedContext = shared != NULL ? shared->m_context : nil;
 
     if (sharedContext != nil)
     {
@@ -282,12 +294,14 @@ void SFContext::createContext(SFContext* shared, unsigned int bitsPerPixel, cons
     }
 
     // Create the context.
-    m_context = [[NSOpenGLContext alloc] initWithFormat:pixFmt shareContext:sharedContext];
+    m_context = [[NSOpenGLContext alloc] initWithFormat:pixFmt
+                                           shareContext:sharedContext];
 
     if (m_context == nil)
     {
         sf::err() << "Error. Unable to create the context. Retrying without shared context." << std::endl;
-        m_context = [[NSOpenGLContext alloc] initWithFormat:pixFmt shareContext:nil];
+        m_context = [[NSOpenGLContext alloc] initWithFormat:pixFmt
+                                             shareContext:nil];
 
         if (m_context == nil)
             sf::err() << "Error. Unable to create the context." << std::endl;
@@ -297,8 +311,10 @@ void SFContext::createContext(SFContext* shared, unsigned int bitsPerPixel, cons
 
     // Free up.
     [pixFmt release];
+
 }
 
 } // namespace priv
 
 } // namespace sf
+

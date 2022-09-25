@@ -29,8 +29,8 @@
 // Headers
 ////////////////////////////////////////////////////////////
 #include <SFML/Audio/SoundFileReader.hpp>
-
 #include <FLAC/stream_decoder.h>
+#include <string>
 #include <vector>
 
 
@@ -45,6 +45,7 @@ namespace priv
 class SoundFileReaderFlac : public SoundFileReader
 {
 public:
+
     ////////////////////////////////////////////////////////////
     /// \brief Check if this reader can handle a file given by an input stream
     ///
@@ -53,9 +54,10 @@ public:
     /// \return True if the file is supported by this reader
     ///
     ////////////////////////////////////////////////////////////
-    [[nodiscard]] static bool check(InputStream& stream);
+    static bool check(InputStream& stream);
 
 public:
+
     ////////////////////////////////////////////////////////////
     /// \brief Default constructor
     ///
@@ -66,7 +68,7 @@ public:
     /// \brief Default constructor
     ///
     ////////////////////////////////////////////////////////////
-    ~SoundFileReaderFlac() override;
+    ~SoundFileReaderFlac();
 
     ////////////////////////////////////////////////////////////
     /// \brief Open a sound file for reading
@@ -75,7 +77,7 @@ public:
     /// \param info   Structure to fill with the attributes of the loaded sound
     ///
     ////////////////////////////////////////////////////////////
-    [[nodiscard]] bool open(sf::InputStream& stream, Info& info) override;
+    virtual bool open(sf::InputStream& stream, Info& info);
 
     ////////////////////////////////////////////////////////////
     /// \brief Change the current read position to the given sample offset
@@ -90,7 +92,7 @@ public:
     /// \param sampleOffset Index of the sample to jump to, relative to the beginning
     ///
     ////////////////////////////////////////////////////////////
-    void seek(std::uint64_t sampleOffset) override;
+    virtual void seek(Uint64 sampleOffset);
 
     ////////////////////////////////////////////////////////////
     /// \brief Read audio samples from the open file
@@ -101,24 +103,26 @@ public:
     /// \return Number of samples actually read (may be less than \a maxCount)
     ///
     ////////////////////////////////////////////////////////////
-    [[nodiscard]] std::uint64_t read(std::int16_t* samples, std::uint64_t maxCount) override;
+    virtual Uint64 read(Int16* samples, Uint64 maxCount);
 
 public:
+
     ////////////////////////////////////////////////////////////
     /// \brief Hold the state that is passed to the decoder callbacks
     ///
     ////////////////////////////////////////////////////////////
     struct ClientData
     {
-        InputStream*              stream;
-        SoundFileReader::Info     info;
-        std::int16_t*             buffer;
-        std::uint64_t             remaining;
-        std::vector<std::int16_t> leftovers;
-        bool                      error;
+        InputStream*          stream;
+        SoundFileReader::Info info;
+        Int16*                buffer;
+        Uint64                remaining;
+        std::vector<Int16>    leftovers;
+        bool                  error;
     };
 
 private:
+
     ////////////////////////////////////////////////////////////
     /// \brief Close the open FLAC file
     ///

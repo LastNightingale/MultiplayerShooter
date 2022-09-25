@@ -28,11 +28,10 @@
 ////////////////////////////////////////////////////////////
 // Headers
 ////////////////////////////////////////////////////////////
-#include <SFML/System/Android/Activity.hpp>
-#include <SFML/Window/EglContext.hpp>
 #include <SFML/Window/Event.hpp>
 #include <SFML/Window/WindowImpl.hpp>
-
+#include <SFML/Window/EglContext.hpp>
+#include <SFML/System/Android/Activity.hpp>
 #include <android/input.h>
 
 
@@ -47,6 +46,7 @@ namespace priv
 class WindowImplAndroid : public WindowImpl
 {
 public:
+
     ////////////////////////////////////////////////////////////
     /// \brief Construct the window implementation from an existing control
     ///
@@ -78,7 +78,7 @@ public:
     /// \return Handle of the window
     ///
     ////////////////////////////////////////////////////////////
-    WindowHandle getSystemHandle() const override;
+    virtual WindowHandle getSystemHandle() const;
 
     ////////////////////////////////////////////////////////////
     /// \brief Get the position of the window
@@ -86,7 +86,7 @@ public:
     /// \return Position of the window, in pixels
     ///
     ////////////////////////////////////////////////////////////
-    Vector2i getPosition() const override;
+    virtual Vector2i getPosition() const;
 
     ////////////////////////////////////////////////////////////
     /// \brief Change the position of the window on screen
@@ -94,7 +94,7 @@ public:
     /// \param position New position of the window, in pixels
     ///
     ////////////////////////////////////////////////////////////
-    void setPosition(const Vector2i& position) override;
+    virtual void setPosition(const Vector2i& position);
 
     ////////////////////////////////////////////////////////////
     /// \brief Get the client size of the window
@@ -102,7 +102,7 @@ public:
     /// \return Size of the window, in pixels
     ///
     ////////////////////////////////////////////////////////////
-    Vector2u getSize() const override;
+    virtual Vector2u getSize() const;
 
     ////////////////////////////////////////////////////////////
     /// \brief Change the size of the rendering region of the window
@@ -110,7 +110,7 @@ public:
     /// \param size New size, in pixels
     ///
     ////////////////////////////////////////////////////////////
-    void setSize(const Vector2u& size) override;
+    virtual void setSize(const Vector2u& size);
 
     ////////////////////////////////////////////////////////////
     /// \brief Change the title of the window
@@ -118,16 +118,17 @@ public:
     /// \param title New title
     ///
     ////////////////////////////////////////////////////////////
-    void setTitle(const String& title) override;
+    virtual void setTitle(const String& title);
 
     ////////////////////////////////////////////////////////////
     /// \brief Change the window's icon
     ///
-    /// \param size   Icon's width and height, in pixels
+    /// \param width  Icon's width, in pixels
+    /// \param height Icon's height, in pixels
     /// \param pixels Pointer to the pixels in memory, format must be RGBA 32 bits
     ///
     ////////////////////////////////////////////////////////////
-    void setIcon(const Vector2u& size, const std::uint8_t* pixels) override;
+    virtual void setIcon(unsigned int width, unsigned int height, const Uint8* pixels);
 
     ////////////////////////////////////////////////////////////
     /// \brief Show or hide the window
@@ -135,7 +136,7 @@ public:
     /// \param visible True to show, false to hide
     ///
     ////////////////////////////////////////////////////////////
-    void setVisible(bool visible) override;
+    virtual void setVisible(bool visible);
 
     ////////////////////////////////////////////////////////////
     /// \brief Show or hide the mouse cursor
@@ -143,7 +144,7 @@ public:
     /// \param visible True to show, false to hide
     ///
     ////////////////////////////////////////////////////////////
-    void setMouseCursorVisible(bool visible) override;
+    virtual void setMouseCursorVisible(bool visible);
 
     ////////////////////////////////////////////////////////////
     /// \brief Clips or releases the mouse cursor
@@ -151,7 +152,7 @@ public:
     /// \param grabbed True to enable, false to disable
     ///
     ////////////////////////////////////////////////////////////
-    void setMouseCursorGrabbed(bool grabbed) override;
+    virtual void setMouseCursorGrabbed(bool grabbed);
 
     ////////////////////////////////////////////////////////////
     /// \brief Set the displayed cursor to a native system cursor
@@ -159,7 +160,7 @@ public:
     /// \param cursor Native system cursor type to display
     ///
     ////////////////////////////////////////////////////////////
-    void setMouseCursor(const CursorImpl& cursor) override;
+    virtual void setMouseCursor(const CursorImpl& cursor);
 
     ////////////////////////////////////////////////////////////
     /// \brief Enable or disable automatic key-repeat
@@ -167,14 +168,14 @@ public:
     /// \param enabled True to enable, false to disable
     ///
     ////////////////////////////////////////////////////////////
-    void setKeyRepeatEnabled(bool enabled) override;
+    virtual void setKeyRepeatEnabled(bool enabled);
 
     ////////////////////////////////////////////////////////////
     /// \brief Request the current window to be made the active
     ///        foreground window
     ///
     ////////////////////////////////////////////////////////////
-    void requestFocus() override;
+    virtual void requestFocus();
 
     ////////////////////////////////////////////////////////////
     /// \brief Check whether the window has the input focus
@@ -182,19 +183,21 @@ public:
     /// \return True if window has focus, false otherwise
     ///
     ////////////////////////////////////////////////////////////
-    bool hasFocus() const override;
+    virtual bool hasFocus() const;
 
-    static void               forwardEvent(const Event& event);
+    static void forwardEvent(const Event& event);
     static WindowImplAndroid* singleInstance;
 
 protected:
+
     ////////////////////////////////////////////////////////////
     /// \brief Process incoming events from the operating system
     ///
     ////////////////////////////////////////////////////////////
-    void processEvents() override;
+    virtual void processEvents();
 
 private:
+
     ////////////////////////////////////////////////////////////
     /// \brief Process messages from the looper associated with the main thread
     ///
@@ -220,7 +223,7 @@ private:
     /// \return Corresponding SFML key code
     ///
     ////////////////////////////////////////////////////////////
-    static Keyboard::Key androidKeyToSF(std::int32_t key);
+    static Keyboard::Key androidKeyToSF(int32_t key);
 
     ////////////////////////////////////////////////////////////
     /// \brief Get Unicode decoded from the input event
@@ -233,9 +236,9 @@ private:
     static int getUnicode(AInputEvent* event);
 
     Vector2u m_size;
-    bool     m_windowBeingCreated;
-    bool     m_windowBeingDestroyed;
-    bool     m_hasFocus;
+    bool m_windowBeingCreated;
+    bool m_windowBeingDestroyed;
+    bool m_hasFocus;
 };
 
 } // namespace priv

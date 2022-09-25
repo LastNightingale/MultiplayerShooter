@@ -29,9 +29,7 @@
 // Headers
 ////////////////////////////////////////////////////////////
 #include <SFML/Audio/SoundFileWriter.hpp>
-
 #include <FLAC/stream_encoder.h>
-#include <filesystem>
 #include <vector>
 
 
@@ -46,6 +44,7 @@ namespace priv
 class SoundFileWriterFlac : public SoundFileWriter
 {
 public:
+
     ////////////////////////////////////////////////////////////
     /// \brief Check if this writer can handle a file on disk
     ///
@@ -54,9 +53,10 @@ public:
     /// \return True if the file can be written by this writer
     ///
     ////////////////////////////////////////////////////////////
-    [[nodiscard]] static bool check(const std::filesystem::path& filename);
+    static bool check(const std::string& filename);
 
 public:
+
     ////////////////////////////////////////////////////////////
     /// \brief Default constructor
     ///
@@ -67,7 +67,7 @@ public:
     /// \brief Destructor
     ///
     ////////////////////////////////////////////////////////////
-    ~SoundFileWriterFlac() override;
+    ~SoundFileWriterFlac();
 
     ////////////////////////////////////////////////////////////
     /// \brief Open a sound file for writing
@@ -79,7 +79,7 @@ public:
     /// \return True if the file was successfully opened
     ///
     ////////////////////////////////////////////////////////////
-    [[nodiscard]] bool open(const std::filesystem::path& filename, unsigned int sampleRate, unsigned int channelCount) override;
+    virtual bool open(const std::string& filename, unsigned int sampleRate, unsigned int channelCount);
 
     ////////////////////////////////////////////////////////////
     /// \brief Write audio samples to the open file
@@ -88,9 +88,10 @@ public:
     /// \param count   Number of samples to write
     ///
     ////////////////////////////////////////////////////////////
-    void write(const std::int16_t* samples, std::uint64_t count) override;
+    virtual void write(const Int16* samples, Uint64 count);
 
 private:
+
     ////////////////////////////////////////////////////////////
     /// \brief Close the file
     ///
@@ -100,9 +101,9 @@ private:
     ////////////////////////////////////////////////////////////
     // Member data
     ////////////////////////////////////////////////////////////
-    FLAC__StreamEncoder*      m_encoder;      //!< FLAC stream encoder
-    unsigned int              m_channelCount; //!< Number of channels
-    std::vector<std::int32_t> m_samples32;    //!< Conversion buffer
+    FLAC__StreamEncoder* m_encoder;      //!< FLAC stream encoder
+    unsigned int         m_channelCount; //!< Number of channels
+    std::vector<Int32>   m_samples32;    //!< Conversion buffer
 };
 
 } // namespace priv

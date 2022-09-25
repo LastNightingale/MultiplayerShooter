@@ -29,10 +29,7 @@
 // Headers
 ////////////////////////////////////////////////////////////
 #include <SFML/Config.hpp>
-
 #include <SFML/Graphics/GLExtensions.hpp>
-
-#include <filesystem>
 
 
 namespace sf
@@ -44,19 +41,14 @@ namespace priv
 ////////////////////////////////////////////////////////////
 #ifdef SFML_DEBUG
 
-// In debug mode, perform a test on every OpenGL call
-// The do-while loop is needed so that glCheck can be used as a single statement in if/else branches
-#define glCheck(expr)                                      \
-    do                                                     \
-    {                                                      \
-        expr;                                              \
-        sf::priv::glCheckError(__FILE__, __LINE__, #expr); \
-    } while (false)
+    // In debug mode, perform a test on every OpenGL call
+    // The do-while loop is needed so that glCheck can be used as a single statement in if/else branches
+    #define glCheck(expr) do { expr; sf::priv::glCheckError(__FILE__, __LINE__, #expr); } while (false)
 
 #else
 
-// Else, we don't add any overhead
-#define glCheck(expr) (expr)
+    // Else, we don't add any overhead
+    #define glCheck(expr) (expr)
 
 #endif
 
@@ -68,7 +60,7 @@ namespace priv
 /// \param expression The evaluated expression as a string
 ///
 ////////////////////////////////////////////////////////////
-void glCheckError(const std::filesystem::path& file, unsigned int line, const char* expression);
+void glCheckError(const char* file, unsigned int line, const char* expression);
 
 } // namespace priv
 

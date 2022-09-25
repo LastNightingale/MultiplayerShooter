@@ -26,13 +26,19 @@
 ////////////////////////////////////////////////////////////
 // Headers
 ////////////////////////////////////////////////////////////
-#import <SFML/Window/OSX/SFOpenGLView+mouse_priv.h>
-#import <SFML/Window/OSX/SFOpenGLView.h>
 #include <SFML/Window/OSX/WindowImplCocoa.hpp>
-
 #include <cmath>
 
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#import <SFML/Window/OSX/SFOpenGLView.h>
+#import <SFML/Window/OSX/SFOpenGLView+mouse_priv.h>
+
+#if defined(__APPLE__)
+    #if defined(__clang__)
+        #pragma clang diagnostic ignored "-Wdeprecated-declarations"
+    #elif defined(__GNUC__)
+        #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+    #endif
+#endif
 
 
 ////////////////////////////////////////////////////////////
@@ -43,17 +49,17 @@
 @implementation SFOpenGLView (mouse)
 
 ////////////////////////////////////////////////////////
-- (void)setCursor:(NSCursor*)cursor
+-(void)setCursor:(NSCursor*)cursor
 {
     m_cursor = cursor;
 
     // indirect call to resetCursorRects to set the cursor
-    [self.window invalidateCursorRectsForView:self];
+    [self.window invalidateCursorRectsForView:self]; 
 }
 
 
 ////////////////////////////////////////////////////////
-- (void)resetCursorRects
+-(void)resetCursorRects
 {
     // addCursorRect:cursor: has to be called from within this function!
     [self addCursorRect:[self frame] cursor:m_cursor];
@@ -62,21 +68,21 @@
 
 
 ////////////////////////////////////////////////////////
-- (BOOL)isMouseInside
+-(BOOL)isMouseInside
 {
     NSPoint relativeToWindow = [[self window] mouseLocationOutsideOfEventStream];
-    NSPoint relativeToView   = [self convertPoint:relativeToWindow fromView:nil];
+    NSPoint relativeToView = [self convertPoint:relativeToWindow fromView:nil];
 
     return NSPointInRect(relativeToView, [self bounds]);
 }
 
 
 ////////////////////////////////////////////////////////
-- (void)updateMouseState
+-(void)updateMouseState
 {
     // Update in/out state
     BOOL mouseWasIn = m_mouseIsIn;
-    m_mouseIsIn     = [self isMouseInside];
+    m_mouseIsIn = [self isMouseInside];
 
     // Send event if needed.
     if (m_requester != 0)
@@ -90,7 +96,7 @@
 
 
 ////////////////////////////////////////////////////////
-- (void)setCursorGrabbed:(BOOL)grabbed
+-(void)setCursorGrabbed:(BOOL)grabbed
 {
     m_cursorGrabbed = grabbed;
 
@@ -99,7 +105,7 @@
 
 
 ////////////////////////////////////////////////////////
-- (void)mouseDown:(NSEvent*)theEvent
+-(void)mouseDown:(NSEvent*)theEvent
 {
     [self handleMouseDown:theEvent];
 
@@ -109,7 +115,7 @@
 
 
 ////////////////////////////////////////////////////////
-- (void)rightMouseDown:(NSEvent*)theEvent
+-(void)rightMouseDown:(NSEvent*)theEvent
 {
     [self handleMouseDown:theEvent];
 
@@ -119,7 +125,7 @@
 
 
 ////////////////////////////////////////////////////////
-- (void)otherMouseDown:(NSEvent*)theEvent
+-(void)otherMouseDown:(NSEvent*)theEvent
 {
     [self handleMouseDown:theEvent];
 
@@ -129,7 +135,7 @@
 
 
 ////////////////////////////////////////////////////////
-- (void)handleMouseDown:(NSEvent*)theEvent
+-(void)handleMouseDown:(NSEvent*)theEvent
 {
     sf::Mouse::Button button = [SFOpenGLView mouseButtonFromEvent:theEvent];
 
@@ -144,7 +150,7 @@
 
 
 ////////////////////////////////////////////////////////
-- (void)mouseUp:(NSEvent*)theEvent
+-(void)mouseUp:(NSEvent*)theEvent
 {
     [self handleMouseUp:theEvent];
 
@@ -154,7 +160,7 @@
 
 
 ////////////////////////////////////////////////////////
-- (void)rightMouseUp:(NSEvent*)theEvent
+-(void)rightMouseUp:(NSEvent*)theEvent
 {
     [self handleMouseUp:theEvent];
 
@@ -164,7 +170,7 @@
 
 
 ////////////////////////////////////////////////////////
-- (void)otherMouseUp:(NSEvent*)theEvent
+-(void)otherMouseUp:(NSEvent*)theEvent
 {
     [self handleMouseUp:theEvent];
 
@@ -174,7 +180,7 @@
 
 
 ////////////////////////////////////////////////////////////
-- (void)handleMouseUp:(NSEvent*)theEvent
+-(void)handleMouseUp:(NSEvent*)theEvent
 {
     sf::Mouse::Button button = [SFOpenGLView mouseButtonFromEvent:theEvent];
 
@@ -189,7 +195,7 @@
 
 
 ////////////////////////////////////////////////////////
-- (void)mouseMoved:(NSEvent*)theEvent
+-(void)mouseMoved:(NSEvent*)theEvent
 {
     [self handleMouseMove:theEvent];
 
@@ -199,7 +205,7 @@
 
 
 ////////////////////////////////////////////////////////
-- (void)rightMouseDragged:(NSEvent*)theEvent
+-(void)rightMouseDragged:(NSEvent*)theEvent
 {
     [self handleMouseMove:theEvent];
 
@@ -209,7 +215,7 @@
 
 
 ////////////////////////////////////////////////////////
-- (void)mouseDragged:(NSEvent*)theEvent
+-(void)mouseDragged:(NSEvent*)theEvent
 {
     [self handleMouseMove:theEvent];
 
@@ -219,7 +225,7 @@
 
 
 ////////////////////////////////////////////////////////
-- (void)otherMouseDragged:(NSEvent*)theEvent
+-(void)otherMouseDragged:(NSEvent*)theEvent
 {
     [self handleMouseMove:theEvent];
 
@@ -229,7 +235,7 @@
 
 
 ////////////////////////////////////////////////////////
-- (void)handleMouseMove:(NSEvent*)theEvent
+-(void)handleMouseMove:(NSEvent*)theEvent
 {
     NSPoint loc = [self cursorPositionFromEvent:theEvent];
 
@@ -249,14 +255,14 @@
 
 
 ////////////////////////////////////////////////////////
-- (BOOL)isCursorCurrentlyGrabbed
+-(BOOL)isCursorCurrentlyGrabbed
 {
     return [[self window] isKeyWindow] && m_cursorGrabbed;
 }
 
 
 ////////////////////////////////////////////////////////
-- (void)updateCursorGrabbed
+-(void)updateCursorGrabbed
 {
     // Disable/enable normal movements of the cursor
     // and project the cursor if needed.
@@ -276,7 +282,7 @@
 
 
 ////////////////////////////////////////////////////////
-- (void)moveCursorTo:(NSPoint)loc
+-(void)moveCursorTo:(NSPoint)loc
 {
     // Convert the point from SFML coord system to screen coord system.
     NSPoint screenLocation = [self computeGlobalPositionOfRelativePoint:loc];
@@ -288,24 +294,21 @@
 
 
 ////////////////////////////////////////////////////////
-- (CGDirectDisplayID)displayId
+-(CGDirectDisplayID)displayId
 {
-    NSScreen* screen    = [[self window] screen];
+    NSScreen* screen = [[self window] screen];
     NSNumber* displayId = [[screen deviceDescription] objectForKey:@"NSScreenNumber"];
     return static_cast<unsigned int>([displayId intValue]);
 }
 
 
 ////////////////////////////////////////////////////////
-- (void)scrollWheel:(NSEvent*)theEvent
+-(void)scrollWheel:(NSEvent*)theEvent
 {
     if (m_requester != 0)
     {
         NSPoint loc = [self cursorPositionFromEvent:theEvent];
-        m_requester->mouseWheelScrolledAt(static_cast<float>([theEvent deltaX]),
-                                          static_cast<float>([theEvent deltaY]),
-                                          static_cast<int>(loc.x),
-                                          static_cast<int>(loc.y));
+        m_requester->mouseWheelScrolledAt(static_cast<float>([theEvent deltaX]), static_cast<float>([theEvent deltaY]), static_cast<int>(loc.x), static_cast<int>(loc.y));
     }
 
     // Transmit to non-SFML responder
@@ -314,7 +317,7 @@
 
 
 ////////////////////////////////////////////////////////
-- (void)mouseEntered:(NSEvent*)theEvent
+-(void)mouseEntered:(NSEvent*)theEvent
 {
     (void)theEvent;
     [self updateMouseState];
@@ -322,7 +325,7 @@
 
 
 ////////////////////////////////////////////////////////
-- (void)mouseExited:(NSEvent*)theEvent
+-(void)mouseExited:(NSEvent*)theEvent
 {
     (void)theEvent;
     [self updateMouseState];
@@ -330,7 +333,7 @@
 
 
 ////////////////////////////////////////////////////////
-- (NSPoint)cursorPositionFromEvent:(NSEvent*)eventOrNil
+-(NSPoint)cursorPositionFromEvent:(NSEvent*)eventOrNil
 {
     NSPoint rawPos;
 
@@ -349,8 +352,10 @@
             // is dissociated from its position.
 
             // Ignore any non-move related event
-            if (([eventOrNil type] == NSMouseMoved) || ([eventOrNil type] == NSLeftMouseDragged) ||
-                ([eventOrNil type] == NSRightMouseDragged) || ([eventOrNil type] == NSOtherMouseDragged))
+            if (([eventOrNil type] == NSMouseMoved)        ||
+                ([eventOrNil type] == NSLeftMouseDragged)  ||
+                ([eventOrNil type] == NSRightMouseDragged) ||
+                ([eventOrNil type] == NSOtherMouseDragged))
             {
                 // Without this factor, the cursor flies around waaay too fast!
                 // But I don't know if it because of retina display or because
@@ -384,8 +389,8 @@
         NSSize  size   = [self frame].size;
         NSPoint origin = [self frame].origin;
         NSPoint oldPos = rawPos;
-        rawPos.x       = std::min(std::max(origin.x, rawPos.x), origin.x + size.width - 1);
-        rawPos.y       = std::min(std::max(origin.y + 1, rawPos.y), origin.y + size.height);
+        rawPos.x = std::min(std::max(origin.x, rawPos.x), origin.x + size.width - 1);
+        rawPos.y = std::min(std::max(origin.y + 1, rawPos.y), origin.y + size.height);
         // Note: the `-1` and `+1` on the two lines above prevent the user to click
         // on the left or below the window, repectively, and therefore prevent the
         // application to lose focus by accident. The sign of this offset is determinded
@@ -400,29 +405,23 @@
 
     // Don't forget to change to SFML coord system.
     const double h = [self frame].size.height;
-    loc.y          = h - loc.y;
+    loc.y = h - loc.y;
 
     return loc;
 }
 
 
 ////////////////////////////////////////////////////////
-+ (sf::Mouse::Button)mouseButtonFromEvent:(NSEvent*)event
++(sf::Mouse::Button)mouseButtonFromEvent:(NSEvent*)event
 {
     switch ([event buttonNumber])
     {
-        case 0:
-            return sf::Mouse::Left;
-        case 1:
-            return sf::Mouse::Right;
-        case 2:
-            return sf::Mouse::Middle;
-        case 3:
-            return sf::Mouse::XButton1;
-        case 4:
-            return sf::Mouse::XButton2;
-        default:
-            return sf::Mouse::ButtonCount; // Never happens! (hopefully)
+        case 0:     return sf::Mouse::Left;
+        case 1:     return sf::Mouse::Right;
+        case 2:     return sf::Mouse::Middle;
+        case 3:     return sf::Mouse::XButton1;
+        case 4:     return sf::Mouse::XButton2;
+        default:    return sf::Mouse::ButtonCount; // Never happens! (hopefully)
     }
 }
 

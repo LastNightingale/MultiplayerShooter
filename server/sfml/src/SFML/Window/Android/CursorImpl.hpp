@@ -28,8 +28,9 @@
 ////////////////////////////////////////////////////////////
 // Headers
 ////////////////////////////////////////////////////////////
-#include <SFML/System/Vector2.hpp>
 #include <SFML/Window/Cursor.hpp>
+#include <SFML/System/NonCopyable.hpp>
+#include <SFML/System/Vector2.hpp>
 
 
 namespace sf
@@ -43,9 +44,10 @@ namespace priv
 /// This is a typical "not supported" implementation.
 ///
 ////////////////////////////////////////////////////////////
-class CursorImpl
+class CursorImpl : NonCopyable
 {
 public:
+
     ////////////////////////////////////////////////////////////
     /// \brief Default constructor
     ///
@@ -55,16 +57,12 @@ public:
     CursorImpl();
 
     ////////////////////////////////////////////////////////////
-    /// \brief Deleted copy constructor
+    /// \brief Destructor
+    ///
+    /// Refer to sf::Cursor::~Cursor().
     ///
     ////////////////////////////////////////////////////////////
-    CursorImpl(const CursorImpl&) = delete;
-
-    ////////////////////////////////////////////////////////////
-    /// \brief Deleted copy assignment
-    ///
-    ////////////////////////////////////////////////////////////
-    CursorImpl& operator=(const CursorImpl&) = delete;
+    ~CursorImpl();
 
     ////////////////////////////////////////////////////////////
     /// \brief Create a cursor with the provided image
@@ -72,7 +70,7 @@ public:
     /// Returns false.
     ///
     ////////////////////////////////////////////////////////////
-    bool loadFromPixels(const std::uint8_t* pixels, Vector2u size, Vector2u hotspot);
+    bool loadFromPixels(const Uint8* pixels, Vector2u size, Vector2u hotspot);
 
     ////////////////////////////////////////////////////////////
     /// \brief Create a native system cursor

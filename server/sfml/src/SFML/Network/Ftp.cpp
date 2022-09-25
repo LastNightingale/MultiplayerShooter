@@ -28,36 +28,23 @@
 #include <SFML/Network/Ftp.hpp>
 #include <SFML/Network/IpAddress.hpp>
 #include <SFML/System/Err.hpp>
-
 #include <algorithm>
 #include <cctype>
-#include <cstdio>
 #include <fstream>
 #include <iterator>
-#include <ostream>
 #include <sstream>
+#include <cstdio>
 
 
 namespace sf
 {
 ////////////////////////////////////////////////////////////
-class Ftp::DataChannel
+class Ftp::DataChannel : NonCopyable
 {
 public:
+
     ////////////////////////////////////////////////////////////
     DataChannel(Ftp& owner);
-
-    ////////////////////////////////////////////////////////////
-    /// \brief Deleted copy constructor
-    ///
-    ////////////////////////////////////////////////////////////
-    DataChannel(const DataChannel&) = delete;
-
-    ////////////////////////////////////////////////////////////
-    /// \brief Deleted copy assignment
-    ///
-    ////////////////////////////////////////////////////////////
-    DataChannel& operator=(const DataChannel&) = delete;
 
     ////////////////////////////////////////////////////////////
     Ftp::Response open(Ftp::TransferMode mode);
@@ -69,6 +56,7 @@ public:
     void receive(std::ostream& stream);
 
 private:
+
     ////////////////////////////////////////////////////////////
     // Member data
     ////////////////////////////////////////////////////////////
@@ -78,8 +66,11 @@ private:
 
 
 ////////////////////////////////////////////////////////////
-Ftp::Response::Response(Status code, const std::string& message) : m_status(code), m_message(message)
+Ftp::Response::Response(Status code, const std::string& message) :
+m_status (code),
+m_message(message)
 {
+
 }
 
 
@@ -105,27 +96,29 @@ const std::string& Ftp::Response::getMessage() const
 
 
 ////////////////////////////////////////////////////////////
-Ftp::DirectoryResponse::DirectoryResponse(const Ftp::Response& response) : Ftp::Response(response)
+Ftp::DirectoryResponse::DirectoryResponse(const Ftp::Response& response) :
+Ftp::Response(response)
 {
     if (isOk())
     {
         // Extract the directory from the server response
         std::string::size_type begin = getMessage().find('"', 0);
         std::string::size_type end   = getMessage().find('"', begin + 1);
-        m_directory                  = getMessage().substr(begin + 1, end - begin - 1);
+        m_directory = getMessage().substr(begin + 1, end - begin - 1);
     }
 }
 
 
 ////////////////////////////////////////////////////////////
-const std::filesystem::path& Ftp::DirectoryResponse::getDirectory() const
+const std::string& Ftp::DirectoryResponse::getDirectory() const
 {
     return m_directory;
 }
 
 
 ////////////////////////////////////////////////////////////
-Ftp::ListingResponse::ListingResponse(const Ftp::Response& response, const std::string& data) : Ftp::Response(response)
+Ftp::ListingResponse::ListingResponse(const Ftp::Response& response, const std::string& data) :
+Ftp::Response(response)
 {
     if (isOk())
     {
@@ -150,7 +143,7 @@ const std::vector<std::string>& Ftp::ListingResponse::getListing() const
 ////////////////////////////////////////////////////////////
 Ftp::~Ftp()
 {
-    (void)disconnect();
+    disconnect();
 }
 
 
@@ -215,8 +208,8 @@ Ftp::ListingResponse Ftp::getDirectoryListing(const std::string& directory)
 {
     // Open a data channel on default port (20) using ASCII transfer mode
     std::ostringstream directoryData;
-    DataChannel        data(*this);
-    Response           response = data.open(Ascii);
+    DataChannel data(*this);
+    Response response = data.open(Ascii);
     if (response.isOk())
     {
         // Tell the server to send us the listing
@@ -264,38 +257,48 @@ Ftp::Response Ftp::deleteDirectory(const std::string& name)
 
 
 ////////////////////////////////////////////////////////////
-Ftp::Response Ftp::renameFile(const std::filesystem::path& file, const std::filesystem::path& newName)
+Ftp::Response Ftp::renameFile(const std::string& file, const std::string& newName)
 {
-    Response response = sendCommand("RNFR", file.string());
+    Response response = sendCommand("RNFR", file);
     if (response.isOk())
-        response = sendCommand("RNTO", newName.string());
+       response = sendCommand("RNTO", newName);
 
     return response;
 }
 
 
 ////////////////////////////////////////////////////////////
-Ftp::Response Ftp::deleteFile(const std::filesystem::path& name)
+Ftp::Response Ftp::deleteFile(const std::string& name)
 {
-    return sendCommand("DELE", name.string());
+    return sendCommand("DELE", name);
 }
 
 
 ////////////////////////////////////////////////////////////
-Ftp::Response Ftp::download(const std::filesystem::path& remoteFile, const std::filesystem::path& localPath, TransferMode mode)
+Ftp::Response Ftp::download(const std::string& remoteFile, const std::string& localPath, TransferMode mode)
 {
     // Open a data channel using the given transfer mode
     DataChannel data(*this);
-    Response    response = data.open(mode);
+    Response response = data.open(mode);
     if (response.isOk())
     {
         // Tell the server to start the transfer
-        response = sendCommand("RETR", remoteFile.string());
+        response = sendCommand("RETR", remoteFile);
         if (response.isOk())
         {
+            // Extract the filename from the file path
+            std::string filename = remoteFile;
+            std::string::size_type pos = filename.find_last_of("/\\");
+            if (pos != std::string::npos)
+                filename = filename.substr(pos + 1);
+
+            // Make sure the destination path ends with a slash
+            std::string path = localPath;
+            if (!path.empty() && (path[path.size() - 1] != '\\') && (path[path.size() - 1] != '/'))
+                path += "/";
+
             // Create the file and truncate it if necessary
-            const std::filesystem::path filepath = localPath / remoteFile.filename();
-            std::ofstream               file(filepath, std::ios_base::binary | std::ios_base::trunc);
+            std::ofstream file((path + filename).c_str(), std::ios_base::binary | std::ios_base::trunc);
             if (!file)
                 return Response(Response::InvalidFile);
 
@@ -310,7 +313,7 @@ Ftp::Response Ftp::download(const std::filesystem::path& remoteFile, const std::
 
             // If the download was unsuccessful, delete the partial file
             if (!response.isOk())
-                std::remove(filepath.string().c_str());
+                std::remove((path + filename).c_str());
         }
     }
 
@@ -327,8 +330,8 @@ Ftp::Response Ftp::upload(const std::string& localFile, const std::string& remot
         return Response(Response::InvalidFile);
 
     // Extract the filename from the file path
-    std::string            filename = localFile;
-    std::string::size_type pos      = filename.find_last_of("/\\");
+    std::string filename = localFile;
+    std::string::size_type pos = filename.find_last_of("/\\");
     if (pos != std::string::npos)
         filename = filename.substr(pos + 1);
 
@@ -339,7 +342,7 @@ Ftp::Response Ftp::upload(const std::string& localFile, const std::string& remot
 
     // Open a data channel using the given transfer mode
     DataChannel data(*this);
-    Response    response = data.open(mode);
+    Response response = data.open(mode);
     if (response.isOk())
     {
         // Tell the server to start the transfer
@@ -383,14 +386,14 @@ Ftp::Response Ftp::getResponse()
     // We'll use a variable to keep track of the last valid code.
     // It is useful in case of multi-lines responses, because the end of such a response
     // will start by the same code
-    unsigned int lastCode          = 0;
-    bool         isInsideMultiline = false;
-    std::string  message;
+    unsigned int lastCode  = 0;
+    bool isInsideMultiline = false;
+    std::string message;
 
     for (;;)
     {
         // Receive the response from the server
-        char        buffer[1024];
+        char buffer[1024];
         std::size_t length;
 
         if (m_receiveBuffer.empty())
@@ -460,8 +463,7 @@ Ftp::Response Ftp::getResponse()
                         }
 
                         // Save the remaining data for the next time getResponse() is called
-                        m_receiveBuffer.assign(buffer + static_cast<std::size_t>(in.tellg()),
-                                               length - static_cast<std::size_t>(in.tellg()));
+                        m_receiveBuffer.assign(buffer + static_cast<std::size_t>(in.tellg()), length - static_cast<std::size_t>(in.tellg()));
 
                         // Return the response code and message
                         return Response(static_cast<Response::Status>(code), message);
@@ -482,7 +484,7 @@ Ftp::Response Ftp::getResponse()
 
                             // Append it to the current message
                             std::ostringstream out;
-                            out << code << separator << line << '\n';
+                            out << code << separator << line << "\n";
                             message += out.str();
                         }
                     }
@@ -521,8 +523,10 @@ Ftp::Response Ftp::getResponse()
 
 
 ////////////////////////////////////////////////////////////
-Ftp::DataChannel::DataChannel(Ftp& owner) : m_ftp(owner)
+Ftp::DataChannel::DataChannel(Ftp& owner) :
+m_ftp(owner)
 {
+
 }
 
 
@@ -537,26 +541,28 @@ Ftp::Response Ftp::DataChannel::open(Ftp::TransferMode mode)
         std::string::size_type begin = response.getMessage().find_first_of("0123456789");
         if (begin != std::string::npos)
         {
-            std::uint8_t data[6] = {0, 0, 0, 0, 0, 0};
-            std::string  str     = response.getMessage().substr(begin);
-            std::size_t  index   = 0;
-            for (unsigned char& datum : data)
+            Uint8 data[6] = {0, 0, 0, 0, 0, 0};
+            std::string str = response.getMessage().substr(begin);
+            std::size_t index = 0;
+            for (int i = 0; i < 6; ++i)
             {
                 // Extract the current number
                 while (isdigit(str[index]))
                 {
-                    datum = static_cast<std::uint8_t>(
-                        static_cast<std::uint8_t>(datum * 10) + static_cast<std::uint8_t>(str[index] - '0'));
-                    ++index;
+                    data[i] = static_cast<Uint8>(static_cast<Uint8>(data[i] * 10) + static_cast<Uint8>(str[index] - '0'));
+                    index++;
                 }
 
                 // Skip separator
-                ++index;
+                index++;
             }
 
             // Reconstruct connection port and address
-            unsigned short port = static_cast<std::uint8_t>(data[4] * 256) + data[5];
-            IpAddress      address(data[0], data[1], data[2], data[3]);
+            unsigned short port = static_cast<Uint16>(data[4] * 256 + data[5]);
+            IpAddress address(data[0],
+                              data[1],
+                              data[2],
+                              data[3]);
 
             // Connect the data channel to the server
             if (m_dataSocket.connect(address, port) == Socket::Done)
@@ -565,15 +571,9 @@ Ftp::Response Ftp::DataChannel::open(Ftp::TransferMode mode)
                 std::string modeStr;
                 switch (mode)
                 {
-                    case Ftp::Binary:
-                        modeStr = "I";
-                        break;
-                    case Ftp::Ascii:
-                        modeStr = "A";
-                        break;
-                    case Ftp::Ebcdic:
-                        modeStr = "E";
-                        break;
+                    case Ftp::Binary: modeStr = "I"; break;
+                    case Ftp::Ascii:  modeStr = "A"; break;
+                    case Ftp::Ebcdic: modeStr = "E"; break;
                 }
 
                 // Set the transfer mode
@@ -595,7 +595,7 @@ Ftp::Response Ftp::DataChannel::open(Ftp::TransferMode mode)
 void Ftp::DataChannel::receive(std::ostream& stream)
 {
     // Receive data
-    char        buffer[1024];
+    char buffer[1024];
     std::size_t received;
     while (m_dataSocket.receive(buffer, sizeof(buffer), received) == Socket::Done)
     {
@@ -617,7 +617,7 @@ void Ftp::DataChannel::receive(std::ostream& stream)
 void Ftp::DataChannel::send(std::istream& stream)
 {
     // Send data
-    char        buffer[1024];
+    char buffer[1024];
     std::size_t count;
 
     for (;;)

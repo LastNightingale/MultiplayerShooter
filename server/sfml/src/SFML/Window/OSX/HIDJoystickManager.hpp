@@ -29,6 +29,7 @@
 ////////////////////////////////////////////////////////////
 // Headers
 ////////////////////////////////////////////////////////////
+#include <SFML/System/NonCopyable.hpp>
 #include <IOKit/hid/IOHIDDevice.h>
 #include <IOKit/hid/IOHIDManager.h>
 
@@ -43,9 +44,10 @@ namespace priv
 /// It's only purpose is to help sf::priv::JoystickImpl class.
 ///
 ////////////////////////////////////////////////////////////
-class HIDJoystickManager
+class HIDJoystickManager : NonCopyable
 {
 public:
+
     ////////////////////////////////////////////////////////////
     /// \brief Get the unique instance of the class
     ///
@@ -57,6 +59,7 @@ public:
     static HIDJoystickManager& getInstance();
 
 public:
+
     ////////////////////////////////////////////////////////////
     /// \brief Get the number of currently connected joystick
     ///
@@ -66,12 +69,13 @@ public:
     ////////////////////////////////////////////////////////////
     /// \brief Copy the devices associated with this HID manager
     ///
-    /// \return a retained CFSetRef of IOHIDDeviceRef or a null pointer
+    /// \return a retained CFSetRef of IOHIDDeviceRef or NULL
     ///
     ////////////////////////////////////////////////////////////
     CFSetRef copyJoysticks();
 
 private:
+
     ////////////////////////////////////////////////////////////
     /// \brief Default constructor
     ///
@@ -85,24 +89,13 @@ private:
     ~HIDJoystickManager();
 
     ////////////////////////////////////////////////////////////
-    /// \brief Deleted copy constructor
-    ///
-    ////////////////////////////////////////////////////////////
-    HIDJoystickManager(const HIDJoystickManager&) = delete;
-
-    ////////////////////////////////////////////////////////////
-    /// \brief Deleted copy assignment
-    ///
-    ////////////////////////////////////////////////////////////
-    HIDJoystickManager& operator=(const HIDJoystickManager&) = delete;
-
-    ////////////////////////////////////////////////////////////
     /// \brief Make sure all event have been processed in the run loop
     ///
     ////////////////////////////////////////////////////////////
     void update();
 
 private:
+
     ////////////////////////////////////////////////////////////
     /// \brief Private "plug-in" callback
     /// \note Only 'context' parameter is used.
@@ -120,11 +113,12 @@ private:
     static void pluggedOut(void* context, IOReturn, void*, IOHIDDeviceRef);
 
 private:
+
     ////////////////////////////////////////////////////////////
     // Member data
     ////////////////////////////////////////////////////////////
-    IOHIDManagerRef m_manager;       ///< HID Manager
-    unsigned int    m_joystickCount; ///< Number of joysticks currently connected
+    IOHIDManagerRef m_manager;      ///< HID Manager
+    unsigned int    m_joystickCount;///< Number of joysticks currently connected
 };
 
 

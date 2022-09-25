@@ -25,41 +25,46 @@
 ////////////////////////////////////////////////////////////
 // Headers
 ////////////////////////////////////////////////////////////
-#include <SFML/System/Err.hpp>
-#include <SFML/Window/ContextSettings.hpp>
 #include <SFML/Window/WindowBase.hpp>
+#include <SFML/Window/ContextSettings.hpp>
 #include <SFML/Window/WindowImpl.hpp>
-
-#include <ostream>
+#include <SFML/System/Err.hpp>
 
 
 namespace
 {
-// A nested named namespace is used here to allow unity builds of SFML.
-namespace WindowsBaseImpl
-{
-const sf::WindowBase* fullscreenWindow = nullptr;
+    // A nested named namespace is used here to allow unity builds of SFML.
+    namespace WindowsBaseImpl
+    {
+        const sf::WindowBase* fullscreenWindow = NULL;
+    }
 }
-} // namespace
 
 
 namespace sf
 {
 ////////////////////////////////////////////////////////////
-WindowBase::WindowBase() : m_impl(), m_size(0, 0)
+WindowBase::WindowBase() :
+m_impl          (NULL),
+m_size          (0, 0)
 {
+
 }
 
 
 ////////////////////////////////////////////////////////////
-WindowBase::WindowBase(VideoMode mode, const String& title, std::uint32_t style) : m_impl(), m_size(0, 0)
+WindowBase::WindowBase(VideoMode mode, const String& title, Uint32 style) :
+m_impl          (NULL),
+m_size          (0, 0)
 {
     WindowBase::create(mode, title, style);
 }
 
 
 ////////////////////////////////////////////////////////////
-WindowBase::WindowBase(WindowHandle handle) : m_impl(), m_size(0, 0)
+WindowBase::WindowBase(WindowHandle handle) :
+m_impl          (NULL),
+m_size          (0, 0)
 {
     WindowBase::create(handle);
 }
@@ -68,12 +73,12 @@ WindowBase::WindowBase(WindowHandle handle) : m_impl(), m_size(0, 0)
 ////////////////////////////////////////////////////////////
 WindowBase::~WindowBase()
 {
-    WindowBase::close();
+    close();
 }
 
 
 ////////////////////////////////////////////////////////////
-void WindowBase::create(VideoMode mode, const String& title, std::uint32_t style)
+void WindowBase::create(VideoMode mode, const String& title, Uint32 style)
 {
     // Destroy the previous window implementation
     close();
@@ -85,7 +90,7 @@ void WindowBase::create(VideoMode mode, const String& title, std::uint32_t style
         if (getFullscreenWindow())
         {
             err() << "Creating two fullscreen windows is not allowed, switching to windowed mode" << std::endl;
-            style &= ~static_cast<std::uint32_t>(Style::Fullscreen);
+            style &= ~static_cast<Uint32>(Style::Fullscreen);
         }
         else
         {
@@ -101,16 +106,16 @@ void WindowBase::create(VideoMode mode, const String& title, std::uint32_t style
         }
     }
 
-// Check validity of style according to the underlying platform
-#if defined(SFML_SYSTEM_IOS) || defined(SFML_SYSTEM_ANDROID)
-    if (style & Style::Fullscreen)
-        style &= ~static_cast<std::uint32_t>(Style::Titlebar);
-    else
-        style |= Style::Titlebar;
-#else
-    if ((style & Style::Close) || (style & Style::Resize))
-        style |= Style::Titlebar;
-#endif
+    // Check validity of style according to the underlying platform
+    #if defined(SFML_SYSTEM_IOS) || defined(SFML_SYSTEM_ANDROID)
+        if (style & Style::Fullscreen)
+            style &= ~static_cast<Uint32>(Style::Titlebar);
+        else
+            style |= Style::Titlebar;
+    #else
+        if ((style & Style::Close) || (style & Style::Resize))
+            style |= Style::Titlebar;
+    #endif
 
     // Recreate the window implementation
     m_impl = priv::WindowImpl::create(mode, title, style, ContextSettings(0, 0, 0, 0, 0, 0xFFFFFFFF, false));
@@ -138,18 +143,19 @@ void WindowBase::create(WindowHandle handle)
 void WindowBase::close()
 {
     // Delete the window implementation
-    m_impl.reset();
+    delete m_impl;
+    m_impl = NULL;
 
     // Update the fullscreen window
     if (this == getFullscreenWindow())
-        setFullscreenWindow(nullptr);
+        setFullscreenWindow(NULL);
 }
 
 
 ////////////////////////////////////////////////////////////
 bool WindowBase::isOpen() const
 {
-    return m_impl != nullptr;
+    return m_impl != NULL;
 }
 
 
@@ -229,10 +235,10 @@ void WindowBase::setTitle(const String& title)
 
 
 ////////////////////////////////////////////////////////////
-void WindowBase::setIcon(const Vector2u& size, const std::uint8_t* pixels)
+void WindowBase::setIcon(unsigned int width, unsigned int height, const Uint8* pixels)
 {
     if (m_impl)
-        m_impl->setIcon(size, pixels);
+        m_impl->setIcon(width, height, pixels);
 }
 
 
@@ -302,7 +308,7 @@ bool WindowBase::hasFocus() const
 ////////////////////////////////////////////////////////////
 WindowHandle WindowBase::getSystemHandle() const
 {
-    return m_impl ? m_impl->getSystemHandle() : WindowHandle{};
+    return m_impl ? m_impl->getSystemHandle() : 0;
 }
 
 

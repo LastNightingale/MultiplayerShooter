@@ -25,16 +25,21 @@
 ////////////////////////////////////////////////////////////
 // Headers
 ////////////////////////////////////////////////////////////
-#include <SFML/System/Utf.hpp>
-#include <SFML/Window/iOS/SFAppDelegate.hpp>
 #include <SFML/Window/iOS/SFView.hpp>
-
+#include <SFML/Window/iOS/SFAppDelegate.hpp>
+#include <SFML/System/Utf.hpp>
 #include <QuartzCore/CAEAGLLayer.h>
 #include <cstring>
 
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#if defined(__APPLE__)
+    #if defined(__clang__)
+        #pragma clang diagnostic ignored "-Wdeprecated-declarations"
+    #elif defined(__GNUC__)
+        #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+    #endif
+#endif
 
-@interface SFView ()
+@interface SFView()
 
 @property (nonatomic) NSMutableArray* touches;
 
@@ -47,7 +52,7 @@
 
 
 ////////////////////////////////////////////////////////////
-- (BOOL)canBecomeFirstResponder
+-(BOOL)canBecomeFirstResponder
 {
     return true;
 }
@@ -77,7 +82,7 @@
     const char* end = utf8 + std::strlen(utf8);
     while (utf8 < end)
     {
-        std::uint32_t character;
+        sf::Uint32 character;
         utf8 = sf::Utf8::decode(utf8, end, character);
         [[SFAppDelegate getInstance] notifyCharacter:character];
     }
@@ -102,7 +107,7 @@
         }
 
         // get the touch position
-        CGPoint      point = [touch locationInView:self];
+        CGPoint point = [touch locationInView:self];
         sf::Vector2i position(static_cast<int>(point.x), static_cast<int>(point.y));
 
         // notify the application delegate
@@ -121,7 +126,7 @@
         if (index != NSNotFound)
         {
             // get the touch position
-            CGPoint      point = [touch locationInView:self];
+            CGPoint point = [touch locationInView:self];
             sf::Vector2i position(static_cast<int>(point.x), static_cast<int>(point.y));
 
             // notify the application delegate
@@ -141,7 +146,7 @@
         if (index != NSNotFound)
         {
             // get the touch position
-            CGPoint      point = [touch locationInView:self];
+            CGPoint point = [touch locationInView:self];
             sf::Vector2i position(static_cast<int>(point.x), static_cast<int>(point.y));
 
             // notify the application delegate
@@ -186,29 +191,27 @@
 
     if (self)
     {
-        self.context = nullptr;
+        self.context = NULL;
         self.touches = [NSMutableArray array];
 
         // Configure the EAGL layer
-        CAEAGLLayer* eaglLayer       = static_cast<CAEAGLLayer*>(self.layer);
-        eaglLayer.opaque             = YES;
-        eaglLayer.drawableProperties = [NSDictionary
-            dictionaryWithObjectsAndKeys:[NSNumber numberWithBool:FALSE],
-                                         kEAGLDrawablePropertyRetainedBacking,
-                                         kEAGLColorFormatRGBA8,
-                                         kEAGLDrawablePropertyColorFormat,
-                                         nil];
+        CAEAGLLayer* eaglLayer = static_cast<CAEAGLLayer*>(self.layer);
+        eaglLayer.opaque = YES;
+        eaglLayer.drawableProperties = [NSDictionary dictionaryWithObjectsAndKeys:
+                                        [NSNumber numberWithBool:FALSE], kEAGLDrawablePropertyRetainedBacking,
+                                        kEAGLColorFormatRGBA8, kEAGLDrawablePropertyColorFormat,
+                                        nil];
 
         // Enable user interactions on the view (multi-touch events)
         self.userInteractionEnabled = true;
-        self.multipleTouchEnabled   = true;
+        self.multipleTouchEnabled = true;
     }
 
     return self;
 }
 
 ////////////////////////////////////////////////////////////
-- (UITextAutocorrectionType)autocorrectionType
+- (UITextAutocorrectionType) autocorrectionType
 {
     return UITextAutocorrectionTypeNo;
 }

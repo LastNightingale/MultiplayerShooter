@@ -28,25 +28,23 @@
 ////////////////////////////////////////////////////////////
 // Headers
 ////////////////////////////////////////////////////////////
+#include <SFML/Window/Cursor.hpp>
 #include <SFML/Window/Export.hpp>
-
-#include <SFML/System/Vector2.hpp>
+#include <SFML/Window/VideoMode.hpp>
 #include <SFML/Window/Vulkan.hpp>
 #include <SFML/Window/WindowHandle.hpp>
 #include <SFML/Window/WindowStyle.hpp>
-
-#include <memory>
+#include <SFML/System/Clock.hpp>
+#include <SFML/System/NonCopyable.hpp>
+#include <SFML/System/String.hpp>
+#include <SFML/System/Vector2.hpp>
 
 
 namespace sf
 {
-class Cursor;
-class String;
-class VideoMode;
-
 namespace priv
 {
-class WindowImpl;
+    class WindowImpl;
 }
 
 class Event;
@@ -55,9 +53,10 @@ class Event;
 /// \brief Window that serves as a base for other windows
 ///
 ////////////////////////////////////////////////////////////
-class SFML_WINDOW_API WindowBase
+class SFML_WINDOW_API WindowBase : NonCopyable
 {
 public:
+
     ////////////////////////////////////////////////////////////
     /// \brief Default constructor
     ///
@@ -81,7 +80,7 @@ public:
     /// \param style %Window style, a bitwise OR combination of sf::Style enumerators
     ///
     ////////////////////////////////////////////////////////////
-    WindowBase(VideoMode mode, const String& title, std::uint32_t style = Style::Default);
+    WindowBase(VideoMode mode, const String& title, Uint32 style = Style::Default);
 
     ////////////////////////////////////////////////////////////
     /// \brief Construct the window from an existing control
@@ -100,18 +99,6 @@ public:
     virtual ~WindowBase();
 
     ////////////////////////////////////////////////////////////
-    /// \brief Deleted copy constructor
-    ///
-    ////////////////////////////////////////////////////////////
-    WindowBase(const WindowBase&) = delete;
-
-    ////////////////////////////////////////////////////////////
-    /// \brief Deleted copy assignment
-    ///
-    ////////////////////////////////////////////////////////////
-    WindowBase& operator=(const WindowBase&) = delete;
-
-    ////////////////////////////////////////////////////////////
     /// \brief Create (or recreate) the window
     ///
     /// If the window was already created, it closes it first.
@@ -123,7 +110,7 @@ public:
     /// \param style %Window style, a bitwise OR combination of sf::Style enumerators
     ///
     ////////////////////////////////////////////////////////////
-    virtual void create(VideoMode mode, const String& title, std::uint32_t style = Style::Default);
+    virtual void create(VideoMode mode, const String& title, Uint32 style = Style::Default);
 
     ////////////////////////////////////////////////////////////
     /// \brief Create (or recreate) the window from an existing control
@@ -166,7 +153,8 @@ public:
     /// thus you should always call this function in a loop
     /// to make sure that you process every pending event.
     /// \code
-    /// for (sf::Event event; window.pollEvent(event);)
+    /// sf::Event event;
+    /// while (window.pollEvent(event))
     /// {
     ///    // process event...
     /// }
@@ -179,7 +167,7 @@ public:
     /// \see waitEvent
     ///
     ////////////////////////////////////////////////////////////
-    [[nodiscard]] bool pollEvent(Event& event);
+    bool pollEvent(Event& event);
 
     ////////////////////////////////////////////////////////////
     /// \brief Wait for an event and return it
@@ -206,7 +194,7 @@ public:
     /// \see pollEvent
     ///
     ////////////////////////////////////////////////////////////
-    [[nodiscard]] bool waitEvent(Event& event);
+    bool waitEvent(Event& event);
 
     ////////////////////////////////////////////////////////////
     /// \brief Get the position of the window
@@ -273,7 +261,8 @@ public:
     ///
     /// The OS default icon is used by default.
     ///
-    /// \param size   Icon's width and height, in pixels
+    /// \param width  Icon's width, in pixels
+    /// \param height Icon's height, in pixels
     /// \param pixels Pointer to the array of pixels in memory. The
     ///               pixels are copied, so you need not keep the
     ///               source alive after calling this function.
@@ -281,7 +270,7 @@ public:
     /// \see setTitle
     ///
     ////////////////////////////////////////////////////////////
-    void setIcon(const Vector2u& size, const std::uint8_t* pixels);
+    void setIcon(unsigned int width, unsigned int height, const Uint8* pixels);
 
     ////////////////////////////////////////////////////////////
     /// \brief Show or hide the window
@@ -395,7 +384,7 @@ public:
     /// \brief Get the OS-specific handle of the window
     ///
     /// The type of the returned handle is sf::WindowHandle,
-    /// which is a type alias to the handle type defined by the OS.
+    /// which is a typedef to the handle type defined by the OS.
     /// You shouldn't need to use this function, unless you have
     /// very specific stuff to implement that SFML doesn't support,
     /// or implement a temporary workaround until a bug is fixed.
@@ -415,11 +404,10 @@ public:
     /// \return True if surface creation was successful, false otherwise
     ///
     ////////////////////////////////////////////////////////////
-    [[nodiscard]] bool createVulkanSurface(const VkInstance&            instance,
-                                           VkSurfaceKHR&                surface,
-                                           const VkAllocationCallbacks* allocator = nullptr);
+    bool createVulkanSurface(const VkInstance& instance, VkSurfaceKHR& surface, const VkAllocationCallbacks* allocator = 0);
 
 protected:
+
     ////////////////////////////////////////////////////////////
     /// \brief Function called after the window has been created
     ///
@@ -440,6 +428,7 @@ protected:
     virtual void onResize();
 
 private:
+
     friend class Window;
 
     ////////////////////////////////////////////////////////////
@@ -454,7 +443,7 @@ private:
     /// \param event Event to filter
     ///
     ////////////////////////////////////////////////////////////
-    [[nodiscard]] bool filterEvent(const Event& event);
+    bool filterEvent(const Event& event);
 
     ////////////////////////////////////////////////////////////
     /// \brief Perform some common internal initializations
@@ -465,7 +454,7 @@ private:
     ////////////////////////////////////////////////////////////
     /// \brief Get the fullscreen window
     ///
-    /// \return The fullscreen window or a null pointer if there is none
+    /// \return The fullscreen window or NULL if there is none
     ///
     ////////////////////////////////////////////////////////////
     const WindowBase* getFullscreenWindow();
@@ -481,8 +470,8 @@ private:
     ////////////////////////////////////////////////////////////
     // Member data
     ////////////////////////////////////////////////////////////
-    std::unique_ptr<priv::WindowImpl> m_impl; //!< Platform-specific implementation of the window
-    Vector2u                          m_size; //!< Current size of the window
+    priv::WindowImpl* m_impl;           //!< Platform-specific implementation of the window
+    Vector2u          m_size;           //!< Current size of the window
 };
 
 } // namespace sf
@@ -514,7 +503,8 @@ private:
 /// while (window.isOpen())
 /// {
 ///    // Event processing
-///    for (sf::Event event; window.pollEvent(event);)
+///    sf::Event event;
+///    while (window.pollEvent(event))
 ///    {
 ///        // Request for closing the window
 ///        if (event.type == sf::Event::Closed)

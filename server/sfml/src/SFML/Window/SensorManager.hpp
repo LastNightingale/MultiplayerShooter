@@ -30,6 +30,7 @@
 ////////////////////////////////////////////////////////////
 #include <SFML/Window/Sensor.hpp>
 #include <SFML/Window/SensorImpl.hpp>
+#include <SFML/System/NonCopyable.hpp>
 
 
 namespace sf
@@ -40,9 +41,10 @@ namespace priv
 /// \brief Global sensor manager
 ///
 ////////////////////////////////////////////////////////////
-class SensorManager
+class SensorManager : NonCopyable
 {
 public:
+
     ////////////////////////////////////////////////////////////
     /// \brief Get the global unique instance of the manager
     ///
@@ -97,6 +99,7 @@ public:
     void update();
 
 private:
+
     ////////////////////////////////////////////////////////////
     /// \brief Default constructor
     ///
@@ -110,27 +113,15 @@ private:
     ~SensorManager();
 
     ////////////////////////////////////////////////////////////
-    /// \brief Deleted copy constructor
-    ///
-    ////////////////////////////////////////////////////////////
-    SensorManager(const SensorManager&) = delete;
-
-    ////////////////////////////////////////////////////////////
-    /// \brief Deleted copy assignment
-    ///
-    ////////////////////////////////////////////////////////////
-    SensorManager& operator=(const SensorManager&) = delete;
-
-    ////////////////////////////////////////////////////////////
     /// \brief Sensor information and state
     ///
     ////////////////////////////////////////////////////////////
     struct Item
     {
-        bool       available; //!< Is the sensor available on this device?
-        bool       enabled;   //!< Current enable state of the sensor
-        SensorImpl sensor;    //!< Sensor implementation
-        Vector3f   value;     //!< The current sensor value
+        bool available;    //!< Is the sensor available on this device?
+        bool enabled;      //!< Current enable state of the sensor
+        SensorImpl sensor; //!< Sensor implementation
+        Vector3f value;    //!< The current sensor value
     };
 
     ////////////////////////////////////////////////////////////

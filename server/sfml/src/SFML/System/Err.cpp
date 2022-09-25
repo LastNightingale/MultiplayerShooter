@@ -26,10 +26,8 @@
 // Headers
 ////////////////////////////////////////////////////////////
 #include <SFML/System/Err.hpp>
-
-#include <cstdio>
-#include <iostream>
 #include <streambuf>
+#include <cstdio>
 
 
 namespace
@@ -39,15 +37,16 @@ namespace
 class DefaultErrStreamBuf : public std::streambuf
 {
 public:
+
     DefaultErrStreamBuf()
     {
         // Allocate the write buffer
-        constexpr int size   = 64;
-        char*         buffer = new char[size];
+        static const int size = 64;
+        char* buffer = new char[size];
         setp(buffer, buffer + size);
     }
 
-    ~DefaultErrStreamBuf() override
+    ~DefaultErrStreamBuf()
     {
         // Synchronize
         sync();
@@ -57,7 +56,8 @@ public:
     }
 
 private:
-    int overflow(int character) override
+
+    virtual int overflow(int character)
     {
         if ((character != EOF) && (pptr() != epptr()))
         {
@@ -77,13 +77,13 @@ private:
         }
     }
 
-    int sync() override
+    virtual int sync()
     {
         // Check if there is something into the write buffer
         if (pbase() != pptr())
         {
             // Print the contents of the write buffer into the standard error output
-            auto size = static_cast<std::size_t>(pptr() - pbase());
+            std::size_t size = static_cast<std::size_t>(pptr() - pbase());
             fwrite(pbase(), 1, size, stderr);
 
             // Reset the pointer position to the beginning of the write buffer
@@ -93,7 +93,7 @@ private:
         return 0;
     }
 };
-} // namespace
+}
 
 namespace sf
 {
@@ -101,7 +101,7 @@ namespace sf
 std::ostream& err()
 {
     static DefaultErrStreamBuf buffer;
-    static std::ostream        stream(&buffer);
+    static std::ostream stream(&buffer);
 
     return stream;
 }

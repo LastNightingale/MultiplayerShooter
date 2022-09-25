@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////
-/// \mainpage
+/// \mainpage SFML Documentation
 ///
 /// \section welcome Welcome
 /// Welcome to the official SFML documentation. Here you will find a detailed
@@ -44,7 +44,8 @@
 ///     while (window.isOpen())
 ///     {
 ///         // Process events
-///         for (sf::Event event; window.pollEvent(event);)
+///         sf::Event event;
+///         while (window.pollEvent(event))
 ///         {
 ///             // Close window: exit
 ///             if (event.type == sf::Event::Closed)

@@ -25,11 +25,14 @@
 #ifndef SFML_CLIPBOARDIMPLCOCOA_HPP
 #define SFML_CLIPBOARDIMPLCOCOA_HPP
 
+////////////////////////////////////////////////////////////
+// Headers
+////////////////////////////////////////////////////////////
+#include <SFML/System/String.hpp>
+
 
 namespace sf
 {
-class String;
-
 namespace priv
 {
 
@@ -40,6 +43,7 @@ namespace priv
 class ClipboardImpl
 {
 public:
+
     ////////////////////////////////////////////////////////////
     /// \brief Get the content of the clipboard as string data
     ///
@@ -71,3 +75,4 @@ public:
 
 
 #endif // SFML_CLIPBOARDIMPLCOCOA_HPP
+

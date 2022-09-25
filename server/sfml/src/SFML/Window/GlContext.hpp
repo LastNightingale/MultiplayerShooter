@@ -29,13 +29,10 @@
 // Headers
 ////////////////////////////////////////////////////////////
 #include <SFML/Config.hpp>
-
 #include <SFML/Window/Context.hpp>
 #include <SFML/Window/ContextSettings.hpp>
 #include <SFML/Window/GlResource.hpp>
-
-#include <cstdint>
-#include <memory>
+#include <SFML/System/NonCopyable.hpp>
 
 
 namespace sf
@@ -48,9 +45,10 @@ class WindowImpl;
 /// \brief Abstract class representing an OpenGL context
 ///
 ////////////////////////////////////////////////////////////
-class GlContext
+class GlContext : NonCopyable
 {
 public:
+
     ////////////////////////////////////////////////////////////
     /// \brief Perform resource initialization
     ///
@@ -103,10 +101,10 @@ public:
     /// This function automatically chooses the specialized class
     /// to use according to the OS.
     ///
-    /// \return Pointer to the created context
+    /// \return Pointer to the created context (don't forget to delete it)
     ///
     ////////////////////////////////////////////////////////////
-    static std::unique_ptr<GlContext> create();
+    static GlContext* create();
 
     ////////////////////////////////////////////////////////////
     /// \brief Create a new context attached to a window
@@ -121,7 +119,7 @@ public:
     /// \return Pointer to the created context
     ///
     ////////////////////////////////////////////////////////////
-    static std::unique_ptr<GlContext> create(const ContextSettings& settings, const WindowImpl& owner, unsigned int bitsPerPixel);
+    static GlContext* create(const ContextSettings& settings, const WindowImpl* owner, unsigned int bitsPerPixel);
 
     ////////////////////////////////////////////////////////////
     /// \brief Create a new context that embeds its own rendering target
@@ -130,12 +128,13 @@ public:
     /// to use according to the OS.
     ///
     /// \param settings Creation parameters
-    /// \param size     Back buffer width and height
+    /// \param width    Back buffer width
+    /// \param height   Back buffer height
     ///
     /// \return Pointer to the created context
     ///
     ////////////////////////////////////////////////////////////
-    static std::unique_ptr<GlContext> create(const ContextSettings& settings, const Vector2u& size);
+    static GlContext* create(const ContextSettings& settings, unsigned int width, unsigned int height);
 
 public:
     ////////////////////////////////////////////////////////////
@@ -161,7 +160,7 @@ public:
     ////////////////////////////////////////////////////////////
     /// \brief Get the currently active context
     ///
-    /// \return The currently active context or a null pointer if none is active
+    /// \return The currently active context or NULL if none is active
     ///
     ////////////////////////////////////////////////////////////
     static const GlContext* getActiveContext();
@@ -175,25 +174,13 @@ public:
     /// \return The active context's ID or 0 if no context is currently active
     ///
     ////////////////////////////////////////////////////////////
-    static std::uint64_t getActiveContextId();
+    static Uint64 getActiveContextId();
 
     ////////////////////////////////////////////////////////////
     /// \brief Destructor
     ///
     ////////////////////////////////////////////////////////////
     virtual ~GlContext();
-
-    ////////////////////////////////////////////////////////////
-    /// \brief Deleted copy constructor
-    ///
-    ////////////////////////////////////////////////////////////
-    GlContext(const GlContext&) = delete;
-
-    ////////////////////////////////////////////////////////////
-    /// \brief Deleted copy assignment
-    ///
-    ////////////////////////////////////////////////////////////
-    GlContext& operator=(const GlContext&) = delete;
 
     ////////////////////////////////////////////////////////////
     /// \brief Get the settings of the context
@@ -243,6 +230,7 @@ public:
     virtual void setVerticalSyncEnabled(bool enabled) = 0;
 
 protected:
+
     ////////////////////////////////////////////////////////////
     /// \brief Default constructor
     ///
@@ -288,14 +276,7 @@ protected:
     /// \return Score of the configuration
     ///
     ////////////////////////////////////////////////////////////
-    static int evaluateFormat(unsigned int           bitsPerPixel,
-                              const ContextSettings& settings,
-                              int                    colorBits,
-                              int                    depthBits,
-                              int                    stencilBits,
-                              int                    antialiasing,
-                              bool                   accelerated,
-                              bool                   sRgb);
+    static int evaluateFormat(unsigned int bitsPerPixel, const ContextSettings& settings, int colorBits, int depthBits, int stencilBits, int antialiasing, bool accelerated, bool sRgb);
 
     ////////////////////////////////////////////////////////////
     // Member data
@@ -303,6 +284,7 @@ protected:
     ContextSettings m_settings; //!< Creation settings of the context
 
 private:
+
     ////////////////////////////////////////////////////////////
     /// \brief Perform various initializations after the context construction
     /// \param requestedSettings Requested settings during context creation
@@ -320,7 +302,7 @@ private:
     ////////////////////////////////////////////////////////////
     // Member data
     ////////////////////////////////////////////////////////////
-    const std::uint64_t m_id; //!< Unique number that identifies the context
+    const Uint64 m_id; //!< Unique number that identifies the context
 };
 
 } // namespace priv

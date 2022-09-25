@@ -3,7 +3,6 @@
 // Headers
 ////////////////////////////////////////////////////////////
 #include <SFML/Audio.hpp>
-
 #include <iostream>
 #include <string>
 
@@ -20,10 +19,10 @@ void playSound()
         return;
 
     // Display sound informations
-    std::cout << "killdeer.wav:" << '\n'
-              << " " << buffer.getDuration().asSeconds() << " seconds" << '\n'
-              << " " << buffer.getSampleRate() << " samples / sec" << '\n'
-              << " " << buffer.getChannelCount() << " channels" << std::endl;
+    std::cout << "killdeer.wav:" << std::endl;
+    std::cout << " " << buffer.getDuration().asSeconds() << " seconds"       << std::endl;
+    std::cout << " " << buffer.getSampleRate()           << " samples / sec" << std::endl;
+    std::cout << " " << buffer.getChannelCount()         << " channels"      << std::endl;
 
     // Create a sound instance and play it
     sf::Sound sound(buffer);
@@ -47,18 +46,18 @@ void playSound()
 /// Play a music
 ///
 ////////////////////////////////////////////////////////////
-void playMusic(const std::filesystem::path& filename)
+void playMusic(const std::string& filename)
 {
     // Load an ogg music file
     sf::Music music;
-    if (!music.openFromFile("resources" / filename))
+    if (!music.openFromFile("resources/" + filename))
         return;
 
     // Display music informations
-    std::cout << filename << ":" << '\n'
-              << " " << music.getDuration().asSeconds() << " seconds" << '\n'
-              << " " << music.getSampleRate() << " samples / sec" << '\n'
-              << " " << music.getChannelCount() << " channels" << std::endl;
+    std::cout << filename << ":" << std::endl;
+    std::cout << " " << music.getDuration().asSeconds() << " seconds"       << std::endl;
+    std::cout << " " << music.getSampleRate()           << " samples / sec" << std::endl;
+    std::cout << " " << music.getChannelCount()         << " channels"      << std::endl;
 
     // Play it
     music.play();
@@ -73,7 +72,7 @@ void playMusic(const std::filesystem::path& filename)
         std::cout << "\rPlaying... " << music.getPlayingOffset().asSeconds() << " sec        ";
         std::cout << std::flush;
     }
-    std::cout << '\n' << std::endl;
+    std::cout << std::endl << std::endl;
 }
 
 

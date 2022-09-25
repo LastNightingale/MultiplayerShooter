@@ -25,13 +25,12 @@
 ////////////////////////////////////////////////////////////
 // Headers
 ////////////////////////////////////////////////////////////
-#include <SFML/System/Err.hpp>
+#include <SFML/Window/DRM/WindowImplDRM.hpp>
 #include <SFML/Window/DRM/DRMContext.hpp>
 #include <SFML/Window/DRM/InputImplUDev.hpp>
-#include <SFML/Window/DRM/WindowImplDRM.hpp>
 #include <SFML/Window/Event.hpp>
 #include <SFML/Window/WindowStyle.hpp>
-
+#include <SFML/System/Err.hpp>
 #include <drm-common.h>
 
 
@@ -40,7 +39,8 @@ namespace sf
 namespace priv
 {
 ////////////////////////////////////////////////////////////
-WindowImplDRM::WindowImplDRM(WindowHandle /*handle*/) : m_size(0, 0)
+WindowImplDRM::WindowImplDRM(WindowHandle /*handle*/) :
+m_size(0, 0)
 {
     sf::priv::InputImpl::setTerminalConfig();
 }
@@ -48,7 +48,7 @@ WindowImplDRM::WindowImplDRM(WindowHandle /*handle*/) : m_size(0, 0)
 
 ////////////////////////////////////////////////////////////
 WindowImplDRM::WindowImplDRM(VideoMode mode, const String& /*title*/, unsigned long /*style*/, const ContextSettings& /*settings*/) :
-m_size(mode.size)
+m_size(mode.width, mode.height)
 {
     sf::priv::InputImpl::setTerminalConfig();
 }
@@ -101,7 +101,7 @@ void WindowImplDRM::setTitle(const String& /*title*/)
 
 
 ////////////////////////////////////////////////////////////
-void WindowImplDRM::setIcon(const Vector2u& /*size*/, const std::uint8_t* /*pixels*/)
+void WindowImplDRM::setIcon(unsigned int /*width*/, unsigned int /*height*/, const Uint8* /*pixels*/)
 {
 }
 

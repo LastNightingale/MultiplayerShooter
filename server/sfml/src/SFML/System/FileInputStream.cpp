@@ -29,61 +29,58 @@
 #ifdef SFML_SYSTEM_ANDROID
 #include <SFML/System/Android/ResourceStream.hpp>
 #endif
-#include <cstddef>
-#include <memory>
+
 
 namespace sf
 {
 ////////////////////////////////////////////////////////////
-#ifndef SFML_SYSTEM_ANDROID
-void FileInputStream::FileCloser::operator()(std::FILE* file)
+FileInputStream::FileInputStream()
+: m_file(NULL)
 {
-    std::fclose(file);
+
 }
-#endif
 
 
 ////////////////////////////////////////////////////////////
-FileInputStream::FileInputStream() = default;
-
-
-////////////////////////////////////////////////////////////
-FileInputStream::~FileInputStream() = default;
-
-
-////////////////////////////////////////////////////////////
-FileInputStream::FileInputStream(FileInputStream&&) = default;
-
-
-////////////////////////////////////////////////////////////
-FileInputStream& FileInputStream::operator=(FileInputStream&&) = default;
-
-
-////////////////////////////////////////////////////////////
-bool FileInputStream::open(const std::filesystem::path& filename)
+FileInputStream::~FileInputStream()
 {
 #ifdef SFML_SYSTEM_ANDROID
-    m_file = std::make_unique<priv::ResourceStream>(filename);
-    return m_file->tell() != -1;
+    if (m_file)
+        delete m_file;
 #else
-#ifdef SFML_SYSTEM_WINDOWS
-    m_file.reset(_wfopen(filename.c_str(), L"rb"));
-#else
-    m_file.reset(std::fopen(filename.c_str(), "rb"));
-#endif
-    return m_file != nullptr;
+    if (m_file)
+        std::fclose(m_file);
 #endif
 }
 
 
 ////////////////////////////////////////////////////////////
-std::int64_t FileInputStream::read(void* data, std::int64_t size)
+bool FileInputStream::open(const std::string& filename)
+{
+#ifdef SFML_SYSTEM_ANDROID
+    if (m_file)
+        delete m_file;
+    m_file = new priv::ResourceStream(filename);
+    return m_file->tell() != -1;
+#else
+    if (m_file)
+        std::fclose(m_file);
+
+    m_file = std::fopen(filename.c_str(), "rb");
+
+    return m_file != NULL;
+#endif
+}
+
+
+////////////////////////////////////////////////////////////
+Int64 FileInputStream::read(void* data, Int64 size)
 {
 #ifdef SFML_SYSTEM_ANDROID
     return m_file->read(data, size);
 #else
     if (m_file)
-        return static_cast<std::int64_t>(std::fread(data, 1, static_cast<std::size_t>(size), m_file.get()));
+        return static_cast<Int64>(std::fread(data, 1, static_cast<std::size_t>(size), m_file));
     else
         return -1;
 #endif
@@ -91,14 +88,14 @@ std::int64_t FileInputStream::read(void* data, std::int64_t size)
 
 
 ////////////////////////////////////////////////////////////
-std::int64_t FileInputStream::seek(std::int64_t position)
+Int64 FileInputStream::seek(Int64 position)
 {
 #ifdef SFML_SYSTEM_ANDROID
     return m_file->seek(position);
 #else
     if (m_file)
     {
-        if (std::fseek(m_file.get(), static_cast<long>(position), SEEK_SET))
+        if (std::fseek(m_file, static_cast<long>(position), SEEK_SET))
             return -1;
 
         return tell();
@@ -112,13 +109,13 @@ std::int64_t FileInputStream::seek(std::int64_t position)
 
 
 ////////////////////////////////////////////////////////////
-std::int64_t FileInputStream::tell()
+Int64 FileInputStream::tell()
 {
 #ifdef SFML_SYSTEM_ANDROID
     return m_file->tell();
 #else
     if (m_file)
-        return std::ftell(m_file.get());
+        return std::ftell(m_file);
     else
         return -1;
 #endif
@@ -126,20 +123,17 @@ std::int64_t FileInputStream::tell()
 
 
 ////////////////////////////////////////////////////////////
-std::int64_t FileInputStream::getSize()
+Int64 FileInputStream::getSize()
 {
 #ifdef SFML_SYSTEM_ANDROID
     return m_file->getSize();
 #else
     if (m_file)
     {
-        std::int64_t position = tell();
-        std::fseek(m_file.get(), 0, SEEK_END);
-        std::int64_t size = tell();
-
-        if (seek(position) == -1)
-            return -1;
-
+        Int64 position = tell();
+        std::fseek(m_file, 0, SEEK_END);
+        Int64 size = tell();
+        seek(position);
         return size;
     }
     else

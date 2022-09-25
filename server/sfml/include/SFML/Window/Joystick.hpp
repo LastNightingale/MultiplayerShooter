@@ -29,7 +29,6 @@
 // Headers
 ////////////////////////////////////////////////////////////
 #include <SFML/Window/Export.hpp>
-
 #include <SFML/System/String.hpp>
 
 
@@ -42,6 +41,7 @@ namespace sf
 class SFML_WINDOW_API Joystick
 {
 public:
+
     ////////////////////////////////////////////////////////////
     /// \brief Constants related to joysticks capabilities
     ///

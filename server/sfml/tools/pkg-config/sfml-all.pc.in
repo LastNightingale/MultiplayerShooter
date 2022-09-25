@@ -6,5 +6,5 @@ includedir=${prefix}/include
 Name: SFML-all
 Description: The Simple and Fast Multimedia Library, all modules.
 URL: http://www.sfml-dev.org
-Version: @PROJECT_VERSION@
+Version: @VERSION_MAJOR@.@VERSION_MINOR@.@VERSION_PATCH@
 Requires: sfml-system, sfml-window, sfml-graphics, sfml-audio, sfml-network

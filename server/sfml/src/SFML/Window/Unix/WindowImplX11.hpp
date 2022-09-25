@@ -30,12 +30,11 @@
 ////////////////////////////////////////////////////////////
 #include <SFML/Window/Event.hpp>
 #include <SFML/Window/WindowImpl.hpp>
+#include <SFML/System/String.hpp>
 #include <SFML/Window/WindowStyle.hpp> // Prevent conflict with macro None from Xlib
-
 #include <X11/Xlib.h>
-#include <X11/extensions/Xrandr.h>
-
 #include <deque>
+#include <X11/extensions/Xrandr.h>
 
 
 namespace sf
@@ -49,6 +48,7 @@ namespace priv
 class WindowImplX11 : public WindowImpl
 {
 public:
+
     ////////////////////////////////////////////////////////////
     /// \brief Construct the window implementation from an existing control
     ///
@@ -80,7 +80,7 @@ public:
     /// \return Handle of the window
     ///
     ////////////////////////////////////////////////////////////
-    WindowHandle getSystemHandle() const override;
+    virtual WindowHandle getSystemHandle() const;
 
     ////////////////////////////////////////////////////////////
     /// \brief Get the position of the window
@@ -88,7 +88,7 @@ public:
     /// \return Position of the window, in pixels
     ///
     ////////////////////////////////////////////////////////////
-    Vector2i getPosition() const override;
+    virtual Vector2i getPosition() const;
 
     ////////////////////////////////////////////////////////////
     /// \brief Change the position of the window on screen
@@ -96,7 +96,7 @@ public:
     /// \param position New position of the window, in pixels
     ///
     ////////////////////////////////////////////////////////////
-    void setPosition(const Vector2i& position) override;
+    virtual void setPosition(const Vector2i& position);
 
     ////////////////////////////////////////////////////////////
     /// \brief Get the client size of the window
@@ -104,7 +104,7 @@ public:
     /// \return Size of the window, in pixels
     ///
     ////////////////////////////////////////////////////////////
-    Vector2u getSize() const override;
+    virtual Vector2u getSize() const;
 
     ////////////////////////////////////////////////////////////
     /// \brief Change the size of the rendering region of the window
@@ -112,7 +112,7 @@ public:
     /// \param size New size, in pixels
     ///
     ////////////////////////////////////////////////////////////
-    void setSize(const Vector2u& size) override;
+    virtual void setSize(const Vector2u& size);
 
     ////////////////////////////////////////////////////////////
     /// \brief Change the title of the window
@@ -120,16 +120,17 @@ public:
     /// \param title New title
     ///
     ////////////////////////////////////////////////////////////
-    void setTitle(const String& title) override;
+    virtual void setTitle(const String& title);
 
     ////////////////////////////////////////////////////////////
     /// \brief Change the window's icon
     ///
-    /// \param size   Icon's width and height, in pixels
+    /// \param width  Icon's width, in pixels
+    /// \param height Icon's height, in pixels
     /// \param pixels Pointer to the pixels in memory, format must be RGBA 32 bits
     ///
     ////////////////////////////////////////////////////////////
-    void setIcon(const Vector2u& size, const std::uint8_t* pixels) override;
+    virtual void setIcon(unsigned int width, unsigned int height, const Uint8* pixels);
 
     ////////////////////////////////////////////////////////////
     /// \brief Show or hide the window
@@ -137,7 +138,7 @@ public:
     /// \param visible True to show, false to hide
     ///
     ////////////////////////////////////////////////////////////
-    void setVisible(bool visible) override;
+    virtual void setVisible(bool visible);
 
     ////////////////////////////////////////////////////////////
     /// \brief Show or hide the mouse cursor
@@ -145,7 +146,7 @@ public:
     /// \param visible True to show, false to hide
     ///
     ////////////////////////////////////////////////////////////
-    void setMouseCursorVisible(bool visible) override;
+    virtual void setMouseCursorVisible(bool visible);
 
     ////////////////////////////////////////////////////////////
     /// \brief Grab or release the mouse cursor
@@ -153,7 +154,7 @@ public:
     /// \param grabbed True to enable, false to disable
     ///
     ////////////////////////////////////////////////////////////
-    void setMouseCursorGrabbed(bool grabbed) override;
+    virtual void setMouseCursorGrabbed(bool grabbed);
 
     ////////////////////////////////////////////////////////////
     /// \brief Set the displayed cursor to a native system cursor
@@ -161,7 +162,7 @@ public:
     /// \param cursor Native system cursor type to display
     ///
     ////////////////////////////////////////////////////////////
-    void setMouseCursor(const CursorImpl& cursor) override;
+    virtual void setMouseCursor(const CursorImpl& cursor);
 
     ////////////////////////////////////////////////////////////
     /// \brief Enable or disable automatic key-repeat
@@ -169,14 +170,14 @@ public:
     /// \param enabled True to enable, false to disable
     ///
     ////////////////////////////////////////////////////////////
-    void setKeyRepeatEnabled(bool enabled) override;
+    virtual void setKeyRepeatEnabled(bool enabled);
 
     ////////////////////////////////////////////////////////////
     /// \brief Request the current window to be made the active
     ///        foreground window
     ///
     ////////////////////////////////////////////////////////////
-    void requestFocus() override;
+    virtual void requestFocus();
 
     ////////////////////////////////////////////////////////////
     /// \brief Check whether the window has the input focus
@@ -184,16 +185,18 @@ public:
     /// \return True if window has focus, false otherwise
     ///
     ////////////////////////////////////////////////////////////
-    bool hasFocus() const override;
+    virtual bool hasFocus() const;
 
 protected:
+
     ////////////////////////////////////////////////////////////
     /// \brief Process incoming events from the operating system
     ///
     ////////////////////////////////////////////////////////////
-    void processEvents() override;
+    virtual void processEvents();
 
 private:
+
     ////////////////////////////////////////////////////////////
     /// \brief Request the WM to make the current window active
     ///
@@ -263,7 +266,7 @@ private:
     bool processEvent(XEvent& windowEvent);
 
     ////////////////////////////////////////////////////////////
-    /// \brief Check if a valid version of XRandR extension is present
+    /// \brief Check if a valid version of XRandR extension is present 
     ///
     /// \param xRandRMajor XRandR major version
     /// \param xRandRMinor XRandR minor version
@@ -297,26 +300,26 @@ private:
     ////////////////////////////////////////////////////////////
     // Member data
     ////////////////////////////////////////////////////////////
-    ::Window           m_window;       ///< X identifier defining our window
-    ::Display*         m_display;      ///< Pointer to the display
-    int                m_screen;       ///< Screen identifier
-    XIM                m_inputMethod;  ///< Input method linked to the X display
-    XIC                m_inputContext; ///< Input context used to get unicode input in our window
-    std::deque<XEvent> m_events;       ///< Queue we use to store pending events for this window
-    bool               m_isExternal;   ///< Tell whether the window has been created externally or by SFML
-    RRMode             m_oldVideoMode; ///< Video mode in use before we switch to fullscreen
-    RRCrtc             m_oldRRCrtc;    ///< RRCrtc in use before we switch to fullscreen
-    ::Cursor           m_hiddenCursor; ///< As X11 doesn't provide cursor hiding, we must create a transparent one
-    ::Cursor m_lastCursor; ///< Last cursor used -- this data is not owned by the window and is required to be always valid
-    bool     m_keyRepeat; ///< Is the KeyRepeat feature enabled?
-    Vector2i m_previousSize; ///< Previous size of the window, to find if a ConfigureNotify event is a resize event (could be a move event only)
-    bool     m_useSizeHints;   ///< Is the size of the window fixed with size hints?
-    bool     m_fullscreen;     ///< Is the window in fullscreen?
-    bool     m_cursorGrabbed;  ///< Is the mouse cursor trapped?
-    bool     m_windowMapped;   ///< Has the window been mapped by the window manager?
-    Pixmap   m_iconPixmap;     ///< The current icon pixmap if in use
-    Pixmap   m_iconMaskPixmap; ///< The current icon mask pixmap if in use
-    ::Time   m_lastInputTime;  ///< Last time we received user input
+    ::Window           m_window;         ///< X identifier defining our window
+    ::Display*         m_display;        ///< Pointer to the display
+    int                m_screen;         ///< Screen identifier
+    XIM                m_inputMethod;    ///< Input method linked to the X display
+    XIC                m_inputContext;   ///< Input context used to get unicode input in our window
+    std::deque<XEvent> m_events;         ///< Queue we use to store pending events for this window
+    bool               m_isExternal;     ///< Tell whether the window has been created externally or by SFML
+    RRMode             m_oldVideoMode;   ///< Video mode in use before we switch to fullscreen
+    RRCrtc             m_oldRRCrtc;      ///< RRCrtc in use before we switch to fullscreen
+    ::Cursor           m_hiddenCursor;   ///< As X11 doesn't provide cursor hiding, we must create a transparent one
+    ::Cursor           m_lastCursor;     ///< Last cursor used -- this data is not owned by the window and is required to be always valid
+    bool               m_keyRepeat;      ///< Is the KeyRepeat feature enabled?
+    Vector2i           m_previousSize;   ///< Previous size of the window, to find if a ConfigureNotify event is a resize event (could be a move event only)
+    bool               m_useSizeHints;   ///< Is the size of the window fixed with size hints?
+    bool               m_fullscreen;     ///< Is the window in fullscreen?
+    bool               m_cursorGrabbed;  ///< Is the mouse cursor trapped?
+    bool               m_windowMapped;   ///< Has the window been mapped by the window manager?
+    Pixmap             m_iconPixmap;     ///< The current icon pixmap if in use
+    Pixmap             m_iconMaskPixmap; ///< The current icon mask pixmap if in use
+    ::Time             m_lastInputTime;  ///< Last time we received user input
 };
 
 } // namespace priv

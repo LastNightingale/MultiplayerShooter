@@ -25,10 +25,8 @@
 ////////////////////////////////////////////////////////////
 // Headers
 ////////////////////////////////////////////////////////////
-#include <SFML/System/Err.hpp>
 #include <SFML/Window/SensorManager.hpp>
-
-#include <ostream>
+#include <SFML/System/Err.hpp>
 
 
 namespace sf
@@ -60,8 +58,7 @@ void SensorManager::setEnabled(Sensor::Type sensor, bool enabled)
     }
     else
     {
-        err() << "Warning: trying to enable a sensor that is not available (call Sensor::isAvailable to check it)"
-              << std::endl;
+        err() << "Warning: trying to enable a sensor that is not available (call Sensor::isAvailable to check it)" << std::endl;
     }
 }
 
@@ -83,11 +80,11 @@ Vector3f SensorManager::getValue(Sensor::Type sensor) const
 ////////////////////////////////////////////////////////////
 void SensorManager::update()
 {
-    for (Item& item : m_sensors)
+    for (int i = 0; i < Sensor::Count; ++i)
     {
         // Only process available sensors
-        if (item.available)
-            item.value = item.sensor.update();
+        if (m_sensors[i].available)
+            m_sensors[i].value = m_sensors[i].sensor.update();
     }
 }
 
@@ -107,15 +104,8 @@ SensorManager::SensorManager()
         // Open the available sensors
         if (m_sensors[i].available)
         {
-            if (m_sensors[i].sensor.open(static_cast<Sensor::Type>(i)))
-            {
-                m_sensors[i].sensor.setEnabled(false);
-            }
-            else
-            {
-                m_sensors[i].available = false;
-                err() << "Warning: sensor " << i << " failed to open, will not be available" << std::endl;
-            }
+            m_sensors[i].sensor.open(static_cast<Sensor::Type>(i));
+            m_sensors[i].sensor.setEnabled(false);
         }
     }
 }
@@ -124,10 +114,10 @@ SensorManager::SensorManager()
 SensorManager::~SensorManager()
 {
     // Per sensor cleanup
-    for (Item& item : m_sensors)
+    for (int i = 0; i < Sensor::Count; ++i)
     {
-        if (item.available)
-            item.sensor.close();
+        if (m_sensors[i].available)
+            m_sensors[i].sensor.close();
     }
 
     // Global sensor cleanup

@@ -29,11 +29,8 @@
 // Headers
 ////////////////////////////////////////////////////////////
 #include <SFML/Network/Export.hpp>
-
 #include <SFML/Network/Socket.hpp>
 #include <SFML/System/Time.hpp>
-
-#include <optional>
 
 
 namespace sf
@@ -49,6 +46,7 @@ class Packet;
 class SFML_NETWORK_API TcpSocket : public Socket
 {
 public:
+
     ////////////////////////////////////////////////////////////
     /// \brief Default constructor
     ///
@@ -71,14 +69,14 @@ public:
     /// \brief Get the address of the connected peer
     ///
     /// If the socket is not connected, this function returns
-    /// an unset optional.
+    /// sf::IpAddress::None.
     ///
     /// \return Address of the remote peer
     ///
     /// \see getRemotePort
     ///
     ////////////////////////////////////////////////////////////
-    std::optional<IpAddress> getRemoteAddress() const;
+    IpAddress getRemoteAddress() const;
 
     ////////////////////////////////////////////////////////////
     /// \brief Get the port of the connected peer to which
@@ -111,7 +109,7 @@ public:
     /// \see disconnect
     ///
     ////////////////////////////////////////////////////////////
-    [[nodiscard]] Status connect(const IpAddress& remoteAddress, unsigned short remotePort, Time timeout = Time::Zero);
+    Status connect(const IpAddress& remoteAddress, unsigned short remotePort, Time timeout = Time::Zero);
 
     ////////////////////////////////////////////////////////////
     /// \brief Disconnect the socket from its remote peer
@@ -140,7 +138,7 @@ public:
     /// \see receive
     ///
     ////////////////////////////////////////////////////////////
-    [[nodiscard]] Status send(const void* data, std::size_t size);
+    Status send(const void* data, std::size_t size);
 
     ////////////////////////////////////////////////////////////
     /// \brief Send raw data to the remote peer
@@ -156,7 +154,7 @@ public:
     /// \see receive
     ///
     ////////////////////////////////////////////////////////////
-    [[nodiscard]] Status send(const void* data, std::size_t size, std::size_t& sent);
+    Status send(const void* data, std::size_t size, std::size_t& sent);
 
     ////////////////////////////////////////////////////////////
     /// \brief Receive raw data from the remote peer
@@ -174,7 +172,7 @@ public:
     /// \see send
     ///
     ////////////////////////////////////////////////////////////
-    [[nodiscard]] Status receive(void* data, std::size_t size, std::size_t& received);
+    Status receive(void* data, std::size_t size, std::size_t& received);
 
     ////////////////////////////////////////////////////////////
     /// \brief Send a formatted packet of data to the remote peer
@@ -192,7 +190,7 @@ public:
     /// \see receive
     ///
     ////////////////////////////////////////////////////////////
-    [[nodiscard]] Status send(Packet& packet);
+    Status send(Packet& packet);
 
     ////////////////////////////////////////////////////////////
     /// \brief Receive a formatted packet of data from the remote peer
@@ -208,9 +206,10 @@ public:
     /// \see send
     ///
     ////////////////////////////////////////////////////////////
-    [[nodiscard]] Status receive(Packet& packet);
+    Status receive(Packet& packet);
 
 private:
+
     friend class TcpListener;
 
     ////////////////////////////////////////////////////////////
@@ -221,7 +220,7 @@ private:
     {
         PendingPacket();
 
-        std::uint32_t     Size;         //!< Data of packet size
+        Uint32            Size;         //!< Data of packet size
         std::size_t       SizeReceived; //!< Number of size bytes received so far
         std::vector<char> Data;         //!< Data of the packet
     };
@@ -229,8 +228,7 @@ private:
     ////////////////////////////////////////////////////////////
     // Member data
     ////////////////////////////////////////////////////////////
-    PendingPacket     m_pendingPacket;     //!< Temporary data of the packet currently being received
-    std::vector<char> m_blockToSendBuffer; //!< Buffer used to prepare data being sent from the socket
+    PendingPacket m_pendingPacket; //!< Temporary data of the packet currently being received
 };
 
 } // namespace sf
@@ -300,7 +298,7 @@ private:
 /// // Wait for a connection
 /// sf::TcpSocket socket;
 /// listener.accept(socket);
-/// std::cout << "New client connected: " << socket.getRemoteAddress().value() << std::endl;
+/// std::cout << "New client connected: " << socket.getRemoteAddress() << std::endl;
 ///
 /// // Receive a message from the client
 /// char buffer[1024];

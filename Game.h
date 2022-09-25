@@ -48,7 +48,7 @@ private:
 	mutex m_Lock;
 	Clock m_Clock;
 	sf::UdpSocket m_Socket;
-	unsigned short m_Port;
+	unsigned short m_Port, m_Port2;
 	float m_Dt;
 	float m_Spawntime;
 	bool m_isRunning;

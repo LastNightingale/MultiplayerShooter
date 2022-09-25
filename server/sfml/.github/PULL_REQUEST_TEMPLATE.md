@@ -37,7 +37,8 @@ int main()
 
     while (window.isOpen())
     {
-        for (sf::Event event; window.pollEvent(event);)
+        sf::Event event;
+        while (window.pollEvent(event))
         {
             if (event.type == sf::Event::Closed)
                 window.close();

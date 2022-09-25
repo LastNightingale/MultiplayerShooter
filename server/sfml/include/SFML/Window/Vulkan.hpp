@@ -29,21 +29,20 @@
 // Headers
 ////////////////////////////////////////////////////////////
 #include <SFML/Window/Export.hpp>
-
-#include <cstdint>
+#include <SFML/Window/WindowHandle.hpp>
 #include <vector>
+#include <stdint.h>
 
 
-using VkInstance = struct VkInstance_T*;
+typedef struct VkInstance_T* VkInstance;
 
-#if defined(__LP64__) || defined(_WIN64) || (defined(__x86_64__) && !defined(__ILP32__)) || defined(_M_X64) || \
-    defined(__ia64) || defined(_M_IA64) || defined(__aarch64__) || defined(__powerpc64__)
+#if defined(__LP64__) || defined(_WIN64) || (defined(__x86_64__) && !defined(__ILP32__) ) || defined(_M_X64) || defined(__ia64) || defined (_M_IA64) || defined(__aarch64__) || defined(__powerpc64__)
 
-using VkSurfaceKHR = struct VkSurfaceKHR_T*;
+typedef struct VkSurfaceKHR_T* VkSurfaceKHR;
 
 #else
 
-using VkSurfaceKHR = std::uint64_t;
+typedef uint64_t VkSurfaceKHR;
 
 #endif
 
@@ -53,7 +52,7 @@ struct VkAllocationCallbacks;
 namespace sf
 {
 
-using VulkanFunctionPointer = void (*)();
+typedef void (*VulkanFunctionPointer)();
 
 ////////////////////////////////////////////////////////////
 /// \brief Vulkan helper functions
@@ -62,6 +61,7 @@ using VulkanFunctionPointer = void (*)();
 class SFML_WINDOW_API Vulkan
 {
 public:
+
     ////////////////////////////////////////////////////////////
     /// \brief Tell whether or not the system supports Vulkan
     ///
@@ -109,6 +109,6 @@ public:
 /// \class sf::Vulkan
 /// \ingroup window
 ///
-///
+/// 
 ///
 ////////////////////////////////////////////////////////////

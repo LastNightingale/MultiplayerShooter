@@ -29,9 +29,8 @@
 // Headers
 ////////////////////////////////////////////////////////////
 #include <SFML/Window/iOS/WindowImplUIKit.hpp>
-
-#include <CoreMotion/CoreMotion.h>
 #include <UIKit/UIKit.h>
+#include <CoreMotion/CoreMotion.h>
 
 
 ////////////////////////////////////////////////////////////
@@ -40,13 +39,13 @@
 /// This class handles global application events.
 ///
 ////////////////////////////////////////////////////////////
-@interface SFAppDelegate : NSObject <UIApplicationDelegate>
+@interface SFAppDelegate : NSObject<UIApplicationDelegate>
 
 ////////////////////////////////////////////////////////////
 /// \brief Return the instance of the application delegate
 ///
 ////////////////////////////////////////////////////////////
-+ (SFAppDelegate*)getInstance;
++(SFAppDelegate*)getInstance;
 
 ////////////////////////////////////////////////////////////
 /// \brief Show or hide the virtual keyboard
@@ -99,7 +98,7 @@
 /// \param character The typed character
 ///
 ////////////////////////////////////////////////////////////
-- (void)notifyCharacter:(std::uint32_t)character;
+- (void)notifyCharacter:(sf::Uint32)character;
 
 ////////////////////////////////////////////////////////////
 /// \brief Tells if the dimensions of the current window must be flipped when switching to a given orientation
@@ -126,10 +125,11 @@
 ////////////////////////////////////////////////////////////
 // Member data
 ////////////////////////////////////////////////////////////
-@property(nonatomic) sf::priv::WindowImplUIKit* sfWindow;      ///< Main window of the application
-@property(readonly, nonatomic) CMMotionManager* motionManager; ///< Instance of the motion manager
-@property(nonatomic) CGFloat                    backingScaleFactor;
+@property (nonatomic) sf::priv::WindowImplUIKit* sfWindow; ///< Main window of the application
+@property (readonly, nonatomic) CMMotionManager* motionManager; ///< Instance of the motion manager
+@property (nonatomic) CGFloat backingScaleFactor;
 
 @end
 
 #endif // SFML_SFAPPDELEGATE_HPP
+

@@ -29,8 +29,7 @@
 // Headers
 ////////////////////////////////////////////////////////////
 #include <SFML/System/Export.hpp>
-
-#include <iosfwd>
+#include <ostream>
 
 
 namespace sf
@@ -70,7 +69,7 @@ SFML_SYSTEM_API std::ostream& err();
 /// std::streambuf* previous = sf::err().rdbuf(file.rdbuf());
 ///
 /// // Redirect to nothing
-/// sf::err().rdbuf(nullptr);
+/// sf::err().rdbuf(NULL);
 ///
 /// // Restore the original output
 /// sf::err().rdbuf(previous);

@@ -29,7 +29,7 @@
 // Headers
 ////////////////////////////////////////////////////////////
 #include <SFML/System/Vector3.hpp>
-
+#include <set>
 #include <string>
 
 
@@ -46,6 +46,7 @@ namespace priv
 class AudioDevice
 {
 public:
+
     ////////////////////////////////////////////////////////////
     /// \brief Default constructor
     ///

@@ -25,30 +25,35 @@
 ////////////////////////////////////////////////////////////
 // Headers
 ////////////////////////////////////////////////////////////
-#include <SFML/Graphics/RenderTarget.hpp>
 #include <SFML/Graphics/Sprite.hpp>
 #include <SFML/Graphics/Texture.hpp>
-
+#include <SFML/Graphics/RenderTarget.hpp>
 #include <cstdlib>
 
 
 namespace sf
 {
 ////////////////////////////////////////////////////////////
-Sprite::Sprite() : m_texture(nullptr), m_textureRect()
+Sprite::Sprite() :
+m_texture    (NULL),
+m_textureRect()
 {
 }
 
 
 ////////////////////////////////////////////////////////////
-Sprite::Sprite(const Texture& texture) : m_texture(nullptr), m_textureRect()
+Sprite::Sprite(const Texture& texture) :
+m_texture    (NULL),
+m_textureRect()
 {
     setTexture(texture, true);
 }
 
 
 ////////////////////////////////////////////////////////////
-Sprite::Sprite(const Texture& texture, const IntRect& rectangle) : m_texture(nullptr), m_textureRect()
+Sprite::Sprite(const Texture& texture, const IntRect& rectangle) :
+m_texture    (NULL),
+m_textureRect()
 {
     // Compute the texture area
     setTextureRect(rectangle);
@@ -63,7 +68,8 @@ void Sprite::setTexture(const Texture& texture, bool resetRect)
     // Recompute the texture area if requested, or if there was no valid texture & rect before
     if (resetRect || (!m_texture && (m_textureRect == sf::IntRect())))
     {
-        setTextureRect(IntRect({0, 0}, Vector2i(texture.getSize())));
+        Vector2i size = Vector2i(texture.getSize());
+        setTextureRect(IntRect(0, 0, size.x, size.y));
     }
 
     // Assign the new texture
@@ -118,10 +124,10 @@ const Color& Sprite::getColor() const
 ////////////////////////////////////////////////////////////
 FloatRect Sprite::getLocalBounds() const
 {
-    auto width  = static_cast<float>(std::abs(m_textureRect.width));
-    auto height = static_cast<float>(std::abs(m_textureRect.height));
+    float width = static_cast<float>(std::abs(m_textureRect.width));
+    float height = static_cast<float>(std::abs(m_textureRect.height));
 
-    return FloatRect({0.f, 0.f}, {width, height});
+    return FloatRect(0.f, 0.f, width, height);
 }
 
 
@@ -133,15 +139,13 @@ FloatRect Sprite::getGlobalBounds() const
 
 
 ////////////////////////////////////////////////////////////
-void Sprite::draw(RenderTarget& target, const RenderStates& states) const
+void Sprite::draw(RenderTarget& target, RenderStates states) const
 {
     if (m_texture)
     {
-        RenderStates statesCopy(states);
-
-        statesCopy.transform *= getTransform();
-        statesCopy.texture = m_texture;
-        target.draw(m_vertices, 4, TriangleStrip, statesCopy);
+        states.transform *= getTransform();
+        states.texture = m_texture;
+        target.draw(m_vertices, 4, TriangleStrip, states);
     }
 }
 
@@ -161,7 +165,7 @@ void Sprite::updatePositions()
 ////////////////////////////////////////////////////////////
 void Sprite::updateTexCoords()
 {
-    FloatRect convertedTextureRect(m_textureRect);
+    FloatRect convertedTextureRect = FloatRect(m_textureRect);
 
     float left   = convertedTextureRect.left;
     float right  = left + convertedTextureRect.width;

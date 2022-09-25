@@ -32,3 +32,4 @@ int sfmlMain();
 
 
 #endif // SFML_SFMAIN_HPP
+

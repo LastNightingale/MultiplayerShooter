@@ -30,7 +30,6 @@
 // Headers
 ////////////////////////////////////////////////////////////
 #include <SFML/Window/VideoMode.hpp>
-
 #include <ApplicationServices/ApplicationServices.h>
 
 namespace sf
@@ -44,7 +43,7 @@ namespace priv
 /// to represent video mode. Instead it uses a CGDisplayMode opaque type.
 ///
 ////////////////////////////////////////////////////////////
-std::size_t modeBitsPerPixel(CGDisplayModeRef mode);
+size_t modeBitsPerPixel(CGDisplayModeRef mode);
 
 ////////////////////////////////////////////////////////////
 /// \brief Get bpp for all OS X version
@@ -53,7 +52,7 @@ std::size_t modeBitsPerPixel(CGDisplayModeRef mode);
 /// display bits per pixel information for a given display id.
 ///
 ////////////////////////////////////////////////////////////
-std::size_t displayBitsPerPixel(CGDirectDisplayID displayId);
+size_t displayBitsPerPixel(CGDirectDisplayID displayId);
 
 ////////////////////////////////////////////////////////////
 /// \brief Convert a Quartz video mode into a sf::VideoMode object

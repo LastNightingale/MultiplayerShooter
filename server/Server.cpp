@@ -7,7 +7,7 @@ Server::Server()
 	m_Port = 12500;
 	m_Port2 = 12501;
 	m_GameStarted = false;
-	//m_Socket.bind(m_Port);
+	m_Socket.bind(m_Port2);
 	m_Socket.setBlocking(false);
 }
 

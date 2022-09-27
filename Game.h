@@ -53,6 +53,8 @@ private:
 	float m_Spawntime;
 	bool m_isRunning;
 	bool m_GameStarted = false;
+	bool m_DataDelivered;
+
 public:
 	Game();
 	void SpawnEnemy();

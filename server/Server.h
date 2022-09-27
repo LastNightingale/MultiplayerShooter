@@ -3,6 +3,7 @@
 //#include "../Enemy.h"
 //#include "../Player.h"
 #include <vector>
+#include <unordered_map>
 
 class Server
 {
@@ -10,7 +11,8 @@ private:
 	sf::UdpSocket m_Socket;
 	int m_PlayerAmount;
 	unsigned short m_Port, m_Port2;
-	std::vector<sf::IpAddress> m_Connections;
+	//std::vector<sf::IpAddress> m_Connections;
+	std::unordered_map<unsigned short, sf::IpAddress> m_Connections;
 	//std::vector<Entity*> m_Entities;
 	bool m_GameStarted;
 public:

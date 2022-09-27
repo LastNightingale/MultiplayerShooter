@@ -5,11 +5,13 @@ Game::Game()
 {	
 	m_Entities.push_back(new Player());
 	m_isRunning = true;
+	m_DataDelivered = false;
 	m_Dt = m_Spawntime = 0;
 	m_Port = 12500;
 	m_Port2 = 12501;
 	m_Socket.setBlocking(false);
-	m_Socket.bind(m_Port);
+
+	//m_Socket.bind(m_Port);
 }
 
 void Game::SpawnEnemy()
@@ -129,10 +131,34 @@ void Game::GameDraw()
 void Game::Run()
 {
 	srand(time(NULL));	
+	std::string ip;
+	unsigned short port;
 	while (true)
 	{
 		sf::Packet pack;
-		m_Socket.send(pack, "127.0.0.1", m_Port2);
+		if (!m_DataDelivered)
+		{
+			
+			std::cout << "Enter IP:\n";
+			std::cin >> ip;
+			std::cout << "Enter port:\n";
+			std::cin >> port;
+			m_Socket.bind(port);
+		}
+		
+		if (m_Socket.send(pack, ip, m_Port) == sf::Socket::Done)
+		{
+			m_DataDelivered = true;
+			std::cout << "Delivered\n";
+		}
+		sf::Packet packe;
+		IpAddress adr;
+		unsigned short prt;
+		if (m_Socket.receive(packe, adr, prt) == Socket::Done)
+		{
+			packe >> m_GameStarted;
+			std::cout << "Packet recieved\n";
+		}
 		if (m_GameStarted)
 		{			
 			thread updatethread([this]
@@ -141,12 +167,7 @@ void Game::Run()
 				});
 			GameDraw();
 			updatethread.join();		
-		}
-		sf::Packet packe;
-		IpAddress adr;
-		unsigned short prt;
-		if (m_Socket.receive(packe, adr, prt) == Socket::Done)
-			packe >> m_GameStarted;
+		}	
 
 	}
 }

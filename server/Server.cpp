@@ -22,8 +22,9 @@ void Server::AddConnection()
 	}
 	else
 	{
-		if (m_Connections.count(prt) == 0)
-			m_Connections[prt] = ClientAdress;
+		Connection newconnection(ClientAdress, prt);
+		if (m_Connections.find(newconnection) == m_Connections.end())
+			m_Connections.insert(newconnection);
 	}
 	Check();
 	std::cout << m_Connections.size() << std::endl;
@@ -41,7 +42,7 @@ void Server::DeliverPackets()
 	pack << m_GameStarted;
 	for (auto& connection : m_Connections)
 	{
-		if (m_Socket.send(pack, connection.second, connection.first) != sf::Socket::Done)
+		if (m_Socket.send(pack, connection.IP, connection.Port) != sf::Socket::Done)
 			std::cout << "Packet haven't been delivered\n";
 	}	
 }

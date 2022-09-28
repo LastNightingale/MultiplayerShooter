@@ -20,10 +20,6 @@ struct Connection
 		Port = port;
 		IP = sf::IpAddress(ip);
 	}
-	/*friend bool operator <(const Connection& left, const Connection& right)
-	{
-		return (left.IP == right.IP) ? (left.Port < right.Port) : (left.IP < right.IP);
-	}*/
 	friend bool operator <(const Connection& left, const Connection& right)
 	{
 		return (left.IP == right.IP) ? (left.Port < right.Port) : (left.IP < right.IP);
@@ -34,17 +30,6 @@ struct Connection
 		return (left.IP == right.IP) && (left.Port == right.Port);
 	}
 };
-
-//bool operator <(const Connection& left, const Connection& right)
-//{
-//	return (left.IP == right.IP) ? (left.Port < right.Port) : (left.IP < right.IP);
-//}
-//
-//bool operator ==(const Connection& left, const Connection& right)
-//{
-//	return (left.IP == right.IP) && (left.Port == right.Port);
-//}
-
 namespace std
 {
 	template<>
@@ -63,8 +48,6 @@ private:
 	sf::UdpSocket m_Socket;
 	int m_PlayerAmount;
 	unsigned short m_Port, m_Port2;
-	//std::vector<sf::IpAddress> m_Connections;
-	//std::unordered_map<unsigned short, sf::IpAddress> m_Connections;
 	std::unordered_set<Connection> m_Connections;
 	//std::vector<Entity*> m_Entities;
 	bool m_GameStarted;

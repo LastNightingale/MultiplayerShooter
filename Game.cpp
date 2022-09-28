@@ -10,8 +10,6 @@ Game::Game()
 	m_Port = 12500;
 	m_Port2 = 12501;
 	m_Socket.setBlocking(false);
-
-	//m_Socket.bind(m_Port);
 }
 
 void Game::SpawnEnemy()

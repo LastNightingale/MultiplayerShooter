@@ -45,6 +45,7 @@ private:
 	vector<Entity*> m_DestroyedEntities;
 	RenderList m_CurrentList;
 	ProgramEvent m_DrawStarted;
+	Player* m_ClientPlayer;
 	mutex m_Lock;
 	Clock m_Clock;
 	sf::UdpSocket m_Socket;

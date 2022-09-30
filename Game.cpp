@@ -4,6 +4,7 @@
 Game::Game()
 {	
 	m_Entities.push_back(new Player());
+	m_ClientPlayer = reinterpret_cast<Player*>(m_Entities[0]);
 	m_isRunning = true;
 	m_DataDelivered = false;
 	m_Dt = m_Spawntime = 0;
@@ -32,7 +33,7 @@ void Game::SpawnEnemy()
 		break;		
 	}
 	m_Entities.push_back(new Enemy(spawnvector,
-		NormalizedVector(VectorCenter(static_cast<Vector2f>(m_Window.getSize())) - spawnvector)));
+		NormalizedVector(m_ClientPlayer->GetPosition() - spawnvector)));
 }
 
 void Game::GameUpdate(float dt)

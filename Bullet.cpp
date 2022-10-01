@@ -10,6 +10,9 @@ Bullet::Bullet(Player* owner, Vector2f direction)
 	m_Body.setFillColor(Color::White);
 }
 
+Bullet::Bullet(Bullet&& other) : Entity(other.m_Body), m_Direction(std::move(other.m_Direction)),
+m_Owner(std::move(other.m_Owner)) {}
+
 void Bullet::Update(float dt)
 {
 	m_Body.move(m_Direction * dt * 500.f);

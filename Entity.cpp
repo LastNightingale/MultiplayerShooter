@@ -1,6 +1,8 @@
 #include "Entity.h"
 #include <iostream>
 
+Entity::Entity(sf::RectangleShape Body) : m_Body(std::move(Body)) {}
+
 void Entity::Move(Vector2f MoveVector)
 {
 	m_Body.move(MoveVector);
@@ -10,11 +12,6 @@ void Entity::Update(float dt)
 {
 	std::cout << "Entity" << std::endl;
 }
-
-//void Entity::Draw(RenderWindow& window)
-//{
-//	window.draw(m_Body);
-//}
 
 void Entity::AddToRenderList(RenderList& list)
 {

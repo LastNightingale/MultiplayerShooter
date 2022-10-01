@@ -53,7 +53,7 @@ private:
 	float m_Dt;
 	float m_Spawntime;
 	bool m_isRunning;
-	bool m_GameStarted = false;
+	bool m_GameStarted;
 	bool m_DataDelivered;
 
 public:

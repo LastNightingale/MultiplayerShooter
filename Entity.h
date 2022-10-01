@@ -20,11 +20,11 @@ public:
 	bool Exists = true;
 public:
 	Entity() = default;
+	Entity(sf::RectangleShape Body);
 	void Move(Vector2f MoveVector);
 
 	virtual void Update(float dt);
 
-	//void Draw(RenderWindow& window);
 	void AddToRenderList(RenderList& list);
 
 	Vector2f GetPosition() const;

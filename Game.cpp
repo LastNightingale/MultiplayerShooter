@@ -5,8 +5,9 @@ Game::Game()
 {	
 	m_Entities.push_back(new Player());
 	m_ClientPlayer = reinterpret_cast<Player*>(m_Entities[0]);
+	m_GameStarted = true; // змінити
 	m_isRunning = true;
-	m_DataDelivered = false;
+	m_DataDelivered = true; // змінити
 	m_Dt = m_Spawntime = 0;
 	m_Port = 12500;
 	m_Port2 = 12501;
@@ -102,17 +103,7 @@ void Game::GameDraw()
 	{
 		m_DrawStarted.Signal();
 		m_Dt = m_Clock.getElapsedTime().asSeconds();
-		m_Clock.restart();
-		Event event;
-		while (m_Window.pollEvent(event))
-		{
-			if (event.type == sf::Event::EventType::Closed) m_Window.close();
-			if (event.type == sf::Event::EventType::MouseButtonReleased && event.key.code == sf::Mouse::Button::Left)
-			{
-				m_Entities.push_back(new Bullet(reinterpret_cast<Player*>(m_Entities[0]),
-					NormalizedVector(static_cast<Vector2f>(Mouse::getPosition(m_Window)) - m_Entities[0]->GetPosition())));
-			}
-		}
+		m_Clock.restart();		
 		RenderList list;
 		m_Lock.lock();
 		list = m_CurrentList;
@@ -123,6 +114,15 @@ void Game::GameDraw()
 			m_Window.draw(rect);
 		}
 		m_Window.display();
+		Event event;
+		while (m_Window.pollEvent(event))
+		{
+			if (event.type == sf::Event::EventType::Closed) m_Window.close();
+			if (event.type == sf::Event::EventType::MouseButtonReleased && event.key.code == sf::Mouse::Button::Left)
+			{
+				m_Entities.push_back(new Bullet(m_ClientPlayer->Shoot(Mouse::getPosition(m_Window))));
+			}
+		}
 	}	
 	m_isRunning = false;
 }

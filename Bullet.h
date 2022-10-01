@@ -12,6 +12,7 @@ private:
 	Vector2f m_Direction;
 public:
 	Bullet(Player* owner, Vector2f direction);
+	Bullet(Bullet&& other);
 	void Update(float dt) override;
 	bool Collided(Entity* other) override;
 	Player* GetOWner();

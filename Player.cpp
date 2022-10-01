@@ -1,5 +1,6 @@
 #include "Player.h"
 #include "Bullet.h"
+#include "GameMath.hpp"
 #include <iostream>
 #define Player_Size Vector2f(75, 75)
 
@@ -28,4 +29,9 @@ bool Player::Collided(Entity* other)
 		else return true;
 	}
 	else return true;
+}
+
+Bullet Player::Shoot(sf::Vector2i MousePosition)
+{
+	return Bullet(this, NormalizedVector(static_cast<sf::Vector2f>(MousePosition) - this->GetPosition()));
 }

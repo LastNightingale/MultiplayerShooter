@@ -48,6 +48,19 @@ void Game::GameUpdate(float dt)
 			SpawnEnemy();
 			m_Spawntime = 0;
 		}
+		for (auto& event : m_Events)
+		{
+			if (event.type == sf::Event::EventType::Closed)
+			{
+				m_Window.close();
+				m_isRunning = false;
+			}
+			if (event.type == sf::Event::EventType::MouseButtonReleased && event.key.code == sf::Mouse::Button::Left)
+			{
+				m_Entities.push_back(new Bullet(m_ClientPlayer->Shoot(Mouse::getPosition(m_Window))));
+			}
+		}
+		m_Events.clear();
 		for (auto& iter : m_Entities)
 		{
 			iter->Update(m_Dt);
@@ -117,11 +130,7 @@ void Game::GameDraw()
 		Event event;
 		while (m_Window.pollEvent(event))
 		{
-			if (event.type == sf::Event::EventType::Closed) m_Window.close();
-			if (event.type == sf::Event::EventType::MouseButtonReleased && event.key.code == sf::Mouse::Button::Left)
-			{
-				m_Entities.push_back(new Bullet(m_ClientPlayer->Shoot(Mouse::getPosition(m_Window))));
-			}
+			m_Events.push_back(event);			
 		}
 	}	
 	m_isRunning = false;

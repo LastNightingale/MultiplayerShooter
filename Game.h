@@ -49,6 +49,7 @@ private:
 	mutex m_Lock;
 	Clock m_Clock;
 	sf::UdpSocket m_Socket;
+	vector<sf::Event> m_Events;
 	unsigned short m_Port, m_Port2;
 	float m_Dt;
 	float m_Spawntime;

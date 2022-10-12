@@ -1,17 +1,27 @@
 #include "Bullet.h"
 
+class Enemy; 
+
 Bullet::Bullet(Player* owner, Vector2f direction)
 {
-	m_Owner = owner;
+	//m_Owner = owner;
 	m_Direction = direction;
-	m_Body.setSize({ 30, 30 });
+	m_Body.setSize({ Bullet_Size, Bullet_Size });
 	m_Body.setOrigin(VectorCenter(m_Body.getSize()));
 	m_Body.setPosition(owner->GetPosition());
-	m_Body.setFillColor(Color::White);
+	m_Body.setFillColor(Bullet_Color);
 }
 
-Bullet::Bullet(Bullet&& other) : Entity(other.m_Body), m_Direction(std::move(other.m_Direction)),
-m_Owner(std::move(other.m_Owner)) {}
+Bullet::Bullet(Bullet&& other) : Entity(other.m_Body), m_Direction(std::move(other.m_Direction))
+/*m_Owner(std::move(other.m_Owner)*/ {}
+
+Bullet::Bullet()
+{
+	//m_Owner = owner;
+	m_Body.setSize({ Bullet_Size, Bullet_Size });
+	m_Body.setOrigin(VectorCenter(m_Body.getSize()));
+	m_Body.setFillColor(Bullet_Color);
+}
 
 void Bullet::Update(float dt)
 {
@@ -20,17 +30,16 @@ void Bullet::Update(float dt)
 
 bool Bullet::Collided(Entity* other)
 {
-	if (Player* player = dynamic_cast<Player*>(other))
-	{
-		if (player == this->GetOWner()) return false;
-		else return true;
-	}
-	else if (dynamic_cast<Bullet*>(other)) return false;
-	else return true;
+	return (dynamic_cast<Enemy*>(other));
 }
 
-Player* Bullet::GetOWner()
+//Player* Bullet::GetOWner()
+//{
+//	return m_Owner;
+//}
+
+Vector2f Bullet::GetDirection()
 {
-	return m_Owner;
+	return this->m_Direction;
 }
 

@@ -2,12 +2,12 @@
 #include "Bullet.h"
 #include "GameMath.hpp"
 #include <iostream>
-#define Player_Size Vector2f(75, 75)
+
 
 Player::Player()
 {
-	m_Body.setFillColor(Color::Blue);
-	m_Body.setSize(Player_Size);
+	m_Body.setFillColor(Player_Color);
+	m_Body.setSize(Vector2f(Player_Size, Player_Size));
 	m_Body.setOrigin(Vector2f(m_Body.getSize().x / 2, m_Body.getSize().y / 2));
 	m_Body.setPosition(Vector2f(400, 400));
 }
@@ -22,13 +22,7 @@ void Player::Update(float dt)
 
 bool Player::Collided(Entity* other)
 {
-	if (this == other) return false;
-	else if (Bullet* bullet = dynamic_cast<Bullet*>(other))
-	{
-		if (this == bullet->GetOWner()) return false;
-		else return true;
-	}
-	else return true;
+	return (dynamic_cast<Enemy*>(other));
 }
 
 Bullet Player::Shoot(sf::Vector2i MousePosition)

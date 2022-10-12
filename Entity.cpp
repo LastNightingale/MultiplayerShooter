@@ -23,6 +23,11 @@ Vector2f Entity::GetPosition() const
 	return m_Body.getPosition();
 }
 
+void Entity::SetPosition(Vector2f pos)
+{
+	this->m_Body.setPosition(pos);
+}
+
 RectangleShape Entity::GetBody()
 {
 	return m_Body;

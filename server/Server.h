@@ -1,7 +1,5 @@
 #pragma once
 #include <SFML/Network.hpp>
-//#include "../Enemy.h"
-//#include "../Player.h"
 #include <vector>
 #include <unordered_map>
 #include <unordered_set>

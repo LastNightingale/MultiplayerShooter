@@ -11,6 +11,6 @@ Enemy.cpp
 Player.cpp
 GameMath.hpp
 Game.cpp
-Bullet.cpp)
+Bullet.cpp )
 
 target_link_libraries(MultiplayerShooter sfml-system sfml-graphics sfml-network) 

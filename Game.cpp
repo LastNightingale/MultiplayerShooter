@@ -48,6 +48,10 @@ void Game::GameUpdate(float dt)
 			SpawnEnemy();
 			m_Spawntime = 0;
 		}
+		std::vector<Event> events;
+		m_EventLock.lock();
+		events = m_Events;
+		m_EventLock.unlock();
 		for (auto& event : m_Events)
 		{
 			if (event.type == sf::Event::EventType::Closed)
@@ -85,9 +89,9 @@ void Game::GameUpdate(float dt)
 		{
 			(*entity)->AddToRenderList(list);
 		}
-		m_Lock.lock();
+		m_DrawLock.lock();
 		m_CurrentList = list;
-		m_Lock.unlock();
+		m_DrawLock.unlock();
 	}	
 }
 void Game::Collision()
@@ -118,9 +122,9 @@ void Game::GameDraw()
 		m_Dt = m_Clock.getElapsedTime().asSeconds();
 		m_Clock.restart();		
 		RenderList list;
-		m_Lock.lock();
+		m_DrawLock.lock();
 		list = m_CurrentList;
-		m_Lock.unlock();
+		m_DrawLock.unlock();
 		m_Window.clear(Color::Black);
 		for (auto& rect : list.Rects)
 		{
@@ -128,10 +132,14 @@ void Game::GameDraw()
 		}
 		m_Window.display();
 		Event event;
+		std::vector<Event> events;
 		while (m_Window.pollEvent(event))
 		{
-			m_Events.push_back(event);			
+			events.push_back(event);			
 		}
+		m_EventLock.lock();
+		m_Events = events;
+		m_EventLock.unlock();
 	}	
 	m_isRunning = false;
 }

@@ -46,7 +46,7 @@ private:
 	RenderList m_CurrentList;
 	ProgramEvent m_DrawStarted;
 	Player* m_ClientPlayer;
-	mutex m_Lock;
+	mutex m_DrawLock, m_EventLock;
 	Clock m_Clock;
 	sf::UdpSocket m_Socket;
 	vector<sf::Event> m_Events;

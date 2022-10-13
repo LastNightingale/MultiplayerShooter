@@ -21,21 +21,22 @@ public:
 	void Update(float dt) override;
 	bool Collided(Entity* other) override;
 	//Player* GetOWner();
-	Vector2f GetDirection();
+	Vector2f GetDirection() const;
+	void SetDirection(Vector2f direction);
 };
 
 namespace sf
 {
-	Packet& operator <<(Packet& packet, const Enemy& enemy)
+	inline Packet& operator <<(Packet& packet, const Bullet& bullet)
 	{
-		return packet << enemy.GetPosition() << enemy.GetDirection();
+		return packet << bullet.GetPosition() << bullet.GetDirection();
 	}
-	Packet& operator >>(Packet& packet, Enemy& enemy)
+	inline Packet& operator >>(Packet& packet, Bullet& bullet)
 	{
 		Vector2f position, direction;
 		packet >> position >> direction;
-		enemy.SetPosition(position);
-		enemy.SetDirection(direction);
+		bullet.SetPosition(position);
+		bullet.SetDirection(direction);
 		return packet;
 	}	
 }

@@ -22,36 +22,16 @@ public:
 
 namespace sf
 {
-	Packet& operator <<(Packet& packet, const Enemy& enemy)
+	inline Packet& operator <<(Packet& packet, const Enemy& enemy)
 	{
 		return packet << enemy.GetPosition() << enemy.GetDirection();
 	}
-	Packet& operator >>(Packet& packet, Enemy& enemy)
+	inline Packet& operator >>(Packet& packet, Enemy& enemy)
 	{
 		Vector2f position, direction;
 		packet >> position >> direction;
 		enemy.SetPosition(position);
 		enemy.SetDirection(direction);
-		return packet;
-	}
-
-	Packet& operator <<(Packet& packet, const std::vector<Enemy>& enemies)
-	{
-		packet << enemies.size();
-		for (size_t i = 0; i < enemies.size(); ++i)
-			packet << enemies[i];
-		return packet;
-	}
-	Packet& operator >>(Packet& packet, std::vector<Enemy>& enemies)
-	{
-		int size;
-		Enemy enemy;
-		packet >> size;
-		for (int i = 0; i < size; ++i)
-		{
-			packet >> enemy;
-			enemies.push_back(Enemy(enemy));
-		}
 		return packet;
 	}
 }

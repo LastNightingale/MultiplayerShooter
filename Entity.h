@@ -39,29 +39,29 @@ public:
 namespace sf
 {
 
-	Packet& operator <<(Packet& packet, const Color& color) //color write
+	inline Packet& operator <<(Packet& packet, const Color& color) //color write
 	{
 		return packet << color.r << color.g << color.b << color.a;
 	}
-	Packet& operator >>(Packet& packet, Color& color) //color recieve
+	inline Packet& operator >>(Packet& packet, Color& color) //color recieve
 	{
 		return packet >> color.r >> color.g >> color.b >> color.a;
 	}
 
-	Packet& operator <<(Packet& packet, const Vector2f& vector) //vector write
+	inline Packet& operator <<(Packet& packet, const Vector2f& vector) //vector write
 	{
 		return packet << vector.x << vector.y;
 	}
-	Packet& operator >>(Packet& packet, Vector2f& vector) //vector recieve
+	inline Packet& operator >>(Packet& packet, Vector2f& vector) //vector recieve
 	{
 		return packet >> vector.x >> vector.y;
 	}
 	
-	Packet& operator <<(Packet& packet, const Entity& entity) //Entity write
+	inline Packet& operator <<(Packet& packet, const Entity& entity) //Entity write
 	{
 		return packet << entity.GetPosition();
 	}
-	Packet& operator >>(Packet& packet, Entity& rect) //Entity recieve
+	inline Packet& operator >>(Packet& packet, Entity& rect) //Entity recieve
 	{
 		Vector2f position;
 		packet >> position;
@@ -69,7 +69,7 @@ namespace sf
 		return packet;
 	}	
 	template <typename T>
-	Packet& operator <<(Packet& packet, const std::vector<T>& values)
+	inline Packet& operator <<(Packet& packet, const std::vector<T>& values)
 	{
 		packet << values.size();
 		for (size_t i = 0; i < values.size(); ++i)
@@ -78,7 +78,7 @@ namespace sf
 	}
 
 	template <typename T>
-	Packet& operator >>(Packet& packet, std::vector<T>& values)
+	inline Packet& operator >>(Packet& packet, std::vector<T>& values)
 	{
 		int size;
 		T value;

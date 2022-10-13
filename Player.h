@@ -15,11 +15,11 @@ public:
 
 namespace sf
 {
-	Packet& operator <<(Packet& packet, const Player& player)
+	inline Packet& operator <<(Packet& packet, const Player& player)
 	{		
 		return packet << player.GetPosition();
 	}
-	Packet& operator >>(Packet& packet, Player& player)
+	inline Packet& operator >>(Packet& packet, Player& player)
 	{
 		Vector2f position;
 		packet >> position;

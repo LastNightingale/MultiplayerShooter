@@ -64,7 +64,6 @@ void Game::GameUpdate(float dt)
 				m_Entities.push_back(new Bullet(m_ClientPlayer->Shoot(Mouse::getPosition(m_Window))));
 			}
 		}
-		m_Events.clear();
 		for (auto& iter : m_Entities)
 		{
 			iter->Update(m_Dt);

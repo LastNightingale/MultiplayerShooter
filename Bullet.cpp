@@ -38,8 +38,13 @@ bool Bullet::Collided(Entity* other)
 //	return m_Owner;
 //}
 
-Vector2f Bullet::GetDirection()
+Vector2f Bullet::GetDirection() const
 {
 	return this->m_Direction;
+}
+
+void Bullet::SetDirection(Vector2f direction)
+{
+	this->m_Direction = direction;
 }
 

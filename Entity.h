@@ -57,17 +57,17 @@ namespace sf
 		return packet >> vector.x >> vector.y;
 	}
 	
-	inline Packet& operator <<(Packet& packet, const Entity& entity) //Entity write
-	{
-		return packet << entity.GetPosition();
-	}
-	inline Packet& operator >>(Packet& packet, Entity& rect) //Entity recieve
-	{
-		Vector2f position;
-		packet >> position;
-		rect.SetPosition(position);
-		return packet;
-	}	
+	//inline Packet& operator <<(Packet& packet, const Entity& entity) //Entity write
+	//{
+	//	return packet << entity.GetPosition();
+	//}
+	//inline Packet& operator >>(Packet& packet, Entity& rect) //Entity recieve
+	//{
+	//	Vector2f position;
+	//	packet >> position;
+	//	rect.SetPosition(position);
+	//	return packet;
+	//}	
 	template <typename T>
 	inline Packet& operator <<(Packet& packet, const std::vector<T>& values)
 	{

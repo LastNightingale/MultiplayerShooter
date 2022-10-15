@@ -42,21 +42,23 @@ class Game
 private:
 	RenderWindow m_Window{ VideoMode({ 1400,900 }) , "Shooter", sf::Style::Close};
 	vector<Entity*> m_Entities;
+	vector<Entity*> m_OtherEntities;
 	vector<Entity*> m_DestroyedEntities;
+	vector<Entity*> m_OtherDestroyedEntities;
 	RenderList m_CurrentList;
 	ProgramEvent m_DrawStarted;
 	Player* m_ClientPlayer;
 	mutex m_DrawLock, m_EventLock;
 	Clock m_Clock;
+	sf::IpAddress m_ServerIP;
 	sf::UdpSocket m_Socket;
 	vector<sf::Event> m_Events;
-	unsigned short m_Port, m_Port2;
+	unsigned short m_ServerPort, m_ClientPort;
 	float m_Dt;
 	float m_Spawntime;
 	bool m_isRunning;
 	bool m_GameStarted;
 	bool m_DataDelivered;
-
 public:
 	Game();
 	void SpawnEnemy();
@@ -64,5 +66,7 @@ public:
 	void Collision();
 	void GameDraw();
 	void Run();
+	void DeliverEntities();
+	void RecieveEntities();
 };
 

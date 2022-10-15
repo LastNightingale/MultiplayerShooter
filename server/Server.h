@@ -48,12 +48,14 @@ private:
 	unsigned short m_Port, m_Port2;
 	std::unordered_set<Connection> m_Connections;
 	//std::vector<Entity*> m_Entities;
-	bool m_GameStarted;
+	bool m_GameStarted, m_ServerIsRunning;
 public:
 	Server();
 	void AddConnection();
 	void Check();
 	void DeliverPackets();
+	void DeliverStartGame();
+	void DeliverData(sf::Packet& packet);
 	void RecievePackets() {};
 	void Run();
 };

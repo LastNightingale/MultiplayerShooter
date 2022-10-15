@@ -5,12 +5,11 @@ Game::Game()
 {	
 	m_Entities.push_back(new Player());
 	m_ClientPlayer = reinterpret_cast<Player*>(m_Entities[0]);
-	m_GameStarted = true; // змінити
+	m_GameStarted = false; // змінити
 	m_isRunning = true;
-	m_DataDelivered = true; // змінити
+	m_DataDelivered = false; // змінити
 	m_Dt = m_Spawntime = 0;
-	m_Port = 12500;
-	m_Port2 = 12501;
+	m_ServerPort = 12500;
 	m_Socket.setBlocking(false);
 }
 
@@ -41,7 +40,8 @@ void Game::GameUpdate(float dt)
 {
 	while (m_isRunning)		
 	{
-		m_DrawStarted.Wait();		
+		m_DrawStarted.Wait();
+		RecieveEntities();
 		m_Spawntime += m_Dt;
 		if (m_Spawntime >= 2.f)
 		{
@@ -69,6 +69,11 @@ void Game::GameUpdate(float dt)
 			iter->Update(m_Dt);
 		}
 
+		/*for (auto& iter : m_OtherEntities)
+		{
+			iter->Update(m_Dt);
+		}*/
+
 		for (Entity* outer : m_Entities)
 		{
 			for (Entity* inner : m_Entities)
@@ -88,9 +93,14 @@ void Game::GameUpdate(float dt)
 		{
 			(*entity)->AddToRenderList(list);
 		}
+		for (auto& entity = m_OtherEntities.rbegin(); entity != m_OtherEntities.rend(); entity++)
+		{
+			(*entity)->AddToRenderList(list);
+		}
 		m_DrawLock.lock();
 		m_CurrentList = list;
 		m_DrawLock.unlock();
+		DeliverEntities();
 	}	
 }
 void Game::Collision()
@@ -146,32 +156,29 @@ void Game::GameDraw()
 void Game::Run()
 {
 	srand(time(NULL));	
-	std::string ip;
-	unsigned short port;
 	while (true)
 	{
 		sf::Packet pack;
 		if (!m_DataDelivered)
-		{
-			
-			std::cout << "Enter IP:\n";
-			std::cin >> ip;
+		{			
+			std::cout << "Enter server IP:\n";
+			std::cin >> m_ServerIP;
 			std::cout << "Enter port:\n";
-			std::cin >> port;
-			m_Socket.bind(port);
+			std::cin >> m_ClientPort;
+			m_Socket.bind(m_ClientPort);
 		}
-		
-		if (m_Socket.send(pack, ip, m_Port) == sf::Socket::Done)
+		pack << m_GameStarted;
+		if (m_Socket.send(pack, m_ServerIP, m_ServerPort) == sf::Socket::Done)
 		{
 			m_DataDelivered = true;
 			std::cout << "Delivered\n";
 		}
-		sf::Packet packe;
-		IpAddress adr;
-		unsigned short prt;
-		if (m_Socket.receive(packe, adr, prt) == Socket::Done)
+		sf::Packet StartGamePacket;
+		IpAddress ServerAddress;
+		unsigned short ClientPort;
+		if (m_Socket.receive(StartGamePacket, ServerAddress, ClientPort) == Socket::Done)
 		{
-			packe >> m_GameStarted;
+			StartGamePacket >> m_GameStarted;
 			std::cout << "Packet recieved\n";
 		}
 		if (m_GameStarted)
@@ -183,6 +190,55 @@ void Game::Run()
 			GameDraw();
 			updatethread.join();		
 		}	
-
 	}
 }
+
+void Game::DeliverEntities()
+{
+	sf::Packet EntityPacket;
+	std::vector<Enemy> enemies;
+	std::vector<Bullet> bullets;
+	std::vector<Player> players;
+	for (auto entity : m_Entities)
+	{
+		if (dynamic_cast<Player*>(entity)) players.push_back(Player(dynamic_cast<Player&>(*entity)));
+		if (dynamic_cast<Enemy*>(entity)) enemies.push_back(Enemy(dynamic_cast<Enemy&>(*entity)));
+		if (dynamic_cast<Bullet*>(entity)) bullets.push_back(Bullet(dynamic_cast<Bullet&>(*entity)));
+	}
+	
+	EntityPacket << m_GameStarted << players << enemies << bullets;
+
+	if (m_Socket.send(EntityPacket, m_ServerIP, m_ServerPort) == sf::Socket::Done)
+	{
+		//aaa
+	}
+}
+
+void Game::RecieveEntities()
+{
+	sf::Packet EntitiesPacket;
+	IpAddress ServerAddress;
+	unsigned short ClientPort;
+	if (m_Socket.receive(EntitiesPacket, ServerAddress, ClientPort) == Socket::Done)
+	{
+		m_OtherEntities.clear();
+		std::vector<Enemy> enemies;
+		std::vector<Bullet> bullets;
+		std::vector<Player> players;
+		bool temp;
+		EntitiesPacket >> players >> enemies >> bullets;
+		for (auto player : players)
+		{
+			m_OtherEntities.push_back(new Player(player));
+		}		
+		for (auto enemy : enemies)
+		{
+			m_OtherEntities.push_back(new Enemy(enemy));
+		}
+		for (auto bullet : bullets)
+		{
+			m_OtherEntities.push_back(new Bullet(bullet));
+		}
+	}
+}
+

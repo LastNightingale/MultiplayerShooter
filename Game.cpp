@@ -7,6 +7,7 @@ Game::Game()
 	m_ClientPlayer = reinterpret_cast<Player*>(m_Entities[0]);
 	m_GameStarted = false; // змінити
 	m_isRunning = true;
+	m_isSynchronized = true;
 	m_DataDelivered = false; // змінити
 	m_Dt = m_Spawntime = 0;
 	m_ServerPort = 12500;
@@ -40,9 +41,9 @@ void Game::GameUpdate(float dt)
 {
 	while (m_isRunning)		
 	{
-		m_DrawStarted.Wait();
-		RecieveEntities();
+		m_DrawStarted.Wait();		
 		m_Spawntime += m_Dt;
+		//RecieveEntities();
 		if (m_Spawntime >= 2.f)
 		{
 			SpawnEnemy();
@@ -89,18 +90,22 @@ void Game::GameUpdate(float dt)
 		}
 		Collision();
 		RenderList list;
+		std::vector<Entity*> others;
+		m_SynchronLock.lock();
+		others = m_OtherEntities;
+		m_SynchronLock.unlock();
 		for (auto& entity = m_Entities.rbegin(); entity != m_Entities.rend(); entity++)
 		{
 			(*entity)->AddToRenderList(list);
 		}
-		for (auto& entity = m_OtherEntities.rbegin(); entity != m_OtherEntities.rend(); entity++)
+		for (auto& entity = others.rbegin(); entity != others.rend(); entity++)
 		{
 			(*entity)->AddToRenderList(list);
 		}
 		m_DrawLock.lock();
 		m_CurrentList = list;
 		m_DrawLock.unlock();
-		DeliverEntities();
+		//DeliverEntities();
 	}	
 }
 void Game::Collision()
@@ -187,8 +192,13 @@ void Game::Run()
 				{
 					GameUpdate(m_Dt);
 				});
+			thread synchronizethread([this]
+				{
+					GameSynchronize();
+				});
 			GameDraw();
-			updatethread.join();		
+			updatethread.join();
+			synchronizethread.join();
 		}	
 	}
 }
@@ -225,20 +235,32 @@ void Game::RecieveEntities()
 		std::vector<Enemy> enemies;
 		std::vector<Bullet> bullets;
 		std::vector<Player> players;
-		bool temp;
 		EntitiesPacket >> players >> enemies >> bullets;
+		std::vector<Entity*> others;
 		for (auto player : players)
 		{
-			m_OtherEntities.push_back(new Player(player));
+			others.push_back(new Player(player));
 		}		
 		for (auto enemy : enemies)
 		{
-			m_OtherEntities.push_back(new Enemy(enemy));
+			others.push_back(new Enemy(enemy));
 		}
 		for (auto bullet : bullets)
 		{
-			m_OtherEntities.push_back(new Bullet(bullet));
+			others.push_back(new Bullet(bullet));
 		}
+		m_SynchronLock.lock();
+		m_OtherEntities = others;
+		m_SynchronLock.unlock();
+	}
+}
+
+void Game::GameSynchronize()
+{
+	while (m_isSynchronized)
+	{
+		DeliverEntities();
+		RecieveEntities();
 	}
 }
 

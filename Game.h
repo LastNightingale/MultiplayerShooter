@@ -48,7 +48,7 @@ private:
 	RenderList m_CurrentList;
 	ProgramEvent m_DrawStarted;
 	Player* m_ClientPlayer;
-	mutex m_DrawLock, m_EventLock;
+	mutex m_DrawLock, m_EventLock, m_SynchronLock;
 	Clock m_Clock;
 	sf::IpAddress m_ServerIP;
 	sf::UdpSocket m_Socket;
@@ -59,12 +59,14 @@ private:
 	bool m_isRunning;
 	bool m_GameStarted;
 	bool m_DataDelivered;
+	bool m_isSynchronized;
 public:
 	Game();
 	void SpawnEnemy();
 	void GameUpdate(float dt);
 	void Collision();
 	void GameDraw();
+	void GameSynchronize();
 	void Run();
 	void DeliverEntities();
 	void RecieveEntities();

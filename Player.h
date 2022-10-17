@@ -17,7 +17,8 @@ namespace sf
 {
 	inline Packet& operator <<(Packet& packet, const Player& player)
 	{		
-		return packet << player.GetPosition();
+		sf::Vector2f pos = player.GetPosition();
+		return packet << pos;
 	}
 	inline Packet& operator >>(Packet& packet, Player& player)
 	{

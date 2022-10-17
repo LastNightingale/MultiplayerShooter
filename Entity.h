@@ -38,7 +38,6 @@ public:
 
 namespace sf
 {
-
 	inline Packet& operator <<(Packet& packet, const Color& color) //color write
 	{
 		return packet << color.r << color.g << color.b << color.a;
@@ -56,7 +55,15 @@ namespace sf
 	{
 		return packet >> vector.x >> vector.y;
 	}
-	
+	//inline Packet& operator <<(Packet& packet, const RectangleShape& rect) //vector write
+	//{
+
+	//	return packet << vector.x << vector.y;
+	//}
+	//inline Packet& operator >>(Packet& packet, RectangleShape& rect) //vector recieve
+	//{
+	//	return packet >> vector.x >> vector.y;
+	//}
 	//inline Packet& operator <<(Packet& packet, const Entity& entity) //Entity write
 	//{
 	//	return packet << entity.GetPosition();

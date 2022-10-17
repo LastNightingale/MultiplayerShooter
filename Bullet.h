@@ -29,7 +29,10 @@ namespace sf
 {
 	inline Packet& operator <<(Packet& packet, const Bullet& bullet)
 	{
-		return packet << bullet.GetPosition() << bullet.GetDirection();
+		sf::Vector2f pos, dir;
+		pos = bullet.GetDirection();
+		dir = bullet.GetPosition();
+		return packet << pos << dir;
 	}
 	inline Packet& operator >>(Packet& packet, Bullet& bullet)
 	{

@@ -176,7 +176,7 @@ void Game::Run()
 		if (m_Socket.send(pack, m_ServerIP, m_ServerPort) == sf::Socket::Done)
 		{
 			m_DataDelivered = true;
-			std::cout << "Delivered\n";
+			//std::cout << "Delivered\n";
 		}
 		sf::Packet StartGamePacket;
 		IpAddress ServerAddress;
@@ -184,7 +184,7 @@ void Game::Run()
 		if (m_Socket.receive(StartGamePacket, ServerAddress, ClientPort) == Socket::Done)
 		{
 			StartGamePacket >> m_GameStarted;
-			std::cout << "Packet recieved\n";
+			//std::cout << "Packet recieved\n";
 		}
 		if (m_GameStarted)
 		{			
@@ -209,6 +209,7 @@ void Game::DeliverEntities()
 	std::vector<Enemy> enemies;
 	std::vector<Bullet> bullets;
 	std::vector<Player> players;
+	int random = rand() % 500 + 1;
 	for (auto entity : m_Entities)
 	{
 		if (dynamic_cast<Player*>(entity)) players.push_back(Player(dynamic_cast<Player&>(*entity)));
@@ -217,13 +218,37 @@ void Game::DeliverEntities()
 	}
 	
 	EntityPacket << true << players << enemies << bullets;
+	{
+		std::vector<Enemy> enemies;
+		std::vector<Bullet> bullets;
+		std::vector<Player> players;
+		bool temp;
+		int random;
+		/*cout << "Recieve:" << endl;
+		const uint8_t* ptr = static_cast<const uint8_t*>(EntitiesPacket.getData());
+		for (size_t i = 0; i < EntitiesPacket.getDataSize(); ++i)
+		{
+			cout << hex << (uint32_t)ptr[i] << " ";
+		}
+		cout << endl;
+		cout << "Recieve " << this->m_ClientPort << " " << EntitiesPacket.getDataSize() << endl;*/
+		EntityPacket >> temp >> random >> players >> enemies >> bullets;
+	}
+	
 
+	/*const uint8_t* ptr = static_cast<const uint8_t*>(EntityPacket.getData());
+	cout << "Deliver:" << endl;
+	for (size_t i = 0; i < EntityPacket.getDataSize(); ++i)
+	{
+		cout << hex << (uint32_t)ptr[i] << " ";
+	}
+	cout << endl;*/
 	
 	if (m_Socket.send(EntityPacket, m_ServerIP, m_ServerPort) != sf::Socket::Done)
 	{
-		std::cout << "Help me" << std::endl;
+		//std::cout << "Help me" << std::endl;
 	}
-	else cout << "Deliver " << this->m_ClientPort << " " << EntityPacket.getDataSize() << endl;
+	//else cout << "Deliver " << this->m_ClientPort << " " << EntityPacket.getDataSize() << endl;
 }
 
 void Game::RecieveEntities()
@@ -237,7 +262,15 @@ void Game::RecieveEntities()
 		std::vector<Bullet> bullets;
 		std::vector<Player> players;
 		bool temp;
-		cout << "Recieve " << this->m_ClientPort << " " << EntitiesPacket.getDataSize() << endl;
+		int random;
+		/*cout << "Recieve:" << endl;
+		const uint8_t* ptr = static_cast<const uint8_t*>(EntitiesPacket.getData());
+		for (size_t i = 0; i < EntitiesPacket.getDataSize(); ++i)
+		{
+			cout << hex << (uint32_t)ptr[i] << " ";
+		}
+		cout << endl;
+		cout << "Recieve " << this->m_ClientPort << " " << EntitiesPacket.getDataSize() << endl;*/
 		EntitiesPacket >> temp >> players >> enemies >> bullets;
 		
 		std::vector<Entity*> others;		
@@ -253,12 +286,12 @@ void Game::RecieveEntities()
 		{
 			others.push_back(new Bullet(bullet));
 		}
-		cout << players.size() << " " << enemies.size() << " " << bullets.size() << endl;
+		//cout << players.size() << " " << enemies.size() << " " << bullets.size() << endl;
 		m_SynchronLock.lock();
 		m_OtherEntities = others;
 		m_SynchronLock.unlock();		
 	}
-	else cout << "Help with recieve" << endl;
+	//else cout << "Help with recieve" << endl;
 
 }
 

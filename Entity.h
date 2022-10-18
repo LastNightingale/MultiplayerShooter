@@ -38,14 +38,14 @@ public:
 
 namespace sf
 {
-	inline Packet& operator <<(Packet& packet, const Color& color) //color write
-	{
-		return packet << color.r << color.g << color.b << color.a;
-	}
-	inline Packet& operator >>(Packet& packet, Color& color) //color recieve
-	{
-		return packet >> color.r >> color.g >> color.b >> color.a;
-	}
+	//inline Packet& operator <<(Packet& packet, const Color& color) //color write
+	//{
+	//	return packet << color.r << color.g << color.b << color.a;
+	//}
+	//inline Packet& operator >>(Packet& packet, Color& color) //color recieve
+	//{
+	//	return packet >> color.r >> color.g >> color.b >> color.a;
+	//}
 
 	inline Packet& operator <<(Packet& packet, const Vector2f& vector) //vector write
 	{
@@ -78,9 +78,10 @@ namespace sf
 	template <typename T>
 	inline Packet& operator <<(Packet& packet, const std::vector<T>& values)
 	{
-		static_assert(!std::is_pointer<T>::value, "wrong data type");
-		packet << values.size();
-		for (size_t i = 0; i < values.size(); ++i)
+		//static_assert(!std::is_pointer<T>::value, "wrong data type");
+		int size = values.size();
+		packet << size;
+		for (int i = 0; i < values.size(); ++i)
 			packet << values[i];
 		return packet;
 	}
@@ -88,14 +89,14 @@ namespace sf
 	template <typename T>
 	inline Packet& operator >>(Packet& packet, std::vector<T>& values)
 	{
-		int size;
+		int size;	
 		T value;
 		packet >> size;
 		//std::cout << size << std::endl;
 		for (int i = 0; i < size; ++i)
 		{
 			packet >> value;
-			values.push_back(T(value));
+			values.push_back(value);
 		}
 		return packet;
 	}

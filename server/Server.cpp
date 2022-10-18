@@ -26,7 +26,7 @@ void Server::AddConnection()
 	{
 		Connection entryconnection(ClientAdress, prt);
 		packet >> started;
-		std::cout << started << "\n";
+		//std::cout << started << "\n";
 		if (started)
 		{
 			for (auto& connection : m_Connections)
@@ -34,9 +34,16 @@ void Server::AddConnection()
 				std::cout << entryconnection.IP << entryconnection.Port << "   " << connection.IP << connection.Port << "\n";
 				if (!(entryconnection == connection))
 				{
-					std::cout << packet.getDataSize() << std::endl;
+					//std::cout << packet.getDataSize() << std::endl;
 					m_Socket.send(packet, connection.IP, connection.Port);
-					std::cout << "Client " << connection.Port << " " << packet.getDataSize() << std::endl;
+					//std::cout << "Client " << connection.Port << " " << packet.getDataSize() << std::endl;	
+					/*std::cout << "Packet\n";
+					const uint8_t* ptr = static_cast<const uint8_t*>(packet.getData());
+					for (size_t i = 0; i < packet.getDataSize(); ++i)
+					{
+						std::cout << std::hex << (uint32_t)ptr[i] << " ";
+					}
+					std::cout << std::endl;*/
 				}
 					
 			}

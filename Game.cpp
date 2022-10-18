@@ -11,7 +11,7 @@ Game::Game()
 	m_DataDelivered = false; // змінити
 	m_Dt = m_Spawntime = 0;
 	m_ServerPort = 12500;
-	m_Socket.setBlocking(false);
+	m_Socket.setBlocking(true);
 }
 
 void Game::SpawnEnemy()
@@ -216,12 +216,14 @@ void Game::DeliverEntities()
 		if (dynamic_cast<Bullet*>(entity)) bullets.push_back(Bullet(dynamic_cast<Bullet&>(*entity)));
 	}
 	
-	EntityPacket << m_GameStarted << players << enemies << bullets;
+	EntityPacket << true << players << enemies << bullets;
 
-	if (m_Socket.send(EntityPacket, m_ServerIP, m_ServerPort) == sf::Socket::Done)
+	
+	if (m_Socket.send(EntityPacket, m_ServerIP, m_ServerPort) != sf::Socket::Done)
 	{
-		//aaa
+		std::cout << "Help me" << std::endl;
 	}
+	else cout << "Deliver " << this->m_ClientPort << " " << EntityPacket.getDataSize() << endl;
 }
 
 void Game::RecieveEntities()
@@ -230,17 +232,19 @@ void Game::RecieveEntities()
 	IpAddress ServerAddress;
 	unsigned short ClientPort;
 	if (m_Socket.receive(EntitiesPacket, ServerAddress, ClientPort) == Socket::Done)
-	{
-		m_OtherEntities.clear();
+	{		
 		std::vector<Enemy> enemies;
 		std::vector<Bullet> bullets;
 		std::vector<Player> players;
-		EntitiesPacket >> players >> enemies >> bullets;
-		std::vector<Entity*> others;
+		bool temp;
+		cout << "Recieve " << this->m_ClientPort << " " << EntitiesPacket.getDataSize() << endl;
+		EntitiesPacket >> temp >> players >> enemies >> bullets;
+		
+		std::vector<Entity*> others;		
 		for (auto player : players)
 		{
 			others.push_back(new Player(player));
-		}		
+		}
 		for (auto enemy : enemies)
 		{
 			others.push_back(new Enemy(enemy));
@@ -249,10 +253,13 @@ void Game::RecieveEntities()
 		{
 			others.push_back(new Bullet(bullet));
 		}
+		cout << players.size() << " " << enemies.size() << " " << bullets.size() << endl;
 		m_SynchronLock.lock();
 		m_OtherEntities = others;
-		m_SynchronLock.unlock();
+		m_SynchronLock.unlock();		
 	}
+	else cout << "Help with recieve" << endl;
+
 }
 
 void Game::GameSynchronize()

@@ -9,7 +9,7 @@ Server::Server()
 	m_GameStarted = false;
 	m_ServerIsRunning = true;
 	m_Socket.bind(m_Port);
-	m_Socket.setBlocking(false);
+	m_Socket.setBlocking(true);
 }
 
 void Server::AddConnection()
@@ -26,12 +26,19 @@ void Server::AddConnection()
 	{
 		Connection entryconnection(ClientAdress, prt);
 		packet >> started;
+		std::cout << started << "\n";
 		if (started)
 		{
 			for (auto& connection : m_Connections)
 			{
+				std::cout << entryconnection.IP << entryconnection.Port << "   " << connection.IP << connection.Port << "\n";
 				if (!(entryconnection == connection))
+				{
+					std::cout << packet.getDataSize() << std::endl;
 					m_Socket.send(packet, connection.IP, connection.Port);
+					std::cout << "Client " << connection.Port << " " << packet.getDataSize() << std::endl;
+				}
+					
 			}
 		}
 		else
@@ -64,7 +71,7 @@ void Server::DeliverStartGame()
 	{
 		if (m_Socket.send(pack, connection.IP, connection.Port) != sf::Socket::Done)
 			std::cout << "Packet haven't been delivered\n";
-		else std::cout << "aaaaaa\n";
+		//else std::cout << "aaaaaa\n";
 	}
 }
 

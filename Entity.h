@@ -78,6 +78,7 @@ namespace sf
 	template <typename T>
 	inline Packet& operator <<(Packet& packet, const std::vector<T>& values)
 	{
+		static_assert(!std::is_pointer<T>::value, "wrong data type");
 		packet << values.size();
 		for (size_t i = 0; i < values.size(); ++i)
 			packet << values[i];
@@ -90,6 +91,7 @@ namespace sf
 		int size;
 		T value;
 		packet >> size;
+		//std::cout << size << std::endl;
 		for (int i = 0; i < size; ++i)
 		{
 			packet >> value;

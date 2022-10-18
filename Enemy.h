@@ -25,8 +25,8 @@ namespace sf
 	inline Packet& operator <<(Packet& packet, const Enemy& enemy)
 	{
 		sf::Vector2f pos, dir;
-		pos = enemy.GetDirection();
-		dir = enemy.GetPosition();
+		dir = enemy.GetDirection();
+		pos = enemy.GetPosition();
 		return packet << pos << dir;
 	}
 	inline Packet& operator >>(Packet& packet, Enemy& enemy)

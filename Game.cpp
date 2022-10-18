@@ -232,7 +232,7 @@ void Game::DeliverEntities()
 		}
 		cout << endl;
 		cout << "Recieve " << this->m_ClientPort << " " << EntitiesPacket.getDataSize() << endl;*/
-		EntityPacket >> temp >> random >> players >> enemies >> bullets;
+		EntityPacket >> temp >> players >> enemies >> bullets;
 	}
 	
 

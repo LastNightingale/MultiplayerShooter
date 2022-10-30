@@ -1,11 +1,11 @@
 cmake_minimum_required (VERSION 3.16)
 
-set(BUILD_SHARED_LIBS OFF)
-
-add_subdirectory ("sfml")
-
-add_executable(MultiplayerShooterServer 
+add_executable(GameServer 
 servermain.cpp
-Server.cpp)
+GameServer.cpp
+Entity.cpp
+Player.cpp
+Enemy.cpp
+Bullet.cpp "Connection.hpp")
 
-target_link_libraries(MultiplayerShooterServer sfml-system sfml-graphics sfml-network) 
+target_link_libraries(GameServer Core) 

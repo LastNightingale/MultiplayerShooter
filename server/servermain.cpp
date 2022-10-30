@@ -1,6 +1,7 @@
-#include "Server.h"
+#include "GameServer.h"
+
 int main()
 {
-	Server server;
+	GameServer server;
 	server.Run();
 }

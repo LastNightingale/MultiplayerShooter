@@ -1,0 +1,7 @@
+cmake_minimum_required (VERSION 3.16)
+
+add_executable(GameClient 
+"clientmain.cpp"
+GameClient.cpp)
+
+target_link_libraries(GameClient Core) 

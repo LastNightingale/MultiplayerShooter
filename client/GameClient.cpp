@@ -63,7 +63,7 @@ void GameClient::ClientDraw()
 		m_DrawLock.lock();
 		list = m_CurrentList;
 		m_DrawLock.unlock();
-		std::cout << "ListToDraw : " << list.Rects.size() << std::endl;
+		//std::cout << "ListToDraw : " << list.Rects.size() << std::endl;
 		m_Window.clear(sf::Color::Black);
 		for (auto& rect : list.Rects)
 		{

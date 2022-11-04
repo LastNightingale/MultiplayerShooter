@@ -2,24 +2,53 @@
 
 GameServer::GameServer()
 {
-	m_PlayerAmount = 2;
+	m_CurrentPosition = 1;
+	m_MaxPlayerAmount = 1;
 	m_ServerPort = 12500;
 	m_GameStarted = false;
 	m_ServerIsRunning = true;
 	m_Socket.bind(m_ServerPort);
 	m_Socket.setBlocking(true);
-	m_Rect.setFillColor(sf::Color::Red);	
+	/*m_Rect.setFillColor(sf::Color::Red);
 	m_Rect.setSize({ 100, 100 });
 	m_Rect.setOrigin({ 50,50 });
 	m_Rect.setPosition(0, 0);
-	m_CurrentList.Rects.push_back(m_Rect);
+	m_CurrentList.Rects.push_back(m_Rect);*/
+}
+
+void GameServer::InitPlayer()
+{
+	m_Entities.push_back(new Player());
+	Entity* temp = m_Entities[m_Connections.size() - 1];
+	m_Entities[m_Connections.size() - 1] = m_Entities[m_Entities.size() - 1];
+	m_Entities[m_Entities.size() - 1] = temp;
+	
+}
+
+void GameServer::InitEnemy()
+{
+
+}
+
+int GameServer::IteratePlayer()
+{
+	if (m_CurrentPosition == m_Connections.size()) m_CurrentPosition = 1;
+	else ++m_CurrentPosition;
+	return m_CurrentPosition;
 }
 
 void GameServer::ServerUpdate()
 {
-	m_CurrentList.Rects.clear();
+	/*m_CurrentList.Rects.clear();
 	m_Rect.move( 1, 1 );
-	m_CurrentList.Rects.push_back(m_Rect);
+	m_CurrentList.Rects.push_back(m_Rect);*/
+	RenderList list;
+	for (auto& entity : m_Entities)
+		entity->AddToRenderList(list);	
+	std::cout << "ListToDraw : " << list.Rects.size() << std::endl;
+	m_DrawLock.lock();
+	m_CurrentList = list;
+	m_DrawLock.unlock();
 }
 
 void GameServer::ServerSynchronize()
@@ -61,6 +90,10 @@ void GameServer::AddConnection()
 					std::cout << std::endl;
 				}*/
 			sf::Packet pack;
+			RenderList list;
+			m_SynchronLock.lock();
+			list = m_CurrentList;
+			m_SynchronLock.unlock();
 			pack << m_GameStarted << m_CurrentList;
 			std::cout << "Packet size: " << pack.getDataSize() << std::endl;
 			for (auto& connection : m_Connections)
@@ -71,7 +104,13 @@ void GameServer::AddConnection()
 		else
 		{
 			if (m_Connections.find(entryconnection) == m_Connections.end())
+			{
 				m_Connections.insert(entryconnection);
+				InitPlayer(); 
+				std::cout << "VectorToDraw : " << m_Entities.size() << std::endl;
+				m_Players.insert(std::pair<Connection, Player*>(entryconnection,
+					reinterpret_cast<Player*>(m_Entities[m_Connections.size() - 1])));
+			}				
 			Check();
 			DeliverStartGame();
 		}
@@ -80,7 +119,7 @@ void GameServer::AddConnection()
 
 void GameServer::Check()
 {
-	if (m_Connections.size() == m_PlayerAmount) m_GameStarted = true;
+	if (m_Connections.size() == m_MaxPlayerAmount) m_GameStarted = true;
 }
 
 void GameServer::DeliverStartGame()

@@ -11,10 +11,12 @@
 #include <mutex>
 #include <thread>
 #include <iostream>
+#include "Enemy.h"
 
 
 class GameServer
 {
+	Vector2u m_WindowSize = Vector2u(1400, 900);
 	std::vector<Entity*> m_Entities;
 	std::vector<Entity*> m_DestroyedEntities;	
 	RenderList m_CurrentList;
@@ -22,7 +24,7 @@ class GameServer
 	Player* m_ClientPlayer;
 	std::unordered_map<Connection, Player*> m_Players;
 	std::unordered_map<Connection, sf::Event> m_Events;
-	std::mutex m_EventLock, m_SynchronLock, m_DrawLock;
+	std::mutex m_EventLock, m_SynchronLock, m_DrawLock, m_PlayerLock;
 	Clock m_Clock;
 	sf::IpAddress m_ServerIP;
 	sf::UdpSocket m_Socket;

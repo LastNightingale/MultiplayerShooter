@@ -12,6 +12,7 @@
 #include <thread>
 #include <iostream>
 #include "Enemy.h"
+#include "Bullet.h"
 
 
 class GameServer
@@ -23,7 +24,7 @@ class GameServer
 	ProgramEvent m_DrawStarted; //is it needed?
 	Player* m_ClientPlayer;
 	std::unordered_map<Connection, Player*> m_Players;
-	std::unordered_map<Connection, sf::Event> m_Events;
+	std::unordered_map<Connection, ScreenEvent> m_Events;
 	std::mutex m_EventLock, m_SynchronLock, m_DrawLock, m_PlayerLock;
 	Clock m_Clock;
 	sf::IpAddress m_ServerIP;

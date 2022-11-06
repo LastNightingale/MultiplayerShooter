@@ -74,11 +74,11 @@ void GameClient::ClientDraw()
 		std::vector<sf::Event> events;
 		while (m_Window.pollEvent(event))
 		{
-			//events.push_back(event);
+			events.push_back(event);
 		}
-		/*m_EventLock.lock();
+		m_EventLock.lock();
 		m_Events = events;
-		m_EventLock.unlock();*/
+		m_EventLock.unlock();
 	}
 	m_isRunning = false;
 }
@@ -95,9 +95,17 @@ void GameClient::ClientSynchronize()
 void GameClient::DeliverData() // deliver events later
 {
 	//std::cout << m_GameStarted << std::endl;
-	sf::Packet EntityPacket;	
-	EntityPacket << true; // deliver events later
-	if (m_Socket.send(EntityPacket, m_ServerIP, m_ServerPort) != sf::Socket::Done)
+	ScreenEvent scevent;
+	std::vector<sf::Event> events;
+	sf::Vector2i mouseposition = Mouse::getPosition(m_Window);
+	sf::Packet DataPacket;	
+	m_SynchronLock.lock();
+	events = m_Events;
+	m_SynchronLock.unlock();
+	scevent.Events = events;
+	scevent.ScreenPosition = mouseposition;
+	DataPacket << true << scevent; // deliver events later
+	if (m_Socket.send(DataPacket, m_ServerIP, m_ServerPort) != sf::Socket::Done)
 	{
 		//std::cout << "Help me" << std::endl;
 	}

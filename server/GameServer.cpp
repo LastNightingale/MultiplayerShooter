@@ -86,6 +86,14 @@ void GameServer::ServerUpdate()
 		{
 			iter->Update(m_Dt);
 		}
+		for (auto& element : m_Events)
+			for (auto& event : element.second.Events)
+			{
+				if (event.type == sf::Event::EventType::MouseButtonReleased && event.key.code == sf::Mouse::Button::Left)
+				{
+					m_Entities.push_back(new Bullet(m_Players[element.first]->Shoot(element.second.ScreenPosition)));
+				}
+			}
 		std::cout << "Updated"  << std::endl;
 		/*m_CurrentList.Rects.clear();
 		m_Rect.move( 1, 1 );
@@ -126,6 +134,12 @@ void GameServer::AddConnection()
 		//std::cout << started << "\n";
 		if (started)
 		{
+			std::vector<sf::Event> events;
+			ScreenEvent scevent;
+			packet >> scevent;
+			m_EventLock.lock();
+			m_Events[entryconnection] = scevent;
+			m_EventLock.unlock();
 			/*for (auto& connection : m_Connections)
 			{
 				//std::cout << entryconnection.IP << entryconnection.Port << "   " << connection.IP << connection.Port << "\n";
@@ -143,7 +157,7 @@ void GameServer::AddConnection()
 					std::cout << std::endl;
 				}*/
 			sf::Packet pack;
-			RenderList list;
+			RenderList list;			
 			m_SynchronLock.lock();
 			list = m_CurrentList;
 			m_SynchronLock.unlock();

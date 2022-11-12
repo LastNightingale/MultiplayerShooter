@@ -64,6 +64,7 @@ void GameClient::ClientDraw()
 	{
 		//m_DrawStarted.Signal();
 		//std::cout << m_GameStarted << std::endl;
+		m_EventSignal.Signal();
 		sf::Event event;								//later
 		std::vector<sf::Event> events;
 		while (m_Window.pollEvent(event))
@@ -71,10 +72,11 @@ void GameClient::ClientDraw()
 			if(event.type == sf::Event::EventType::MouseButtonPressed)
 				events.push_back(event);
 		}
-		m_EventLock.lock();
+		std::cout << "All events :" << m_Events.size() << std::endl;
+		m_InteractLock.lock();
 		m_Events = events;
-		m_EventLock.unlock();
-		if (m_Events.size() > 0) std::cout << m_Events.size() << std::endl;
+		m_InteractLock.unlock();
+		//if (m_Events.size() > 0) std::cout << m_Events.size() << std::endl;
 		RenderList list;
 		m_DrawLock.lock();
 		list = m_CurrentList;
@@ -103,28 +105,35 @@ void GameClient::ClientEvents()
 {
 	while (m_isRunning)
 	{
+		
 		m_TcpSocket.connect(m_ServerIP, m_ServerPort + (unsigned short)50);
 		sf::Vector2i mouseposition = Mouse::getPosition(m_Window);
 		sf::Packet DataPacket;
 		ScreenEvent scevent;
 		std::vector<sf::Event> events;
-		m_SynchronLock.lock();
+		m_EventSignal.Wait();
+		m_EventLock.lock();
 		events = m_Events;
-		m_SynchronLock.unlock();
+		m_EventLock.unlock();
+		std::cout << "Events to deliver :" << events.size() << std::endl;
 		scevent.Events = events;
 		scevent.ScreenPosition = mouseposition;
-		DataPacket << sf::IpAddress::getLocalAddress() << static_cast<int>(m_ClientPort) << scevent;
-		if(m_TcpSocket.send(DataPacket) == sf::Socket::Done) 
-		{
-		}
+		
+		DataPacket << static_cast<int>(m_ClientPort) << scevent;
 		{
 			sf::IpAddress ip;
 			int port;
 			ScreenEvent scevent;
-			DataPacket >> ip >> port >> scevent;
-			if(scevent.Events.size() > 0)
-				std::cout << ip.toString() << " " << port << " " << scevent.Events.size() << std::endl;
+			DataPacket >> port >> scevent;
+			//if(scevent.Events.size() > 0)
+			std::cout << port << " " << scevent.Events.size() << std::endl;
 		}
+		if(m_TcpSocket.send(DataPacket) == sf::Socket::Done) 
+		{
+		}
+		/*m_EventLock.lock();
+		m_Events.clear();
+		m_EventLock.unlock();*/
 	}
 }
 

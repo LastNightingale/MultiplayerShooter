@@ -8,6 +8,8 @@
 #include "ProgramEvent.hpp"
 #include <SFML/Network.hpp>
 #include <sfml/Graphics.hpp>
+#include <unordered_set>
+#include "EventHash.hpp"
 
 
 using namespace std;
@@ -20,11 +22,13 @@ private:
 	sf::RenderWindow m_Window{ sf::VideoMode({ 1400,900 }) , "GameClient", sf::Style::Close };
 	RenderList m_CurrentList;
 	ProgramEvent m_DrawStarted;
-	mutex m_DrawLock, m_EventLock, m_SynchronLock;
+	mutex m_DrawLock, m_EventLock, m_SynchronLock, m_InteractLock;
+	ProgramEvent m_EventSignal;
 	sf::IpAddress m_ServerIP;
 	sf::UdpSocket m_Socket;
 	sf::TcpSocket m_TcpSocket;
 	sf::TcpListener m_TcpListener;
+	std::unordered_set<sf::TcpEvent> m_NewEvents;
 	vector<sf::Event> m_Events;
 	unsigned short m_ServerPort, m_ClientPort;
 	bool m_isRunning;

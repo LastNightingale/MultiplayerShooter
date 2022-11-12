@@ -131,10 +131,10 @@ void GameServer::ServerEvents()
 			sf::IpAddress ip;
 			int port;
 			ScreenEvent scevent;
-			packet >> ip >> port >> scevent;
+			packet >> port >> scevent;
 			//std::cout << ip.toString() << " " << port << " " << scevent.Events.size() << std::endl;
-			Connection connection(m_TcpSocket.getRemoteAddress(), (unsigned short)port);
-			std::cout << "Bullet: " << m_TcpSocket.getRemotePort() << std::endl;
+			Connection connection(m_TcpSocket.getRemoteAddress(), static_cast<unsigned short>(port));
+			//std::cout << "Bullet: " << m_TcpSocket.getRemotePort() << std::endl;
 			m_EventLock.lock();
 			m_Events[connection] = scevent;
 			m_EventLock.unlock();
@@ -192,7 +192,7 @@ void GameServer::AddConnection()
 		{			
 			if (m_Connections.find(entryconnection) == m_Connections.end())
 			{
-				std::cout << entryconnection.IP.toString() << std::endl;
+				//std::cout << entryconnection.IP.toString() << std::endl;
 				m_Connections.insert(entryconnection);
 				InitPlayer(); 	
 				//std::cout << "VectorToDraw : " << m_Entities.size() << std::endl;

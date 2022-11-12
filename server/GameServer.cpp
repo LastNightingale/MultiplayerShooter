@@ -7,8 +7,9 @@ GameServer::GameServer()
 	m_ServerPort = 12500;
 	m_GameStarted = false;
 	m_ServerIsRunning = true;
-	m_Socket.bind(m_ServerPort);
-	m_Socket.setBlocking(true);
+	m_UdpSocket.bind(m_ServerPort);
+	m_TcpListener.listen(m_ServerPort + (unsigned short)50);
+	m_UdpSocket.setBlocking(true);
 	m_Dt = m_Spawntime = 0;
 	/*m_Rect.setFillColor(sf::Color::Red);
 	m_Rect.setSize({ 100, 100 });
@@ -76,7 +77,7 @@ void GameServer::ServerUpdate()
 		{
 			m_Clock.restart();
 		}
-		std::cout << "Spawntime : " << m_Spawntime << std::endl;
+		//std::cout << "Spawntime : " << m_Spawntime << std::endl;
 		if (m_Spawntime >= 1.5)
 		{			
 			InitEnemy();
@@ -89,19 +90,20 @@ void GameServer::ServerUpdate()
 		for (auto& element : m_Events)
 			for (auto& event : element.second.Events)
 			{
-				if (event.type == sf::Event::EventType::MouseButtonReleased && event.key.code == sf::Mouse::Button::Left)
+				if (event.type == sf::Event::EventType::MouseButtonPressed && event.key.code == sf::Mouse::Button::Left)
 				{
 					m_Entities.push_back(new Bullet(m_Players[element.first]->Shoot(element.second.ScreenPosition)));
+					//std::cout << "Bullet \n";
 				}
 			}
-		std::cout << "Updated"  << std::endl;
+		//std::cout << "Updated"  << std::endl;
 		/*m_CurrentList.Rects.clear();
 		m_Rect.move( 1, 1 );
 		m_CurrentList.Rects.push_back(m_Rect);*/
 		RenderList list;
 		for (auto& entity : m_Entities)
 			entity->AddToRenderList(list);
-		std::cout << "ListToDraw : " << list.Rects.size() << std::endl;
+		//std::cout << "ListToDraw : " << list.Rects.size() << std::endl;
 		m_DrawLock.lock();
 		m_CurrentList = list;
 		m_DrawLock.unlock();		
@@ -117,13 +119,37 @@ void GameServer::ServerSynchronize()
 	}	
 }
 
+void GameServer::ServerEvents()
+{
+	while (m_ServerIsRunning)
+	{
+		sf::Packet packet;		
+		/*if(m_GameStarted) */
+		m_TcpListener.accept(m_TcpSocket);
+		if (m_TcpSocket.receive(packet) == sf::Socket::Done)
+		{
+			sf::IpAddress ip;
+			int port;
+			ScreenEvent scevent;
+			packet >> ip >> port >> scevent;
+			//std::cout << ip.toString() << " " << port << " " << scevent.Events.size() << std::endl;
+			Connection connection(m_TcpSocket.getRemoteAddress(), (unsigned short)port);
+			std::cout << "Bullet: " << m_TcpSocket.getRemotePort() << std::endl;
+			m_EventLock.lock();
+			m_Events[connection] = scevent;
+			m_EventLock.unlock();
+		}
+		else std::cout << "Didn't recieve TCP\n";
+	}
+}
+
 void GameServer::AddConnection()
 {
 	bool started;
 	sf::Packet packet;
 	unsigned short prt;
 	sf::IpAddress ClientAdress;
-	if (m_Socket.receive(packet, ClientAdress, prt) != sf::Socket::Done)
+	if (m_UdpSocket.receive(packet, ClientAdress, prt) != sf::Socket::Done)
 	{
 		//std::cout << "No new connections\n";
 	}
@@ -133,13 +159,7 @@ void GameServer::AddConnection()
 		packet >> started;
 		//std::cout << started << "\n";
 		if (started)
-		{
-			std::vector<sf::Event> events;
-			ScreenEvent scevent;
-			packet >> scevent;
-			m_EventLock.lock();
-			m_Events[entryconnection] = scevent;
-			m_EventLock.unlock();
+		{		
 			/*for (auto& connection : m_Connections)
 			{
 				//std::cout << entryconnection.IP << entryconnection.Port << "   " << connection.IP << connection.Port << "\n";
@@ -165,13 +185,14 @@ void GameServer::AddConnection()
 			//std::cout << "Packet size: " << pack.getDataSize() << std::endl;
 			for (auto& connection : m_Connections)
 			{
-				m_Socket.send(pack, connection.IP, connection.Port);
+				m_UdpSocket.send(pack, connection.IP, connection.Port);
 			}
 		}
 		else
 		{			
 			if (m_Connections.find(entryconnection) == m_Connections.end())
 			{
+				std::cout << entryconnection.IP.toString() << std::endl;
 				m_Connections.insert(entryconnection);
 				InitPlayer(); 	
 				//std::cout << "VectorToDraw : " << m_Entities.size() << std::endl;
@@ -195,7 +216,7 @@ void GameServer::DeliverStartGame()
 	pack << m_GameStarted;
 	for (auto& connection : m_Connections)
 	{
-		if (m_Socket.send(pack, connection.IP, connection.Port) != sf::Socket::Done)
+		if (m_UdpSocket.send(pack, connection.IP, connection.Port) != sf::Socket::Done)
 		{
 
 		}
@@ -212,7 +233,12 @@ void GameServer::Run()
 			{
 				ServerSynchronize();
 			});
+		std::thread eventthread([this]
+			{
+				ServerEvents();
+			});
 		ServerUpdate();
 		synchronthread.join();
+		eventthread.join();
 	}	
 }

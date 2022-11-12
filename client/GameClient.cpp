@@ -9,7 +9,7 @@ GameClient::GameClient()
 	m_isSynchronized = true;
 	m_DataDelivered = false; // змінити
 	m_ServerPort = 12500;
-	m_Socket.setBlocking(true);
+	m_Socket.setBlocking(true);	
 }
 
 void GameClient::Run()
@@ -47,8 +47,13 @@ void GameClient::Run()
 				{
 					ClientSynchronize();
 				});
+			thread eventthread([this]
+				{
+					ClientEvents();
+				});
 			ClientDraw();
 			synchronizethread.join();
+			eventthread.join();
 		}
 	}
 }
@@ -59,6 +64,17 @@ void GameClient::ClientDraw()
 	{
 		//m_DrawStarted.Signal();
 		//std::cout << m_GameStarted << std::endl;
+		sf::Event event;								//later
+		std::vector<sf::Event> events;
+		while (m_Window.pollEvent(event))
+		{
+			if(event.type == sf::Event::EventType::MouseButtonPressed)
+				events.push_back(event);
+		}
+		m_EventLock.lock();
+		m_Events = events;
+		m_EventLock.unlock();
+		if (m_Events.size() > 0) std::cout << m_Events.size() << std::endl;
 		RenderList list;
 		m_DrawLock.lock();
 		list = m_CurrentList;
@@ -69,16 +85,7 @@ void GameClient::ClientDraw()
 		{
 			m_Window.draw(rect);
 		}
-		m_Window.display();
-		sf::Event event;								//later
-		std::vector<sf::Event> events;
-		while (m_Window.pollEvent(event))
-		{
-			events.push_back(event);
-		}
-		m_EventLock.lock();
-		m_Events = events;
-		m_EventLock.unlock();
+		m_Window.display();		
 	}
 	m_isRunning = false;
 }
@@ -92,19 +99,42 @@ void GameClient::ClientSynchronize()
 	}	
 }
 
+void GameClient::ClientEvents()
+{
+	while (m_isRunning)
+	{
+		m_TcpSocket.connect(m_ServerIP, m_ServerPort + (unsigned short)50);
+		sf::Vector2i mouseposition = Mouse::getPosition(m_Window);
+		sf::Packet DataPacket;
+		ScreenEvent scevent;
+		std::vector<sf::Event> events;
+		m_SynchronLock.lock();
+		events = m_Events;
+		m_SynchronLock.unlock();
+		scevent.Events = events;
+		scevent.ScreenPosition = mouseposition;
+		DataPacket << sf::IpAddress::getLocalAddress() << static_cast<int>(m_ClientPort) << scevent;
+		if(m_TcpSocket.send(DataPacket) == sf::Socket::Done) 
+		{
+		}
+		{
+			sf::IpAddress ip;
+			int port;
+			ScreenEvent scevent;
+			DataPacket >> ip >> port >> scevent;
+			if(scevent.Events.size() > 0)
+				std::cout << ip.toString() << " " << port << " " << scevent.Events.size() << std::endl;
+		}
+	}
+}
+
 void GameClient::DeliverData() // deliver events later
 {
 	//std::cout << m_GameStarted << std::endl;
-	ScreenEvent scevent;
-	std::vector<sf::Event> events;
-	sf::Vector2i mouseposition = Mouse::getPosition(m_Window);
-	sf::Packet DataPacket;	
-	m_SynchronLock.lock();
-	events = m_Events;
-	m_SynchronLock.unlock();
-	scevent.Events = events;
-	scevent.ScreenPosition = mouseposition;
-	DataPacket << true << scevent; // deliver events later
+	
+	
+	sf::Packet DataPacket;		
+	DataPacket << true; // deliver events later
 	if (m_Socket.send(DataPacket, m_ServerIP, m_ServerPort) != sf::Socket::Done)
 	{
 		//std::cout << "Help me" << std::endl;

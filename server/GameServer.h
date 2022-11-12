@@ -28,7 +28,9 @@ class GameServer
 	std::mutex m_EventLock, m_SynchronLock, m_DrawLock, m_PlayerLock;
 	Clock m_Clock;
 	sf::IpAddress m_ServerIP;
-	sf::UdpSocket m_Socket;
+	sf::UdpSocket m_UdpSocket;
+	sf::TcpSocket m_TcpSocket;
+	sf::TcpListener m_TcpListener;
 	unsigned short m_ServerPort;
 	float m_Dt;
 	float m_Spawntime;
@@ -48,6 +50,7 @@ public:
 	int IteratePlayer();
 	void ServerUpdate();
 	void ServerSynchronize();
+	void ServerEvents();
 	void AddConnection();
 	void Check();
 	void DeliverStartGame();

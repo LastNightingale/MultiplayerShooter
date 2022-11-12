@@ -23,6 +23,8 @@ private:
 	mutex m_DrawLock, m_EventLock, m_SynchronLock;
 	sf::IpAddress m_ServerIP;
 	sf::UdpSocket m_Socket;
+	sf::TcpSocket m_TcpSocket;
+	sf::TcpListener m_TcpListener;
 	vector<sf::Event> m_Events;
 	unsigned short m_ServerPort, m_ClientPort;
 	bool m_isRunning;
@@ -36,6 +38,7 @@ private:
 	//void ClientUpdate();
 	void ClientDraw();
 	void ClientSynchronize();
+	void ClientEvents();
 	void DeliverData();
 	void RecieveData();
 };

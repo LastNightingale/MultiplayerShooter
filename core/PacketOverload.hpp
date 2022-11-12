@@ -156,4 +156,17 @@ namespace sf
 	{
 		return packet >> scevent.Events >> scevent.ScreenPosition;
 	}
+
+	//IPAddress
+	inline Packet& operator <<(Packet& packet, const sf::IpAddress& ipaddress)
+	{
+		return packet << ipaddress.toString();
+	}
+	inline Packet& operator >>(Packet& packet, sf::IpAddress& ipaddress)
+	{
+		std::string ip;
+		packet >> ip;
+		ipaddress = sf::IpAddress(ip);
+		return packet;
+	}
 }

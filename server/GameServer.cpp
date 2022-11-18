@@ -87,7 +87,9 @@ void GameServer::ServerUpdate()
 		{
 			iter->Update(m_Dt);
 		}
+
 		for (auto& element : m_Events)
+		{			
 			for (auto& event : element.second.Events)
 			{
 				if (event.type == sf::Event::EventType::MouseButtonPressed && event.key.code == sf::Mouse::Button::Left)
@@ -96,6 +98,8 @@ void GameServer::ServerUpdate()
 					//std::cout << "Bullet \n";
 				}
 			}
+		}
+			
 		//std::cout << "Updated"  << std::endl;
 		/*m_CurrentList.Rects.clear();
 		m_Rect.move( 1, 1 );
@@ -104,9 +108,9 @@ void GameServer::ServerUpdate()
 		for (auto& entity : m_Entities)
 			entity->AddToRenderList(list);
 		//std::cout << "ListToDraw : " << list.Rects.size() << std::endl;
-		m_DrawLock.lock();
+		m_SynchronLock.lock();
 		m_CurrentList = list;
-		m_DrawLock.unlock();		
+		m_SynchronLock.unlock();
 	}
 	
 }
@@ -123,23 +127,36 @@ void GameServer::ServerEvents()
 {
 	while (m_ServerIsRunning)
 	{
-		sf::Packet packet;		
+		std::cout << "Start\n";
+		sf::Packet packet;	
+		//m_TcpListener.listen(m_ServerPort + (unsigned short)50);		
+		std::cout << "Point\n";
 		/*if(m_GameStarted) */
-		m_TcpListener.accept(m_TcpSocket);
+		if (m_TcpListener.accept(m_TcpSocket) != sf::Socket::Status::Done)
+		{
+			std::cout << "Accept Error\n";
+		}
+		//std::cout << "After accept\n";
 		if (m_TcpSocket.receive(packet) == sf::Socket::Done)
 		{
 			sf::IpAddress ip;
 			int port;
 			ScreenEvent scevent;
 			packet >> port >> scevent;
+			if (scevent.Events.size() > 0)
+			{
+				std::cout << "Events to recieve : " << scevent.Events.size() << std::endl;
+				std::cout << "All entities : " << m_Entities.size() << std::endl;
+			}
 			//std::cout << ip.toString() << " " << port << " " << scevent.Events.size() << std::endl;
 			Connection connection(m_TcpSocket.getRemoteAddress(), static_cast<unsigned short>(port));
-			//std::cout << "Bullet: " << m_TcpSocket.getRemotePort() << std::endl;
+			//std::cout << "Port: " << m_TcpSocket.getRemotePort() << std::endl;
 			m_EventLock.lock();
 			m_Events[connection] = scevent;
 			m_EventLock.unlock();
 		}
 		else std::cout << "Didn't recieve TCP\n";
+		//m_TcpListener.close();
 	}
 }
 

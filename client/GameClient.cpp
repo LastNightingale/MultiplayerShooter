@@ -2,8 +2,6 @@
 
 GameClient::GameClient()
 {
-	//m_Entities.push_back(new Player());
-	//m_ClientPlayer = reinterpret_cast<Player*>(m_Entities[0]);
 	m_GameStarted = false; // змінити
 	m_isRunning = true;
 	m_isSynchronized = true;
@@ -72,15 +70,15 @@ void GameClient::ClientDraw()
 			if(event.type == sf::Event::EventType::MouseButtonPressed)
 				events.push_back(event);
 		}
-		std::cout << "All events :" << m_Events.size() << std::endl;
-		m_InteractLock.lock();
-		m_Events = events;
-		m_InteractLock.unlock();
+		if (m_Events.size() > 0) std::cout << "All events :" << m_Events.size() << std::endl;
+		m_EventLock.lock();
+		m_Events.insert(m_Events.end(), events.begin(), events.end());
+		m_EventLock.unlock();
 		//if (m_Events.size() > 0) std::cout << m_Events.size() << std::endl;
 		RenderList list;
-		m_DrawLock.lock();
+		m_SynchronLock.lock();
 		list = m_CurrentList;
-		m_DrawLock.unlock();
+		m_SynchronLock.unlock();
 		//std::cout << "ListToDraw : " << list.Rects.size() << std::endl;
 		m_Window.clear(sf::Color::Black);
 		for (auto& rect : list.Rects)
@@ -104,18 +102,18 @@ void GameClient::ClientSynchronize()
 void GameClient::ClientEvents()
 {
 	while (m_isRunning)
-	{
-		
+	{		
 		m_TcpSocket.connect(m_ServerIP, m_ServerPort + (unsigned short)50);
 		sf::Vector2i mouseposition = Mouse::getPosition(m_Window);
 		sf::Packet DataPacket;
 		ScreenEvent scevent;
 		std::vector<sf::Event> events;
 		m_EventSignal.Wait();
-		m_EventLock.lock();
+		m_EventLock.lock();		
 		events = m_Events;
+		m_Events.clear();
 		m_EventLock.unlock();
-		std::cout << "Events to deliver :" << events.size() << std::endl;
+		if(events.size() > 0) std::cout << "Events to deliver :" << events.size() << std::endl;
 		scevent.Events = events;
 		scevent.ScreenPosition = mouseposition;
 		
@@ -126,11 +124,13 @@ void GameClient::ClientEvents()
 			ScreenEvent scevent;
 			DataPacket >> port >> scevent;
 			//if(scevent.Events.size() > 0)
-			std::cout << port << " " << scevent.Events.size() << std::endl;
+			//std::cout << port << " " << scevent.Events.size() << std::endl;
 		}
 		if(m_TcpSocket.send(DataPacket) == sf::Socket::Done) 
 		{
+			
 		}
+		m_TcpSocket.disconnect();
 		/*m_EventLock.lock();
 		m_Events.clear();
 		m_EventLock.unlock();*/

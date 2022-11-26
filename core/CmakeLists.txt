@@ -1,7 +1,12 @@
-cmake_minimum_required (VERSION 3.16)
+cmake_minimum_required (VERSION 3.8)
 
 set(CORE_SOURCES
 "AdditionalDependencies.cpp")
+
+set(TRACY_STATIC "" ON)
+set( TRACY_ENABLE "" ON)
+set ( TRACY_NO_EXIT "" ON)
+add_subdirectory("tracy")
 
 set(BUILD_SHARED_LIBS OFF)
 
@@ -10,7 +15,8 @@ add_subdirectory ("sfml")
 add_library(Core STATIC ${CORE_SOURCES} "RenderList.hpp" "ScreenEvent.hpp" "EventHash.hpp")
 
 target_link_libraries(Core 
-PUBLIC sfml-system PUBLIC sfml-graphics PUBLIC sfml-network) 
+PUBLIC sfml-system PUBLIC sfml-graphics PUBLIC sfml-network 
+PUBLIC TracyClient) 
 
 target_include_directories(Core 
 	PUBLIC "./")

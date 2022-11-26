@@ -1,5 +1,6 @@
 #pragma once
 #include <vector>
+#include <tracy/Tracy.hpp>
 #include <iostream>
 #include <thread>
 #include <mutex>
@@ -34,7 +35,7 @@ private:
 	bool m_isRunning;
 	bool m_GameStarted;
 	bool m_DataDelivered;
-	bool m_isSynchronized;
+	bool m_isSynchronized, m_Connected = false;
 public:
 	GameClient();
 	void Run();

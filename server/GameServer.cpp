@@ -5,7 +5,7 @@ GameServer::GameServer()
 	m_CurrentPosition = 0;
 	m_MaxPlayerAmount = 1;
 	m_ServerPort = 12500;
-	m_GameStarted = false;
+	m_GameStarted = m_Connected = false;
 	m_ServerIsRunning = true;
 	m_UdpSocket.bind(m_ServerPort);
 	m_TcpListener.listen(m_ServerPort + (unsigned short)50);
@@ -16,6 +16,12 @@ GameServer::GameServer()
 	m_Rect.setOrigin({ 50,50 });
 	m_Rect.setPosition(0, 0);
 	m_CurrentList.Rects.push_back(m_Rect);*/
+}
+
+void GameServer::TestConnect()
+{
+	if (m_TcpListener.accept(m_TestSocket) == sf::Socket::Status::Done)
+		m_Connected = true;
 }
 
 void GameServer::InitPlayer()
@@ -63,10 +69,31 @@ int GameServer::IteratePlayer()
 	return m_CurrentPosition;
 }
 
+void GameServer::Collision()
+{
+	for (Entity* entity : m_DestroyedEntities)
+	{
+		for (int i = 0; i < m_Entities.size(); i++)
+		{
+			if (entity == m_Entities[i])
+			{
+				Entity* temp = m_Entities[i];
+				m_Entities[i] = m_Entities[m_Entities.size() - 1];
+				m_Entities[m_Entities.size() - 1] = temp;
+				m_Entities.pop_back();
+				delete temp;
+				break;
+			}
+		}
+	}
+	m_DestroyedEntities.clear();
+}
+
 void GameServer::ServerUpdate()
 {
 	while (m_ServerIsRunning)
 	{
+		ZoneScopedN("ServerUpdate");
 		if (m_GameStarted)
 		{
 			m_Dt = m_Clock.getElapsedTime().asSeconds();
@@ -83,10 +110,21 @@ void GameServer::ServerUpdate()
 			InitEnemy();
 			m_Spawntime = 0;
 		}
+
+		for (auto& iter : m_Entities)
+		{
+			if (abs(iter->GetPosition().x - Window_Size.x / 2) > Window_Size.x / 2 + 50.f ||
+				abs(iter->GetPosition().y - Window_Size.y / 2) > Window_Size.y / 2 + 50.f)
+				m_DestroyedEntities.push_back(iter);
+		}
+
+		Collision();
+
 		for (auto& iter : m_Entities)
 		{
 			iter->Update(m_Dt);
 		}
+
 
 		for (auto& element : m_Events)
 		{			
@@ -119,6 +157,7 @@ void GameServer::ServerSynchronize()
 {
 	while (m_ServerIsRunning)
 	{
+		ZoneScopedN("ServerSynchron");
 		AddConnection();
 	}	
 }
@@ -127,35 +166,44 @@ void GameServer::ServerEvents()
 {
 	while (m_ServerIsRunning)
 	{
-		std::cout << "Start\n";
-		sf::Packet packet;	
+		ZoneScopedN("ServerEvent");
+		//std::cout << "Start event cycle marker\n";
+		//std::cout << "Start\n";		
+		sf::Packet packet;
+		//std::cout << "Current marker2\t" << m_Connected << std::endl;
+		if (!m_Connected) TestConnect();
+			
+		//std::cout << "Current marker1\n";
+		//std::cout << "TRIED TO ACCEPT\n";
 		//m_TcpListener.listen(m_ServerPort + (unsigned short)50);		
-		std::cout << "Point\n";
+		//std::cout << "Point\n";
 		/*if(m_GameStarted) */
-		if (m_TcpListener.accept(m_TcpSocket) != sf::Socket::Status::Done)
+		/*if (m_TcpListener.accept(m_TestSocket) != sf::Socket::Status::Done)
 		{
 			std::cout << "Accept Error\n";
-		}
-		//std::cout << "After accept\n";
-		if (m_TcpSocket.receive(packet) == sf::Socket::Done)
+		}*/
+		//std::cout << "BEFORE RECIEVE\n";
+		if (m_TestSocket.receive(packet) == sf::Socket::Done)
 		{
+			//std::cout << "Start of recieving events marker\n";
 			sf::IpAddress ip;
 			int port;
 			ScreenEvent scevent;
 			packet >> port >> scevent;
 			if (scevent.Events.size() > 0)
 			{
-				std::cout << "Events to recieve : " << scevent.Events.size() << std::endl;
-				std::cout << "All entities : " << m_Entities.size() << std::endl;
+				//std::cout << "Events to recieve : " << scevent.Events.size() << std::endl;
+				//std::cout << "All entities : " << m_Entities.size() << std::endl;
 			}
 			//std::cout << ip.toString() << " " << port << " " << scevent.Events.size() << std::endl;
-			Connection connection(m_TcpSocket.getRemoteAddress(), static_cast<unsigned short>(port));
+			Connection connection(m_TestSocket.getRemoteAddress(), static_cast<unsigned short>(port));
 			//std::cout << "Port: " << m_TcpSocket.getRemotePort() << std::endl;
 			m_EventLock.lock();
 			m_Events[connection] = scevent;
 			m_EventLock.unlock();
+			//std::cout << "End of recieving events marker\n";
 		}
-		else std::cout << "Didn't recieve TCP\n";
+		//else std::cout << "Didn't recieve TCP\n";
 		//m_TcpListener.close();
 	}
 }
@@ -214,7 +262,7 @@ void GameServer::AddConnection()
 				InitPlayer(); 	
 				//std::cout << "VectorToDraw : " << m_Entities.size() << std::endl;
 				m_Players.insert(std::pair<Connection, Player*>(entryconnection,
-					reinterpret_cast<Player*>(m_Entities[m_Connections.size() - 1])));
+					reinterpret_cast<Player*>(m_Entities[m_Connections.size() - 1])));				
 			}				
 			Check();
 			DeliverStartGame();

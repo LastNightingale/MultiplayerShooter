@@ -2,7 +2,7 @@
 
 GameClient::GameClient()
 {
-	m_GameStarted = false; // змінити
+	m_GameStarted = m_Connected = false; // змінити
 	m_isRunning = true;
 	m_isSynchronized = true;
 	m_DataDelivered = false; // змінити
@@ -41,6 +41,7 @@ void GameClient::Run()
 		
 		if (m_GameStarted)
 		{
+			
 			thread synchronizethread([this]
 				{
 					ClientSynchronize();
@@ -60,6 +61,7 @@ void GameClient::ClientDraw()
 {
 	while (m_Window.isOpen())
 	{
+		ZoneScopedN("ClientDraw");
 		//m_DrawStarted.Signal();
 		//std::cout << m_GameStarted << std::endl;
 		m_EventSignal.Signal();
@@ -67,10 +69,14 @@ void GameClient::ClientDraw()
 		std::vector<sf::Event> events;
 		while (m_Window.pollEvent(event))
 		{
-			if(event.type == sf::Event::EventType::MouseButtonPressed)
+			if (event.type == sf::Event::EventType::MouseButtonPressed)
+			{
 				events.push_back(event);
+				std::cout << "Click marker\n";
+			}
+				
 		}
-		if (m_Events.size() > 0) std::cout << "All events :" << m_Events.size() << std::endl;
+		if (events.size() > 0) std::cout << "All events :" << events.size() << std::endl;
 		m_EventLock.lock();
 		m_Events.insert(m_Events.end(), events.begin(), events.end());
 		m_EventLock.unlock();
@@ -94,6 +100,7 @@ void GameClient::ClientSynchronize()
 {
 	while (m_isSynchronized)
 	{
+		ZoneScopedN("ClientSynchronize");
 		DeliverData();
 		RecieveData();
 	}	
@@ -102,8 +109,12 @@ void GameClient::ClientSynchronize()
 void GameClient::ClientEvents()
 {
 	while (m_isRunning)
-	{		
-		m_TcpSocket.connect(m_ServerIP, m_ServerPort + (unsigned short)50);
+	{
+		ZoneScopedN("ClientEvents");
+		if (!m_Connected)
+			if (m_TcpSocket.connect(m_ServerIP, m_ServerPort + (unsigned short)50) == sf::Socket::Status::Done)
+				m_Connected = true;	
+		//m_TcpSocket.connect(m_ServerIP, m_ServerPort + (unsigned short)50);
 		sf::Vector2i mouseposition = Mouse::getPosition(m_Window);
 		sf::Packet DataPacket;
 		ScreenEvent scevent;
@@ -128,9 +139,10 @@ void GameClient::ClientEvents()
 		}
 		if(m_TcpSocket.send(DataPacket) == sf::Socket::Done) 
 		{
-			
+			std::cout << "Sending events marker\n";
 		}
-		m_TcpSocket.disconnect();
+		else std::cout << "NOT Sending events marker\n";
+		//m_TcpSocket.disconnect();
 		/*m_EventLock.lock();
 		m_Events.clear();
 		m_EventLock.unlock();*/

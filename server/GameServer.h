@@ -13,6 +13,8 @@
 #include <iostream>
 #include "Enemy.h"
 #include "Bullet.h"
+#include <tracy/Tracy.hpp>
+#define Window_Size sf::Vector2f(1400,900)
 
 
 class GameServer
@@ -29,7 +31,7 @@ class GameServer
 	Clock m_Clock;
 	sf::IpAddress m_ServerIP;
 	sf::UdpSocket m_UdpSocket;
-	sf::TcpSocket m_TcpSocket;
+	sf::TcpSocket m_TestSocket;
 	sf::TcpListener m_TcpListener;
 	unsigned short m_ServerPort;
 	float m_Dt;
@@ -38,16 +40,18 @@ class GameServer
 	bool m_isRunning;
 	bool m_GameStarted;
 	bool m_DataDelivered;
-	bool m_isSynchronized;
+	bool m_isSynchronized, m_Connected = false;
 	int m_MaxPlayerAmount;	
 	std::unordered_set<Connection> m_Connections;
 	bool m_ServerIsRunning;
 	sf::RectangleShape m_Rect;
 public:
 	GameServer();
+	void TestConnect();
 	void InitPlayer();
 	void InitEnemy();
 	int IteratePlayer();
+	void Collision();
 	void ServerUpdate();
 	void ServerSynchronize();
 	void ServerEvents();

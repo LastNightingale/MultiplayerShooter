@@ -14,10 +14,10 @@ Player::Player()
 
 void Player::Update(float dt) 
 {
-	/*if (Keyboard::isKeyPressed(Keyboard::Key::A)) Move(Vector2f(-1000, 0) * dt);
-	if (Keyboard::isKeyPressed(Keyboard::Key::D)) Move(Vector2f(1000, 0) * dt);
-	if (Keyboard::isKeyPressed(Keyboard::Key::W)) Move(Vector2f(0, -1000) * dt);
-	if (Keyboard::isKeyPressed(Keyboard::Key::S)) Move(Vector2f(0, 1000) * dt);*/
+	//Move(m_Direction * dt * 10.f);
+	//m_Direction = { 0, 0 };
+	for (auto key : m_Keys)
+		if (key.second) Move(KeyDirections.at(key.first) * dt * 5.f);
 }
 
 bool Player::Collided(Entity* other)

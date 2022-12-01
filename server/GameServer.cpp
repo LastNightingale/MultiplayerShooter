@@ -11,11 +11,10 @@ GameServer::GameServer()
 	m_TcpListener.listen(m_ServerPort + (unsigned short)50);
 	m_UdpSocket.setBlocking(true);
 	m_Dt = m_Spawntime = 0;
-	/*m_Rect.setFillColor(sf::Color::Red);
-	m_Rect.setSize({ 100, 100 });
-	m_Rect.setOrigin({ 50,50 });
-	m_Rect.setPosition(0, 0);
-	m_CurrentList.Rects.push_back(m_Rect);*/
+	m_Keys.insert({ sf::Keyboard::Key::D, {100.f, 0.f} });
+	m_Keys.insert({ sf::Keyboard::Key::A, {-100.f, 0.f} });
+	m_Keys.insert({ sf::Keyboard::Key::W, {0.f, -100.f} });
+	m_Keys.insert({ sf::Keyboard::Key::S, {0.f, 100.f} });
 }
 
 void GameServer::TestConnect()
@@ -120,6 +119,22 @@ void GameServer::ServerUpdate()
 
 		Collision();
 
+		/*for (Entity* outer : m_Entities)
+		{
+			for (Entity* inner : m_Entities)
+			{
+				if (outer->GetGlobalBounds().intersects(inner->GetGlobalBounds()))
+				{
+					if (outer->Collided(inner))
+					{
+						m_DestroyedEntities.push_back(inner);
+					}
+				}
+			}
+		}
+
+		Collision();*/
+
 		for (auto& iter : m_Entities)
 		{
 			iter->Update(m_Dt);
@@ -133,20 +148,32 @@ void GameServer::ServerUpdate()
 				if (event.type == sf::Event::EventType::MouseButtonPressed && event.key.code == sf::Mouse::Button::Left)
 				{
 					m_Entities.push_back(new Bullet(m_Players[element.first]->Shoot(element.second.ScreenPosition)));
-					//std::cout << "Bullet \n";
+				}
+				if (event.type == sf::Event::EventType::KeyPressed && m_Keys.find(event.key.code) != m_Keys.end())
+				{
+					/*m_Players.at(element.first)->m_Direction += m_Keys.at(event.key.code);
+					std::cout << "Pressed" << m_Players.at(element.first)->m_Direction.x
+						<< m_Players.at(element.first)->m_Direction.y << std::endl;*/
+					m_Players.at(element.first)->m_Keys.at(event.key.code) = true;
+				}
+				if (event.type == sf::Event::EventType::KeyReleased && m_Keys.find(event.key.code) != m_Keys.end())
+				{
+					/*m_Players.at(element.first)->m_Direction -= m_Keys.at(event.key.code);
+					std::cout << "Released" << m_Players.at(element.first)->m_Direction.x 
+						<< m_Players.at(element.first)->m_Direction.y << std::endl;*/
+					m_Players.at(element.first)->m_Keys.at(event.key.code) = false;
 				}
 			}
 		}
-			
-		//std::cout << "Updated"  << std::endl;
-		/*m_CurrentList.Rects.clear();
-		m_Rect.move( 1, 1 );
-		m_CurrentList.Rects.push_back(m_Rect);*/
+		m_SynchronLock.lock();
 		RenderList list;
 		for (auto& entity : m_Entities)
 			entity->AddToRenderList(list);
-		//std::cout << "ListToDraw : " << list.Rects.size() << std::endl;
-		m_SynchronLock.lock();
+		/*for (auto& entity = m_Entities.rbegin(); entity != m_Entities.rend(); entity++)
+		{
+			(*entity)->AddToRenderList(list);
+		}*/
+		//std::cout << "ListToDraw : " << list.Rects.size() << std::endl;		
 		m_CurrentList = list;
 		m_SynchronLock.unlock();
 	}

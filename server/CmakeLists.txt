@@ -6,6 +6,8 @@ GameServer.cpp
 Entity.cpp
 Player.cpp
 Enemy.cpp
-Bullet.cpp "Connection.hpp")
+Bullet.cpp 
+Connection.hpp 
+Keys.hpp)
 
 target_link_libraries(GameServer Core) 

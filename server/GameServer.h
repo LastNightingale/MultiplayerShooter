@@ -45,6 +45,7 @@ class GameServer
 	std::unordered_set<Connection> m_Connections;
 	bool m_ServerIsRunning;
 	sf::RectangleShape m_Rect;
+	std::unordered_map<sf::Keyboard::Key, sf::Vector2f> m_Keys;
 public:
 	GameServer();
 	void TestConnect();

@@ -40,8 +40,7 @@ void GameClient::Run()
 		}
 		
 		if (m_GameStarted)
-		{
-			
+		{			
 			thread synchronizethread([this]
 				{
 					ClientSynchronize();
@@ -69,14 +68,16 @@ void GameClient::ClientDraw()
 		std::vector<sf::Event> events;
 		while (m_Window.pollEvent(event))
 		{
-			if (event.type == sf::Event::EventType::MouseButtonPressed)
+			if (event.type == sf::Event::EventType::MouseButtonPressed ||
+				event.type == sf::Event::EventType::KeyPressed ||
+				event.type == sf::Event::EventType::KeyReleased)
 			{
 				events.push_back(event);
-				std::cout << "Click marker\n";
+				//std::cout << "Click marker\n";
 			}
 				
 		}
-		if (events.size() > 0) std::cout << "All events :" << events.size() << std::endl;
+		//if (events.size() > 0) std::cout << "All events :" << events.size() << std::endl;
 		m_EventLock.lock();
 		m_Events.insert(m_Events.end(), events.begin(), events.end());
 		m_EventLock.unlock();
@@ -114,7 +115,6 @@ void GameClient::ClientEvents()
 		if (!m_Connected)
 			if (m_TcpSocket.connect(m_ServerIP, m_ServerPort + (unsigned short)50) == sf::Socket::Status::Done)
 				m_Connected = true;	
-		//m_TcpSocket.connect(m_ServerIP, m_ServerPort + (unsigned short)50);
 		sf::Vector2i mouseposition = Mouse::getPosition(m_Window);
 		sf::Packet DataPacket;
 		ScreenEvent scevent;

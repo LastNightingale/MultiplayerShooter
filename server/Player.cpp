@@ -14,8 +14,7 @@ Player::Player()
 
 void Player::Update(float dt) 
 {
-	//Move(m_Direction * dt * 10.f);
-	//m_Direction = { 0, 0 };
+	/*Move(m_Direction * dt * 5.f);*/
 	for (auto key : m_Keys)
 		if (key.second) Move(KeyDirections.at(key.first) * dt * 5.f);
 }

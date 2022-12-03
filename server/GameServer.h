@@ -49,7 +49,7 @@ class GameServer
 public:
 	GameServer();
 	void TestConnect();
-	void InitPlayer();
+	void InitPlayer(Connection connection);
 	void InitEnemy();
 	int IteratePlayer();
 	void Collision();

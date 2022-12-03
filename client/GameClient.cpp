@@ -69,11 +69,12 @@ void GameClient::ClientDraw()
 		while (m_Window.pollEvent(event))
 		{
 			if (event.type == sf::Event::EventType::MouseButtonPressed ||
+				event.type == sf::Event::EventType::MouseButtonReleased ||
 				event.type == sf::Event::EventType::KeyPressed ||
 				event.type == sf::Event::EventType::KeyReleased)
 			{
 				events.push_back(event);
-				//std::cout << "Click marker\n";
+				//if (event.type == sf::Event::EventType::MouseButtonPressed) std::cout << "Click marker\n";
 			}
 				
 		}
@@ -124,7 +125,7 @@ void GameClient::ClientEvents()
 		events = m_Events;
 		m_Events.clear();
 		m_EventLock.unlock();
-		if(events.size() > 0) std::cout << "Events to deliver :" << events.size() << std::endl;
+		//if(events.size() > 0) std::cout << "Events to deliver :" << events.size() << std::endl;
 		scevent.Events = events;
 		scevent.ScreenPosition = mouseposition;
 		
@@ -139,9 +140,9 @@ void GameClient::ClientEvents()
 		}
 		if(m_TcpSocket.send(DataPacket) == sf::Socket::Done) 
 		{
-			std::cout << "Sending events marker\n";
+			//std::cout << "Sending events marker\n";
 		}
-		else std::cout << "NOT Sending events marker\n";
+		//else std::cout << "NOT Sending events marker\n";
 		//m_TcpSocket.disconnect();
 		/*m_EventLock.lock();
 		m_Events.clear();

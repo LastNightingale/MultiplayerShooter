@@ -23,9 +23,9 @@ void GameServer::TestConnect()
 		m_Connected = true;
 }
 
-void GameServer::InitPlayer()
+void GameServer::InitPlayer(Connection connection)
 {
-	std::vector<Entity*> vector;
+	/*std::vector<Entity*> vector;
 	m_PlayerLock.lock();
 	vector = m_Entities;
 	m_PlayerLock.unlock();
@@ -35,7 +35,15 @@ void GameServer::InitPlayer()
 	vector[vector.size() - 1] = temp;
 	m_PlayerLock.lock();
 	m_Entities = vector;
-	m_PlayerLock.unlock();
+	m_PlayerLock.unlock();*/
+	m_SynchronLock.lock();
+	m_Entities.push_back(new Player());
+	Entity* temp = m_Entities[m_Connections.size() - 1];
+	m_Entities[m_Connections.size() - 1] = m_Entities[m_Entities.size() - 1];
+	m_Entities[m_Entities.size() - 1] = temp;
+	m_Players.insert(std::pair<Connection, Player*>(connection,
+		reinterpret_cast<Player*>(m_Entities[m_Connections.size() - 1])));
+	m_SynchronLock.unlock();
 }
 
 void GameServer::InitEnemy()
@@ -103,12 +111,58 @@ void GameServer::ServerUpdate()
 		{
 			m_Clock.restart();
 		}
-		//std::cout << "Spawntime : " << m_Spawntime << std::endl;
+		RenderList list;
+		m_SynchronLock.lock();
 		if (m_Spawntime >= 1.5)
 		{			
 			InitEnemy();
 			m_Spawntime = 0;
 		}
+
+		m_EventLock.lock();
+		for (auto& element : m_Events)
+		{
+			for (auto& event : element.second.Events)
+			{
+				/*if (event.type == sf::Event::EventType::MouseButtonPressed && event.key.code == sf::Mouse::Button::Left)
+				{	
+					if (m_Players.at(element.first)->isReady)
+					{
+						m_Entities.push_back(new Bullet(m_Players[element.first]->Shoot(element.second.ScreenPosition)));
+						m_Players.at(element.first)->isReady = false;
+					}
+				}
+				if (event.type == sf::Event::EventType::MouseButtonReleased && event.key.code == sf::Mouse::Button::Left)
+				{
+					if (!m_Players.at(element.first)->isReady)
+					{
+						m_Players.at(element.first)->isReady = true;
+					}
+				}*/
+				if (event.type == sf::Event::EventType::MouseButtonPressed && event.key.code == sf::Mouse::Button::Left)
+				{
+					m_Entities.push_back(new Bullet(m_Players[element.first]->Shoot(element.second.ScreenPosition)));
+				}
+				if (event.type == sf::Event::EventType::KeyPressed && m_Keys.find(event.key.code) != m_Keys.end())
+				{
+					m_Players.at(element.first)->m_Keys.at(event.key.code) = true;
+				}
+				if (event.type == sf::Event::EventType::KeyReleased && m_Keys.find(event.key.code) != m_Keys.end())
+				{
+					m_Players.at(element.first)->m_Keys.at(event.key.code) = false;
+				}
+				/*if (event.type == sf::Event::EventType::KeyPressed && m_Keys.find(event.key.code) != m_Keys.end())
+				{
+					m_Players.at(element.first)->m_Direction += m_Keys.at(event.key.code);
+				}
+				if (event.type == sf::Event::EventType::KeyReleased && m_Keys.find(event.key.code) != m_Keys.end())
+				{
+					m_Players.at(element.first)->m_Direction -= m_Keys.at(event.key.code);
+				}*/
+			}
+		}
+		m_Events.clear();
+		m_EventLock.unlock();
 
 		for (auto& iter : m_Entities)
 		{
@@ -119,7 +173,7 @@ void GameServer::ServerUpdate()
 
 		Collision();
 
-		/*for (Entity* outer : m_Entities)
+		for (Entity* outer : m_Entities)
 		{
 			for (Entity* inner : m_Entities)
 			{
@@ -128,51 +182,26 @@ void GameServer::ServerUpdate()
 					if (outer->Collided(inner))
 					{
 						m_DestroyedEntities.push_back(inner);
+						//std::cout << "To Destroy :" << m_DestroyedEntities.size() << std::endl;
 					}
 				}
 			}
 		}
 
-		Collision();*/
+		Collision();
 
 		for (auto& iter : m_Entities)
 		{
 			iter->Update(m_Dt);
 		}
-
-
-		for (auto& element : m_Events)
-		{			
-			for (auto& event : element.second.Events)
-			{
-				if (event.type == sf::Event::EventType::MouseButtonPressed && event.key.code == sf::Mouse::Button::Left)
-				{
-					m_Entities.push_back(new Bullet(m_Players[element.first]->Shoot(element.second.ScreenPosition)));
-				}
-				if (event.type == sf::Event::EventType::KeyPressed && m_Keys.find(event.key.code) != m_Keys.end())
-				{
-					/*m_Players.at(element.first)->m_Direction += m_Keys.at(event.key.code);
-					std::cout << "Pressed" << m_Players.at(element.first)->m_Direction.x
-						<< m_Players.at(element.first)->m_Direction.y << std::endl;*/
-					m_Players.at(element.first)->m_Keys.at(event.key.code) = true;
-				}
-				if (event.type == sf::Event::EventType::KeyReleased && m_Keys.find(event.key.code) != m_Keys.end())
-				{
-					/*m_Players.at(element.first)->m_Direction -= m_Keys.at(event.key.code);
-					std::cout << "Released" << m_Players.at(element.first)->m_Direction.x 
-						<< m_Players.at(element.first)->m_Direction.y << std::endl;*/
-					m_Players.at(element.first)->m_Keys.at(event.key.code) = false;
-				}
-			}
-		}
-		m_SynchronLock.lock();
-		RenderList list;
-		for (auto& entity : m_Entities)
-			entity->AddToRenderList(list);
-		/*for (auto& entity = m_Entities.rbegin(); entity != m_Entities.rend(); entity++)
+		
+				
+		/*for (auto& entity : m_Entities)
+			entity->AddToRenderList(list);*/
+		for (auto& entity = m_Entities.rbegin(); entity != m_Entities.rend(); entity++)
 		{
 			(*entity)->AddToRenderList(list);
-		}*/
+		}
 		//std::cout << "ListToDraw : " << list.Rects.size() << std::endl;		
 		m_CurrentList = list;
 		m_SynchronLock.unlock();
@@ -231,7 +260,6 @@ void GameServer::ServerEvents()
 			//std::cout << "End of recieving events marker\n";
 		}
 		//else std::cout << "Didn't recieve TCP\n";
-		//m_TcpListener.close();
 	}
 }
 
@@ -286,10 +314,8 @@ void GameServer::AddConnection()
 			{
 				//std::cout << entryconnection.IP.toString() << std::endl;
 				m_Connections.insert(entryconnection);
-				InitPlayer(); 	
-				//std::cout << "VectorToDraw : " << m_Entities.size() << std::endl;
-				m_Players.insert(std::pair<Connection, Player*>(entryconnection,
-					reinterpret_cast<Player*>(m_Entities[m_Connections.size() - 1])));				
+				InitPlayer(entryconnection);
+				//std::cout << "VectorToDraw : " << m_Entities.size() << std::endl;								
 			}				
 			Check();
 			DeliverStartGame();

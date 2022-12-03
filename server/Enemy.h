@@ -2,6 +2,9 @@
 #include "Entity.h"
 #include <SFML/Graphics.hpp>
 #include "GameMath.hpp"
+#include "Bullet.h"
+#include "Player.h"
+#include <iostream>
 #define Enemy_Size 50
 #define Enemy_Color Color::Red
 

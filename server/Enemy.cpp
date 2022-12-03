@@ -23,8 +23,9 @@ void Enemy::Update(float dt)
 
 bool Enemy::Collided(Entity* other)
 {
-	if (dynamic_cast<Enemy*>(other)) return false;
-	else return true;
+	if (dynamic_cast<Bullet*>(other)) std::cout << "Enemy destroyed bullet\n";
+	return (!dynamic_cast<Enemy*>(other));
+	//else return true;
 }
 
 Vector2f Enemy::GetDirection() const

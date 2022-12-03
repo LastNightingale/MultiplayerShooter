@@ -11,6 +11,7 @@ class Player : public Entity
 	
 public:
 	Vector2f m_Direction;
+	bool isReady = true;
 	Player();
 	void Update(float dt) override;
 	bool Collided(Entity* other) override;

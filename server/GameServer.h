@@ -51,6 +51,7 @@ public:
 	GameServer();
 	void TestConnect();
 	void InitPlayer(Connection connection);
+	void DeletePlayer(Player* lost);
 	void InitEnemy();
 	int IteratePlayer();
 	void Collision();

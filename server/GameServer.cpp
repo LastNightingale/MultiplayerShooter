@@ -26,17 +26,6 @@ void GameServer::TestConnect()
 
 void GameServer::InitPlayer(Connection connection)
 {
-	/*std::vector<Entity*> vector;
-	m_PlayerLock.lock();
-	vector = m_Entities;
-	m_PlayerLock.unlock();
-	vector.push_back(new Player());
-	Entity* temp = vector[m_Connections.size() - 1];
-	vector[m_Connections.size() - 1] = vector[vector.size() - 1];
-	vector[vector.size() - 1] = temp;
-	m_PlayerLock.lock();
-	m_Entities = vector;
-	m_PlayerLock.unlock();*/
 	m_SynchronLock.lock();
 	m_Entities.push_back(new Player());
 	Entity* temp = m_Entities[m_Connections.size() - 1];
@@ -45,6 +34,18 @@ void GameServer::InitPlayer(Connection connection)
 	m_Players.insert(std::pair<Connection, Player*>(connection,
 		reinterpret_cast<Player*>(m_Entities[m_Connections.size() - 1])));
 	m_SynchronLock.unlock();
+}
+
+void GameServer::DeletePlayer(Player* lost)
+{	
+	for (auto& player : m_Players)
+	{
+		if (lost == player.second)
+		{
+			m_Players.erase(player.first);
+			break;
+		}			
+	}	
 }
 
 void GameServer::InitEnemy()
@@ -85,6 +86,7 @@ void GameServer::Collision()
 		{
 			if (entity == m_Entities[i])
 			{
+				if (Player* lost = dynamic_cast<Player*>(entity)) DeletePlayer(lost);					
 				Entity* temp = m_Entities[i];
 				m_Entities[i] = m_Entities[m_Entities.size() - 1];
 				m_Entities[m_Entities.size() - 1] = temp;
@@ -229,11 +231,16 @@ void GameServer::ServerEvents()
 							sf::IpAddress ip;
 							int port;
 							ScreenEvent scevent;
+							bool alive = false;
 							packet >> port >> scevent;
 							Connection connection(client.getRemoteAddress(), static_cast<unsigned short>(port));
-							m_EventLock.lock();
-							m_Events[connection] = scevent;
+							m_SynchronLock.lock();
+							if (m_Players.find(connection) != m_Players.end()) alive = true;
+							m_SynchronLock.unlock();
+							m_EventLock.lock();							
+							if(alive) m_Events[connection] = scevent;							
 							m_EventLock.unlock();
+							
 							//std::cout << "End of recieving events marker\n";
 						}
 						//else std::cout << "Didn't recieve TCP\n";
@@ -258,32 +265,15 @@ void GameServer::AddConnection()
 	{
 		Connection entryconnection(ClientAdress, prt);
 		packet >> started;
-		//std::cout << started << "\n";
 		if (started)
 		{		
-			/*for (auto& connection : m_Connections)
-			{
-				//std::cout << entryconnection.IP << entryconnection.Port << "   " << connection.IP << connection.Port << "\n";
-				if (!(entryconnection == connection))
-				{
-					//std::cout << packet.getDataSize() << std::endl;
-					m_Socket.send(packet, connection.IP, connection.Port);
-					//std::cout << "Client " << connection.Port << " " << packet.getDataSize() << std::endl;	
-					/*std::cout << "Packet\n";
-					const uint8_t* ptr = static_cast<const uint8_t*>(packet.getData());
-					for (size_t i = 0; i < packet.getDataSize(); ++i)
-					{
-						std::cout << std::hex << (uint32_t)ptr[i] << " ";
-					}
-					std::cout << std::endl;
-				}*/
 			sf::Packet pack;
-			RenderList list;			
+			RenderList list;	
+			bool isPlayerDead;
 			m_SynchronLock.lock();
 			list = m_CurrentList;
 			m_SynchronLock.unlock();
 			pack << m_GameStarted << list;
-			//std::cout << "Packet size: " << pack.getDataSize() << std::endl;
 			for (auto& connection : m_Connections)
 			{
 				m_UdpSocket.send(pack, connection.IP, connection.Port);
@@ -293,10 +283,8 @@ void GameServer::AddConnection()
 		{			
 			if (m_Connections.find(entryconnection) == m_Connections.end())
 			{
-				//std::cout << entryconnection.IP.toString() << std::endl;
 				m_Connections.insert(entryconnection);
-				InitPlayer(entryconnection);
-				//std::cout << "VectorToDraw : " << m_Entities.size() << std::endl;								
+				InitPlayer(entryconnection);							
 			}				
 			Check();
 			DeliverStartGame();
@@ -319,8 +307,6 @@ void GameServer::DeliverStartGame()
 		{
 
 		}
-			//std::cout << "Packet haven't been delivered\n";
-		//else std::cout << "aaaaaa\n";
 	}
 }
 

@@ -3,12 +3,13 @@
 GameServer::GameServer()
 {
 	m_CurrentPosition = 0;
-	m_MaxPlayerAmount = 1;
+	m_MaxPlayerAmount = 2;
 	m_ServerPort = 12500;
 	m_GameStarted = m_Connected = false;
 	m_ServerIsRunning = true;
 	m_UdpSocket.bind(m_ServerPort);
 	m_TcpListener.listen(m_ServerPort + (unsigned short)50);
+	m_Selector.add(m_TcpListener);
 	m_UdpSocket.setBlocking(true);
 	m_Dt = m_Spawntime = 0;
 	m_Keys.insert({ sf::Keyboard::Key::D, {100.f, 0.f} });
@@ -124,21 +125,6 @@ void GameServer::ServerUpdate()
 		{
 			for (auto& event : element.second.Events)
 			{
-				/*if (event.type == sf::Event::EventType::MouseButtonPressed && event.key.code == sf::Mouse::Button::Left)
-				{	
-					if (m_Players.at(element.first)->isReady)
-					{
-						m_Entities.push_back(new Bullet(m_Players[element.first]->Shoot(element.second.ScreenPosition)));
-						m_Players.at(element.first)->isReady = false;
-					}
-				}
-				if (event.type == sf::Event::EventType::MouseButtonReleased && event.key.code == sf::Mouse::Button::Left)
-				{
-					if (!m_Players.at(element.first)->isReady)
-					{
-						m_Players.at(element.first)->isReady = true;
-					}
-				}*/
 				if (event.type == sf::Event::EventType::MouseButtonPressed && event.key.code == sf::Mouse::Button::Left)
 				{
 					m_Entities.push_back(new Bullet(m_Players[element.first]->Shoot(element.second.ScreenPosition)));
@@ -151,14 +137,6 @@ void GameServer::ServerUpdate()
 				{
 					m_Players.at(element.first)->m_Keys.at(event.key.code) = false;
 				}
-				/*if (event.type == sf::Event::EventType::KeyPressed && m_Keys.find(event.key.code) != m_Keys.end())
-				{
-					m_Players.at(element.first)->m_Direction += m_Keys.at(event.key.code);
-				}
-				if (event.type == sf::Event::EventType::KeyReleased && m_Keys.find(event.key.code) != m_Keys.end())
-				{
-					m_Players.at(element.first)->m_Direction -= m_Keys.at(event.key.code);
-				}*/
 			}
 		}
 		m_Events.clear();
@@ -222,44 +200,47 @@ void GameServer::ServerEvents()
 {
 	while (m_ServerIsRunning)
 	{
-		ZoneScopedN("ServerEvent");
-		//std::cout << "Start event cycle marker\n";
-		//std::cout << "Start\n";		
-		sf::Packet packet;
-		//std::cout << "Current marker2\t" << m_Connected << std::endl;
-		if (!m_Connected) TestConnect();
-			
-		//std::cout << "Current marker1\n";
-		//std::cout << "TRIED TO ACCEPT\n";
-		//m_TcpListener.listen(m_ServerPort + (unsigned short)50);		
-		//std::cout << "Point\n";
-		/*if(m_GameStarted) */
-		/*if (m_TcpListener.accept(m_TestSocket) != sf::Socket::Status::Done)
+		ZoneScopedN("ServerEvent");		
+		if (m_Selector.wait())
 		{
-			std::cout << "Accept Error\n";
-		}*/
-		//std::cout << "BEFORE RECIEVE\n";
-		if (m_TestSocket.receive(packet) == sf::Socket::Done)
-		{
-			//std::cout << "Start of recieving events marker\n";
-			sf::IpAddress ip;
-			int port;
-			ScreenEvent scevent;
-			packet >> port >> scevent;
-			if (scevent.Events.size() > 0)
+			if (m_Selector.isReady(m_TcpListener) && m_Clients.size() < m_MaxPlayerAmount)
 			{
-				//std::cout << "Events to recieve : " << scevent.Events.size() << std::endl;
-				//std::cout << "All entities : " << m_Entities.size() << std::endl;
+				sf::TcpSocket* client = new sf::TcpSocket;
+				if (m_TcpListener.accept(*client) == sf::Socket::Done)
+				{
+					m_Clients.push_back(client);
+					m_Selector.add(*client);
+				}
+				else
+				{
+					delete client;
+				}
 			}
-			//std::cout << ip.toString() << " " << port << " " << scevent.Events.size() << std::endl;
-			Connection connection(m_TestSocket.getRemoteAddress(), static_cast<unsigned short>(port));
-			//std::cout << "Port: " << m_TcpSocket.getRemotePort() << std::endl;
-			m_EventLock.lock();
-			m_Events[connection] = scevent;
-			m_EventLock.unlock();
-			//std::cout << "End of recieving events marker\n";
-		}
-		//else std::cout << "Didn't recieve TCP\n";
+			else
+			{
+				for (auto it : m_Clients)
+				{
+					sf::TcpSocket& client = *it;
+					if (m_Selector.isReady(client))
+					{
+						sf::Packet packet;
+						if (client.receive(packet) == sf::Socket::Done)
+						{
+							sf::IpAddress ip;
+							int port;
+							ScreenEvent scevent;
+							packet >> port >> scevent;
+							Connection connection(client.getRemoteAddress(), static_cast<unsigned short>(port));
+							m_EventLock.lock();
+							m_Events[connection] = scevent;
+							m_EventLock.unlock();
+							//std::cout << "End of recieving events marker\n";
+						}
+						//else std::cout << "Didn't recieve TCP\n";
+					}
+				}
+			}
+		}		
 	}
 }
 

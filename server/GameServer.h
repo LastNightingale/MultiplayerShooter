@@ -23,7 +23,6 @@ class GameServer
 	std::vector<Entity*> m_Entities;
 	std::vector<Entity*> m_DestroyedEntities;	
 	RenderList m_CurrentList;
-	ProgramEvent m_DrawStarted; //is it needed?
 	Player* m_ClientPlayer;
 	std::unordered_map<Connection, Player*> m_Players;
 	std::unordered_map<Connection, ScreenEvent> m_Events;
@@ -32,7 +31,9 @@ class GameServer
 	sf::IpAddress m_ServerIP;
 	sf::UdpSocket m_UdpSocket;
 	sf::TcpSocket m_TestSocket;
+	std::vector<sf::TcpSocket*> m_Clients;
 	sf::TcpListener m_TcpListener;
+	sf::SocketSelector m_Selector;
 	unsigned short m_ServerPort;
 	float m_Dt;
 	float m_Spawntime;
